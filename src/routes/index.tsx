@@ -19,10 +19,12 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const fleet = [
-  { name: "City Hatchbacks", detail: "Smart, efficient and easy to park", price: "₹1,699", tag: "Everyday", imagePosition: "left" },
-  { name: "Executive Sedans", detail: "A smoother way to go further", price: "₹2,199", tag: "Comfort", imagePosition: "center" },
-  { name: "Adventure SUVs", detail: "More room for the road ahead", price: "₹2,499", tag: "Popular", imagePosition: "right" },
+import { useEffect } from "react";
+
+const fallbackFleet = [
+  { id: "hatchback", name: "City Hatchbacks", detail: "Smart, efficient and easy to park", price: "₹1,699", tag: "Everyday", imagePosition: "left" },
+  { id: "sedan", name: "Executive Sedans", detail: "A smoother way to go further", price: "₹2,199", tag: "Comfort", imagePosition: "center" },
+  { id: "suv", name: "Adventure SUVs", detail: "More room for the road ahead", price: "₹2,499", tag: "Popular", imagePosition: "right" },
 ];
 const destinations = [
   { name: "Tirumala", detail: "Temple & pilgrimage", imagePosition: "left" },
@@ -43,8 +45,48 @@ function Index() {
   const [endDate, setEndDate] = useState("2026-09-06");
   const [notice, setNotice] = useState("");
   const [selectedFleet, setSelectedFleet] = useState("All cars");
+  const [fleet, setFleet] = useState(fallbackFleet);
+  const [selectedCar, setSelectedCar] = useState("");
+
+  // Fetch live fleet data from Node/Express backend
+  useEffect(() => {
+    fetch("http://localhost:5000/api/cars")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setFleet(res.data);
+        }
+      })
+      .catch((err) => console.error("Error fetching live fleet data:", err));
+  }, []);
+
   const handleSearch = () => {
-    setNotice(`Showing cars available in ${pickup} from ${startDate} to ${endDate}.`);
+    setNotice("Sending booking reservation...");
+    fetch("http://localhost:5000/api/bookings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pickup,
+        startDate,
+        endDate,
+        carName: selectedCar || "General Search Inquiry",
+      }),
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setNotice(`Booking request submitted! Selected: ${selectedCar || "General Inquiry"} in ${pickup} from ${startDate} to ${endDate}.`);
+        } else {
+          setNotice(`Failed to book: ${res.message}`);
+        }
+      })
+      .catch((err) => {
+        console.error("Booking submission error:", err);
+        setNotice(`Local Search: Showing cars available in ${pickup} from ${startDate} to ${endDate}.`);
+      });
+
     document.getElementById("fleet")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -68,7 +110,7 @@ function Index() {
         </div>
       </section>
       <section className="border-b border-border bg-brand-cream py-16 sm:py-20"><div className="mx-auto grid max-w-7xl gap-8 px-5 sm:px-8 lg:grid-cols-4 lg:px-10">{benefits.map(({ icon: Icon, title, copy }) => <div key={title} className="flex gap-4 border-l border-border pl-5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gold-soft text-brand-navy"><Icon className="h-5 w-5" /></span><div><h3 className="text-sm font-bold">{title}</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">{copy}</p></div></div>)}</div></section>
-      <section id="fleet" className="page-grid scroll-mt-10 py-24 sm:py-32"><div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-teal">The Moar collection</p><h2 className="mt-3 max-w-xl text-4xl font-extrabold leading-tight tracking-[-0.04em] sm:text-5xl">Find a car that feels like <span className="text-brand-teal">you.</span></h2></div><a href="#fleet" className="flex items-center gap-2 text-sm font-bold text-brand-navy hover:text-brand-teal">View all cars <ChevronRight className="h-4 w-4" /></a></div><div className="mt-9 flex flex-wrap gap-2" role="tablist" aria-label="Vehicle categories">{["All cars", "Hatchbacks", "Sedans", "SUVs"].map((filter) => <button key={filter} role="tab" aria-selected={selectedFleet === filter} onClick={() => setSelectedFleet(filter)} className={`rounded-full border px-4 py-2 text-xs font-bold transition-colors ${selectedFleet === filter ? "border-brand-navy bg-brand-navy text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-brand-teal hover:text-brand-teal"}`}>{filter}</button>)}</div><div className="mt-10 grid gap-5 lg:grid-cols-3">{fleet.map((car) => <article key={car.name} className="group overflow-hidden rounded-sm border border-border bg-card shadow-sm transition-transform hover:-translate-y-1"><div className="relative h-56 overflow-hidden bg-brand-navy"><img src={fleetImage} alt={`${car.name} vehicle collection`} loading="lazy" width={1600} height={1000} className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${car.imagePosition === "left" ? "object-left" : car.imagePosition === "right" ? "object-right" : "object-center"}`} /><span className="absolute left-4 top-4 rounded-full bg-brand-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-navy">{car.tag}</span></div><div className="grid gap-5 p-5"><div><h3 className="text-xl font-bold">{car.name}</h3><p className="mt-1 text-sm text-muted-foreground">{car.detail}</p></div><div className="flex items-end justify-between border-t border-border pt-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">From</p><p className="mt-1 text-lg font-extrabold text-brand-teal">{car.price}<span className="text-xs font-medium text-muted-foreground"> / day</span></p></div><Button variant="outline" className="rounded-sm border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-primary-foreground" onClick={() => { setNotice(`${car.name} selected. Choose your dates above to continue.`); document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" }); }}>Choose car <ArrowRight /></Button></div></div></article>)}</div></div></section>
+      <section id="fleet" className="page-grid scroll-mt-10 py-24 sm:py-32"><div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-teal">The Moar collection</p><h2 className="mt-3 max-w-xl text-4xl font-extrabold leading-tight tracking-[-0.04em] sm:text-5xl">Find a car that feels like <span className="text-brand-teal">you.</span></h2></div><a href="#fleet" className="flex items-center gap-2 text-sm font-bold text-brand-navy hover:text-brand-teal">View all cars <ChevronRight className="h-4 w-4" /></a></div><div className="mt-9 flex flex-wrap gap-2" role="tablist" aria-label="Vehicle categories">{["All cars", "Hatchbacks", "Sedans", "SUVs"].map((filter) => <button key={filter} role="tab" aria-selected={selectedFleet === filter} onClick={() => setSelectedFleet(filter)} className={`rounded-full border px-4 py-2 text-xs font-bold transition-colors ${selectedFleet === filter ? "border-brand-navy bg-brand-navy text-primary-foreground" : "border-border bg-card text-muted-foreground hover:border-brand-teal hover:text-brand-teal"}`}>{filter}</button>)}</div><div className="mt-10 grid gap-5 lg:grid-cols-3">{fleet.map((car) => <article key={car.name} className="group overflow-hidden rounded-sm border border-border bg-card shadow-sm transition-transform hover:-translate-y-1"><div className="relative h-56 overflow-hidden bg-brand-navy"><img src={fleetImage} alt={`${car.name} vehicle collection`} loading="lazy" width={1600} height={1000} className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${car.imagePosition === "left" ? "object-left" : car.imagePosition === "right" ? "object-right" : "object-center"}`} /><span className="absolute left-4 top-4 rounded-full bg-brand-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-brand-navy">{car.tag}</span></div><div className="grid gap-5 p-5"><div><h3 className="text-xl font-bold">{car.name}</h3><p className="mt-1 text-sm text-muted-foreground">{car.detail}</p></div><div className="flex items-end justify-between border-t border-border pt-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">From</p><p className="mt-1 text-lg font-extrabold text-brand-teal">{car.price}<span className="text-xs font-medium text-muted-foreground"> / day</span></p></div><Button variant="outline" className="rounded-sm border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-primary-foreground" onClick={() => { setSelectedCar(car.name); setNotice(`${car.name} selected. Choose your dates above to continue.`); document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" }); }}>Choose car <ArrowRight /></Button></div></div></article>)}</div></div></section>
       <section id="about" className="bg-brand-navy py-24 text-primary-foreground sm:py-32"><div className="mx-auto grid max-w-7xl gap-14 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center lg:px-10"><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-gold">More than a rental</p><h2 className="mt-4 text-4xl font-extrabold leading-tight tracking-[-0.04em] sm:text-5xl">The best stories start when you <span className="text-brand-gold">take the wheel.</span></h2><p className="mt-6 max-w-md text-base leading-7 text-primary-foreground/70">We make self-drive simple, so you can spend less time organising and more time discovering. From an early temple visit to a late-night hill drive, your next chapter starts here.</p><a href="#how-it-works" className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-brand-gold">Why drive with Moar <ArrowRight className="h-4 w-4" /></a></div><div className="relative overflow-hidden rounded-sm border border-primary-foreground/15"><img src={heroImage} alt="Road winding through the hills around Tirupati" loading="lazy" width={1600} height={900} className="h-[360px] w-full object-cover sm:h-[450px]" /><div className="absolute bottom-5 left-5 right-5 flex items-center justify-between border border-primary-foreground/20 bg-brand-navy/80 p-4 backdrop-blur-sm"><div><p className="text-2xl font-extrabold">50+</p><p className="text-xs text-primary-foreground/60">cars ready to go</p></div><div className="h-9 w-px bg-primary-foreground/20" /><div><p className="text-2xl font-extrabold">4.9/5</p><p className="text-xs text-primary-foreground/60">traveller rating</p></div><div className="h-9 w-px bg-primary-foreground/20" /><div><p className="text-2xl font-extrabold">24/7</p><p className="text-xs text-primary-foreground/60">roadside care</p></div></div></div></div></section>
       <section id="explore" className="bg-brand-cream py-24 sm:py-32"><div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"><div className="flex items-end justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-teal">Make a day of it</p><h2 className="mt-3 text-4xl font-extrabold tracking-[-0.04em] sm:text-5xl">Explore from Tirupati.</h2></div><Compass className="hidden h-12 w-12 text-brand-gold sm:block" /></div><div className="mt-10 grid gap-5 md:grid-cols-3">{destinations.map((destination) => <a key={destination.name} href="#booking" className="group relative h-72 overflow-hidden rounded-sm bg-brand-navy"><img src={heroImage} alt={destination.name} loading="lazy" width={1600} height={900} className={`h-full w-full object-cover opacity-80 transition duration-700 group-hover:scale-105 group-hover:opacity-100 ${destination.imagePosition === "left" ? "object-left" : destination.imagePosition === "right" ? "object-right" : "object-center"}`} /><div className="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/15 to-transparent" /><div className="absolute bottom-5 left-5 text-primary-foreground"><p className="text-xl font-bold">{destination.name}</p><p className="mt-1 text-xs text-primary-foreground/70">{destination.detail}</p></div><span className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold text-brand-navy transition-transform group-hover:translate-x-1"><ArrowRight className="h-4 w-4" /></span></a>)}</div></div></section>
       <section id="how-it-works" className="border-y border-border bg-brand-mist py-20 sm:py-24"><div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-10"><div><p className="text-xs font-bold uppercase tracking-[0.22em] text-brand-teal">Simple by design</p><h2 className="mt-3 text-4xl font-extrabold tracking-[-0.04em]">Your road, in four easy steps.</h2></div><div className="grid gap-0 sm:grid-cols-4">{[{ n: "01", title: "Choose", copy: "Pick a car that fits your day." }, { n: "02", title: "Reserve", copy: "Select dates and lock it in." }, { n: "03", title: "Collect", copy: "Meet us or choose doorstep delivery." }, { n: "04", title: "Drive", copy: "Turn the key and go your way." }].map((step, index) => <div key={step.n} className="relative border-l border-brand-teal/30 py-4 pl-5 sm:py-0"><span className="text-xs font-bold text-brand-gold">{step.n}</span><h3 className="mt-5 text-lg font-bold">{step.title}</h3><p className="mt-2 pr-4 text-xs leading-5 text-muted-foreground">{step.copy}</p>{index < 3 && <ChevronRight className="absolute -right-2 top-1/2 hidden h-4 w-4 bg-brand-mist text-brand-teal sm:block" />}</div>)}</div></div></section>
