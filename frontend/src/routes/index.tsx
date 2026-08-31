@@ -50,7 +50,7 @@ function Index() {
 
   // Fetch live fleet data from Node/Express backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/cars")
+    fetch("/api/cars")
       .then((res) => res.json())
       .then((res) => {
         if (res.success && res.data) {
@@ -62,7 +62,7 @@ function Index() {
 
   const handleSearch = () => {
     setNotice("Sending booking reservation...");
-    fetch("http://localhost:5000/api/bookings", {
+    fetch("/api/bookings", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

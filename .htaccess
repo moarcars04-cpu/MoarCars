@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# 1. Route API requests starting with /api/ to the Express backend on port 5000
+RewriteRule ^api/(.*)$ http://127.0.0.1:5000/api/$1 [P,L]
+
+# 2. Route all other requests to the TanStack Start frontend server on port 3000
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
