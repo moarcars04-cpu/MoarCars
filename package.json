@@ -1,6 +1,7 @@
 {
   "name": "moar-cars-workspace",
   "private": true,
+  "type": "module",
   "workspaces": [
     "frontend",
     "backend"
