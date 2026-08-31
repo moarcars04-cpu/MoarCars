@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { sequelize } from "./db.js";
 import { Car } from "./models/Car.js";
 import { Booking } from "./models/Booking.js";
@@ -20,6 +22,11 @@ app.use(
 );
 
 app.use(express.json());
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, "../frontend/dist/client")));
 
 // GET /api/cars - Get all fleet vehicles from database
 app.get("/api/cars", async (req, res) => {
@@ -71,6 +78,11 @@ app.post("/api/bookings", async (req, res) => {
       message: "Internal server error saving booking details.",
     });
   }
+});
+
+// Serve index.html for all other routes (SPA fallback)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/client/index.html"));
 });
 
 // Sync database tables and start listening
