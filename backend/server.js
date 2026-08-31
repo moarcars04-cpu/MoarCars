@@ -27,7 +27,7 @@ app.use(express.json());
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, "../frontend/dist/client")));
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // GET /api/cars - Get all fleet vehicles from database
 app.get("/api/cars", async (req, res) => {
@@ -142,7 +142,7 @@ app.delete("/api/admin/cars/:id", async (req, res) => {
 
 // Serve index.html for all other routes (SPA fallback)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/client/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 // Sync database tables and start listening

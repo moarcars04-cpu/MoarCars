@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Lock, User, Plus, Trash2, Calendar, MapPin, Car, DollarSign, LogOut, Shield } from "lucide-react";
 
-export const Route = createFileRoute("/admin")({
-  component: AdminComponent,
-});
+interface AdminDashboardProps {
+  onNavigate: (path: string) => void;
+}
 
-function AdminComponent() {
-  const navigate = useNavigate();
+export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -152,7 +150,6 @@ function AdminComponent() {
   const totalBookings = bookings.length;
   const activeFleetCount = fleet.length;
   const totalRevenue = bookings.reduce((sum, b) => {
-    // Basic calculation parsing price tags or matching a standard rate
     return sum + 2000; // Average rate ₹2,000 per booking
   }, 0);
 
@@ -229,7 +226,7 @@ function AdminComponent() {
 
           <div className="text-center mt-6">
             <button
-              onClick={() => navigate({ to: "/" })}
+              onClick={() => onNavigate("/")}
               className="text-xs text-gray-500 hover:text-white transition-all underline"
             >
               Return to Website
@@ -258,7 +255,7 @@ function AdminComponent() {
 
           <div className="flex items-center gap-6">
             <button
-              onClick={() => navigate({ to: "/" })}
+              onClick={() => onNavigate("/")}
               className="text-sm text-gray-400 hover:text-white transition-all"
             >
               View Site

@@ -1,25 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, CalendarDays, ChevronDown, ChevronRight, Compass, Headphones, Menu, MapPin, Phone, Play, Search, ShieldCheck, Ticket, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/moar-hero.jpg";
 import fleetImage from "@/assets/moar-fleet.jpg";
-
-export const Route = createFileRoute("/")({
-  component: Index,
-  head: () => ({
-    meta: [
-      { title: "Moar Cars | Premium Self-Drive Rentals in Tirupati" },
-      { name: "description", content: "Book premium self-drive cars in Tirupati with Moar Cars. Transparent pricing, flexible pickup and a fleet ready for every journey." },
-      { property: "og:title", content: "Moar Cars | Drive More. Explore More." },
-      { property: "og:description", content: "Premium self-drive cars in Tirupati for every journey." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-});
-
-import { useEffect } from "react";
 
 const fallbackFleet = [
   { id: "hatchback", name: "City Hatchbacks", detail: "Smart, efficient and easy to park", price: "₹1,699", tag: "Everyday", imagePosition: "left" },
@@ -38,7 +21,7 @@ const benefits = [
   { icon: Headphones, title: "Here when you need us", copy: "Real people and 24/7 roadside assistance." },
 ];
 
-function Index() {
+export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickup, setPickup] = useState("Tirupati");
   const [startDate, setStartDate] = useState("2026-09-04");
@@ -95,11 +78,11 @@ function Index() {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/80 backdrop-blur-md">
         <div className="relative mx-auto max-w-7xl px-5 py-4 sm:px-8 lg:px-10 flex items-center justify-between">
           <a href="#top" className="brand-mark flex items-center gap-2 text-xl tracking-tight text-primary-foreground" aria-label="Moar Cars home"><span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-brand-gold text-sm text-brand-gold">M</span><span>MOAR <span className="text-brand-gold">CARS</span></span></a>
-          <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-foreground/80 lg:flex"><a className="text-brand-gold" href="#top">Home</a><a className="transition-colors hover:text-brand-gold" href="#fleet">Our fleet</a><a className="transition-colors hover:text-brand-gold" href="#how-it-works">How it works</a><a className="transition-colors hover:text-brand-gold" href="#explore">Explore</a><a className="transition-colors hover:text-brand-gold" href="#about">About us</a></nav>
+          <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-foreground/80 lg:flex"><a className="text-brand-gold" href="#top">Home</a><a className="transition-colors hover:text-brand-gold" href="#fleet">Our fleet</a><a className="transition-colors hover:text-brand-gold" href="#how-it-works">How it works</a><a className="transition-colors hover:text-brand-gold" href="#explore">Explore</a><a className="transition-colors hover:text-brand-gold" href="#about">About us</a><a className="transition-colors hover:text-brand-gold" href="/admin">Admin Area</a></nav>
           <div className="hidden items-center gap-5 lg:flex"><a href="tel:+918500012345" className="flex items-center gap-2 text-xs font-medium text-primary-foreground/85"><Phone className="h-3.5 w-3.5 text-brand-gold" /> +91 85000 12345</a><Button className="h-10 rounded-sm bg-brand-gold px-5 text-xs font-bold uppercase tracking-[0.12em] text-brand-navy shadow-none hover:bg-brand-gold-soft" onClick={() => document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" })}>Book a car <ArrowRight /></Button></div>
           <button className="rounded-sm p-2 text-primary-foreground lg:hidden" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close navigation" : "Open navigation"}>{menuOpen ? <X /> : <Menu />}</button>
         </div>
-        {menuOpen && <nav className="mx-auto max-w-7xl grid gap-3 px-5 pb-5 text-sm text-primary-foreground lg:hidden"><a href="#fleet" onClick={() => setMenuOpen(false)}>Our fleet</a><a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a><a href="#explore" onClick={() => setMenuOpen(false)}>Explore Tirupati</a><a href="#about" onClick={() => setMenuOpen(false)}>About us</a></nav>}
+        {menuOpen && <nav className="mx-auto max-w-7xl grid gap-3 px-5 pb-5 text-sm text-primary-foreground lg:hidden"><a href="#fleet" onClick={() => setMenuOpen(false)}>Our fleet</a><a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a><a href="#explore" onClick={() => setMenuOpen(false)}>Explore Tirupati</a><a href="#about" onClick={() => setMenuOpen(false)}>About us</a><a href="/admin" onClick={() => setMenuOpen(false)}>Admin Area</a></nav>}
       </header>
       <section className="relative min-h-[calc(100vh-68px)] flex items-center pt-16 bg-brand-navy text-primary-foreground">
         <img src={heroImage} alt="SUV driving through the Tirupati hills" className="absolute inset-0 h-full w-full object-cover object-center" width={1600} height={900} />
