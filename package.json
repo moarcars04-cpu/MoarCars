@@ -12,6 +12,10 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "nodemailer": "^6.9.16",
     "sequelize": "^6.37.1",
     "mysql2": "^3.9.2",
     "sqlite3": "^5.1.7"
