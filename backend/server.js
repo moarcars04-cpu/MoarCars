@@ -1,3 +1,4 @@
+import fs from "fs";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -16,8 +17,8 @@ const PORT = process.env.PORT || 5000;
 // Enable CORS for frontend development server
 app.use(
   cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+    origin: ["http://localhost:5173", "https://moarcars.com", "http://moarcars.com"],
+    methods: ["GET", "POST", "DELETE"],
     credentials: true,
   })
 );
@@ -25,9 +26,15 @@ app.use(
 app.use(express.json());
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const frontendDist = path.join(__dirname, "../frontend/dist");
+const rootDist = path.join(__dirname, "..");
 
 // Serve static frontend files
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
+if (fs.existsSync(path.join(frontendDist, "index.html"))) {
+  app.use(express.static(frontendDist));
+} else {
+  app.use(express.static(rootDist));
+}
 
 // GET /api/cars - Get all fleet vehicles from database
 app.get("/api/cars", async (req, res) => {
@@ -142,7 +149,11 @@ app.delete("/api/admin/cars/:id", async (req, res) => {
 
 // Serve index.html for all other routes (SPA fallback)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+  const frontendIndex = path.join(frontendDist, "index.html");
+  if (fs.existsSync(frontendIndex)) {
+    return res.sendFile(frontendIndex);
+  }
+  res.sendFile(path.join(rootDist, "index.html"));
 });
 
 // Sync database tables and start listening
