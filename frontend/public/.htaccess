@@ -2,22 +2,17 @@
 # Moar Cars - Production .htaccess configuration for Hostinger
 # ----------------------------------------------------------------------
 
-# Enable Node.js Passenger Application (Hostinger App Engine)
-PassengerEnabled on
-PassengerAppType node
-PassengerStartupFile server.js
-
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # 1. Allow direct access to real existing files and directories (CSS, JS, images, etc.)
+  # 1. Route all /api/* requests to native PHP backend handler
+  RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+  RewriteRule ^api$ api/index.php [QSA,L]
+
+  # 2. Allow direct access to real existing files and directories
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-
-  # 2. Do NOT rewrite /api requests so Passenger handles backend routes
-  RewriteCond %{REQUEST_URI} ^/api [NC]
   RewriteRule ^ - [L]
 
   # 3. Redirect all other frontend routes (e.g. /admin) to index.html for React SPA
