@@ -99,22 +99,28 @@ app.post("/api/bookings", async (req, res) => {
 // In-memory OTP storage fallback: email -> { otp, expiresAt, attempts }
 const otpStore = new Map();
 
-// Helper to configure Gmail SMTP Transporter with Hostinger SSL compatibility
+// Helper to configure Gmail SMTP Transporter with connection pooling for instant dispatch
+let cachedTransporter = null;
 const getTransporter = () => {
-  const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
-  const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user,
-      pass,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+  if (!cachedTransporter) {
+    const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
+    const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
+    cachedTransporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      pool: true,
+      maxConnections: 3,
+      auth: {
+        user,
+        pass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+  }
+  return cachedTransporter;
 };
 
 // POST /api/admin/send-otp - Send 6-digit login OTP to Admin Email
