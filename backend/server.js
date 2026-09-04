@@ -333,10 +333,15 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(rootDist, "index.html"));
 });
 
-// Sync database tables and start listening
-sequelize
-  .sync()
-  .then(async () => {
+// Start listening immediately so web server reverse proxies never get 503
+const server = app.listen(PORT, () => {
+  console.log(`Express server running on port ${PORT}`);
+});
+
+// Sync database and seed tables asynchronously in the background
+(async () => {
+  try {
+    await sequelize.sync();
     console.log("Database tables synced successfully.");
 
     // Seed default vehicles if database is empty
@@ -379,15 +384,10 @@ sequelize
       });
       console.log("Database: Seeding default admin complete.");
     }
+  } catch (err) {
+    console.warn("Database initialization warning (DB offline/connecting):", err.message);
+  }
+})();
 
-    app.listen(PORT, () => {
-      console.log(`Express server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Failed to sync database:", err);
-    // Fallback: start server anyway so app doesn't crash on bad DB configuration
-    app.listen(PORT, () => {
-      console.log(`Express server running (DB offline) on http://localhost:${PORT}`);
-    });
-  });
+export default app;
+export { app };
