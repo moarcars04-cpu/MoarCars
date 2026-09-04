@@ -9,6 +9,7 @@ import { sequelize } from "./db.js";
 import { Car } from "./models/Car.js";
 import { Booking } from "./models/Booking.js";
 import { Admin } from "./models/Admin.js";
+import { AdminOtp } from "./models/AdminOtp.js";
 
 dotenv.config();
 
@@ -89,18 +90,23 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
-// In-memory OTP storage: email -> { otp, expiresAt, attempts }
+// In-memory OTP storage fallback: email -> { otp, expiresAt, attempts }
 const otpStore = new Map();
 
-// Helper to configure Gmail SMTP Transporter
+// Helper to configure Gmail SMTP Transporter with Hostinger SSL compatibility
 const getTransporter = () => {
   const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
   const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user,
       pass,
+    },
+    tls: {
+      rejectUnauthorized: false,
     },
   });
 };
@@ -124,7 +130,16 @@ app.post("/api/admin/send-otp", async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
 
+    // Save in memory
     otpStore.set(targetEmail, { otp, expiresAt, attempts: 0 });
+
+    // Save in database
+    try {
+      await AdminOtp.destroy({ where: { email: targetEmail } });
+      await AdminOtp.create({ email: targetEmail, otp, expiresAt, attempts: 0 });
+    } catch (dbErr) {
+      console.warn("[AUTH] DB OTP store warning (falling back to memory):", dbErr.message);
+    }
 
     const transporter = getTransporter();
     const mailOptions = {
@@ -162,7 +177,7 @@ app.post("/api/admin/send-otp", async (req, res) => {
     console.error("[AUTH] Error sending admin OTP:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to send email verification code. Check email configuration.",
+      message: `Failed to send email: ${error.message || "Please check email configuration"}`,
     });
   }
 });
@@ -177,7 +192,26 @@ app.post("/api/admin/verify-otp", async (req, res) => {
       return res.status(400).json({ success: false, message: "Please enter the 6-digit OTP code." });
     }
 
-    const record = otpStore.get(targetEmail);
+    let record = otpStore.get(targetEmail);
+
+    // Fallback to database check if in-memory missed
+    if (!record) {
+      try {
+        const dbRecord = await AdminOtp.findOne({
+          where: { email: targetEmail },
+          order: [["createdAt", "DESC"]],
+        });
+        if (dbRecord) {
+          record = {
+            otp: dbRecord.otp,
+            expiresAt: Number(dbRecord.expiresAt),
+            attempts: dbRecord.attempts,
+          };
+        }
+      } catch (dbErr) {
+        console.warn("[AUTH] DB check error:", dbErr.message);
+      }
+    }
 
     if (!record) {
       return res.status(400).json({
@@ -188,6 +222,7 @@ app.post("/api/admin/verify-otp", async (req, res) => {
 
     if (Date.now() > record.expiresAt) {
       otpStore.delete(targetEmail);
+      try { await AdminOtp.destroy({ where: { email: targetEmail } }); } catch {}
       return res.status(400).json({
         success: false,
         message: "The verification code has expired. Please request a new one.",
@@ -196,8 +231,13 @@ app.post("/api/admin/verify-otp", async (req, res) => {
 
     if (record.otp !== otp.toString().trim()) {
       record.attempts += 1;
+      try {
+        await AdminOtp.update({ attempts: record.attempts }, { where: { email: targetEmail } });
+      } catch {}
+
       if (record.attempts >= 5) {
         otpStore.delete(targetEmail);
+        try { await AdminOtp.destroy({ where: { email: targetEmail } }); } catch {}
         return res.status(400).json({
           success: false,
           message: "Too many failed attempts. Please request a new OTP.",
@@ -211,6 +251,7 @@ app.post("/api/admin/verify-otp", async (req, res) => {
 
     // OTP matched successfully!
     otpStore.delete(targetEmail);
+    try { await AdminOtp.destroy({ where: { email: targetEmail } }); } catch {}
     console.log(`[AUTH] Admin successfully authenticated via Email OTP: ${targetEmail}`);
 
     res.json({

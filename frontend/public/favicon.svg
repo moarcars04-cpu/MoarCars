@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#07172a"/><circle cx="32" cy="32" r="21" fill="none" stroke="#e9ad22" stroke-width="4"/><path d="M19 42 27 22l5 10 5-10 8 20h-6l-2.6-7-4.4 10-4.3-10-2.7 7Z" fill="#e9ad22"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="moarGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="moarTeal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Navy Squircle -->
+  <rect width="128" height="128" rx="28" fill="#0B132B"/>
+  <rect x="3" y="3" width="122" height="122" rx="25" fill="none" stroke="url(#moarGold)" stroke-width="3" stroke-opacity="0.7"/>
+  
+  <!-- Outer Ring -->
+  <circle cx="64" cy="64" r="44" fill="none" stroke="url(#moarGold)" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Stylized Fast 'M' Emblem for MOAR CARS -->
+  <path d="M38 84 L52 44 L64 62 L76 44 L90 84 H79 L73 66 L64 80 L55 66 L49 84 Z" fill="url(#moarGold)"/>
+  
+  <!-- Teal Speed Accent Line -->
+  <path d="M40 91 Q64 97 88 91" fill="none" stroke="url(#moarTeal)" stroke-width="4.5" stroke-linecap="round"/>
+</svg>
