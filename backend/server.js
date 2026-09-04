@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import nodemailer from "nodemailer";
 import { sequelize } from "./db.js";
 import { Car } from "./models/Car.js";
 import { Booking } from "./models/Booking.js";
@@ -88,7 +89,142 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
-// POST /api/admin/login - Authenticate admin credentials
+// In-memory OTP storage: email -> { otp, expiresAt, attempts }
+const otpStore = new Map();
+
+// Helper to configure Gmail SMTP Transporter
+const getTransporter = () => {
+  const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
+  const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
+
+// POST /api/admin/send-otp - Send 6-digit login OTP to Admin Email
+app.post("/api/admin/send-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const targetEmail = (email || process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim().toLowerCase();
+    const authorizedEmail = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim().toLowerCase();
+
+    // Verify requested email is authorized admin
+    if (targetEmail !== authorizedEmail) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized admin email address.",
+      });
+    }
+
+    // Generate secure 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+
+    otpStore.set(targetEmail, { otp, expiresAt, attempts: 0 });
+
+    const transporter = getTransporter();
+    const mailOptions = {
+      from: `"Moar Cars Admin" <${authorizedEmail}>`,
+      to: targetEmail,
+      subject: `🔑 Your Admin Login Code: ${otp}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #0b132b; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #48cae4; margin: 0; font-size: 24px;">Moar Cars Rental</h1>
+            <p style="color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; margin-top: 5px;">Admin Control Panel</p>
+          </div>
+          <div style="background-color: #1c2541; padding: 25px; border-radius: 8px; border: 1px solid #3a506b; text-align: center;">
+            <p style="font-size: 14px; color: #cbd5e1; margin-bottom: 15px;">Your one-time verification code for admin login is:</p>
+            <div style="background: linear-gradient(135deg, #00b4d8, #0077b6); color: #ffffff; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 15px 20px; border-radius: 8px; display: inline-block; margin: 10px 0;">
+              ${otp}
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">⏱️ This code is valid for <strong>10 minutes</strong>.</p>
+          </div>
+          <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 20px;">
+            If you did not request this login code, please secure your account immediately.
+          </p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[AUTH] Admin OTP sent successfully to ${targetEmail}`);
+
+    res.json({
+      success: true,
+      message: `Verification code sent to ${targetEmail}`,
+    });
+  } catch (error) {
+    console.error("[AUTH] Error sending admin OTP:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send email verification code. Check email configuration.",
+    });
+  }
+});
+
+// POST /api/admin/verify-otp - Verify 6-digit OTP for login
+app.post("/api/admin/verify-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const targetEmail = (email || process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim().toLowerCase();
+
+    if (!otp) {
+      return res.status(400).json({ success: false, message: "Please enter the 6-digit OTP code." });
+    }
+
+    const record = otpStore.get(targetEmail);
+
+    if (!record) {
+      return res.status(400).json({
+        success: false,
+        message: "No active verification code found. Please request a new OTP.",
+      });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      otpStore.delete(targetEmail);
+      return res.status(400).json({
+        success: false,
+        message: "The verification code has expired. Please request a new one.",
+      });
+    }
+
+    if (record.otp !== otp.toString().trim()) {
+      record.attempts += 1;
+      if (record.attempts >= 5) {
+        otpStore.delete(targetEmail);
+        return res.status(400).json({
+          success: false,
+          message: "Too many failed attempts. Please request a new OTP.",
+        });
+      }
+      return res.status(400).json({
+        success: false,
+        message: `Invalid code. ${5 - record.attempts} attempt(s) remaining.`,
+      });
+    }
+
+    // OTP matched successfully!
+    otpStore.delete(targetEmail);
+    console.log(`[AUTH] Admin successfully authenticated via Email OTP: ${targetEmail}`);
+
+    res.json({
+      success: true,
+      message: "Admin verification successful!",
+      username: targetEmail,
+    });
+  } catch (error) {
+    console.error("[AUTH] OTP Verification error:", error);
+    res.status(500).json({ success: false, message: "Internal server error during verification." });
+  }
+});
+
+// POST /api/admin/login - Authenticate admin credentials (fallback)
 app.post("/api/admin/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -158,7 +294,7 @@ app.get("*", (req, res) => {
 
 // Sync database tables and start listening
 sequelize
-  .sync({ alter: true })
+  .sync()
   .then(async () => {
     console.log("Database tables synced successfully.");
 

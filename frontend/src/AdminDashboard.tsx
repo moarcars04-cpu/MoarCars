@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Lock, User, Plus, Trash2, Calendar, MapPin, Car, DollarSign, LogOut, Shield } from "lucide-react";
+import { Lock, User, Plus, Trash2, Calendar, MapPin, Car, DollarSign, LogOut, Shield, Mail, KeyRound, ArrowRight, RotateCcw, CheckCircle2 } from "lucide-react";
 
 interface AdminDashboardProps {
   onNavigate: (path: string) => void;
@@ -7,8 +7,21 @@ interface AdminDashboardProps {
 
 export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Login method toggle
+  const [loginMode, setLoginMode] = useState<"otp" | "password">("otp");
+
+  // Email & OTP States
+  const [email, setEmail] = useState("moarcars04@gmail.com");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpSuccessMsg, setOtpSuccessMsg] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+
+  // Password Login States
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +36,17 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [newCarPrice, setNewCarPrice] = useState("");
   const [newCarTag, setNewCarTag] = useState("Everyday");
   const [newCarImagePosition, setNewCarImagePosition] = useState("center");
+
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    let timer: any;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
 
   // Check session storage on mount
   useEffect(() => {
@@ -53,7 +77,65 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Step 1: Send OTP to Admin Email
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setError("");
+    setOtpSuccessMsg("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setOtpSent(true);
+        setOtpSuccessMsg(data.message || `Verification code sent to ${email}`);
+        setResendCountdown(60);
+      } else {
+        setError(data.message || "Failed to send verification code.");
+      }
+    } catch (err) {
+      setError("Server connection failed. Make sure the backend server is running.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), otp: otp.trim() }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+        sessionStorage.setItem("adminSession", "true");
+        fetchDashboardData();
+      } else {
+        setError(data.message || "Invalid OTP code.");
+      }
+    } catch (err) {
+      setError("Verification server failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback: Password Login
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -85,6 +167,9 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem("adminSession");
+    setOtp("");
+    setOtpSent(false);
+    setOtpSuccessMsg("");
     setUsername("");
     setPassword("");
   };
@@ -162,67 +247,217 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-brand-orange/10 rounded-full blur-[120px]" />
 
         <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative z-10">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center p-3 bg-brand-teal/20 rounded-2xl mb-4 text-brand-teal">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center p-3 bg-brand-teal/20 rounded-2xl mb-3 text-brand-teal">
               <Shield className="w-8 h-8" />
             </div>
             <h1 className="text-2xl font-bold text-white tracking-wide">Moar Cars Admin</h1>
-            <p className="text-sm text-gray-400 mt-2">Enter credentials to access the control panel</p>
+            <p className="text-sm text-gray-400 mt-1">Secure management access</p>
+          </div>
+
+          {/* Mode Switcher */}
+          <div className="flex bg-brand-navy/60 p-1 rounded-xl border border-white/10 mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode("otp");
+                setError("");
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+                loginMode === "otp"
+                  ? "bg-brand-teal text-brand-navy shadow-md"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              Email OTP
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode("password");
+                setError("");
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+                loginMode === "password"
+                  ? "bg-brand-teal text-brand-navy shadow-md"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Lock className="w-4 h-4" />
+              Password
+            </button>
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-6 text-center">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl p-3 mb-6 text-center">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                  <User className="w-5 h-5" />
-                </span>
-                <input
-                  type="text"
-                  required
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-brand-navy/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all"
-                />
-              </div>
+          {otpSuccessMsg && loginMode === "otp" && (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl p-3 mb-6 text-center flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{otpSuccessMsg}</span>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                  <Lock className="w-5 h-5" />
-                </span>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-brand-navy/50 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all"
-                />
+          {loginMode === "otp" ? (
+            /* Email OTP Mode */
+            !otpSent ? (
+              /* Step 1: Request OTP */
+              <form onSubmit={handleSendOtp} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Admin Email Address
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
+                      <Mail className="w-5 h-5" />
+                    </span>
+                    <input
+                      type="email"
+                      required
+                      placeholder="moarcars04@gmail.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-brand-navy/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all text-sm"
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-2">
+                    We will send a 6-digit login verification code to this inbox.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 bg-brand-teal hover:bg-brand-teal/90 text-brand-navy font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-brand-teal/20"
+                >
+                  {loading ? (
+                    "Sending OTP code..."
+                  ) : (
+                    <>
+                      <span>Send Login Code</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              /* Step 2: Enter & Verify OTP */
+              <form onSubmit={handleVerifyOtp} className="space-y-5">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      Enter 6-Digit Code
+                    </label>
+                    <span className="text-[11px] text-brand-teal font-mono">
+                      {resendCountdown > 0 ? `Expires in ${resendCountdown}s` : "Code sent"}
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
+                      <KeyRound className="w-5 h-5" />
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      autoFocus
+                      required
+                      placeholder="••••••"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      className="w-full bg-brand-navy/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-brand-teal tracking-[8px] text-center font-mono font-bold text-lg transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || otp.length < 6}
+                  className="w-full bg-brand-teal hover:bg-brand-teal/90 disabled:opacity-50 text-brand-navy font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-brand-teal/20"
+                >
+                  {loading ? "Verifying..." : "Verify & Access Panel"}
+                </button>
+
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtp("");
+                      setError("");
+                    }}
+                    className="text-gray-400 hover:text-white transition-all underline"
+                  >
+                    Change Email
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={resendCountdown > 0 || loading}
+                    onClick={() => handleSendOtp()}
+                    className="flex items-center gap-1.5 text-brand-teal disabled:text-gray-600 hover:underline transition-all"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend OTP"}
+                  </button>
+                </div>
+              </form>
+            )
+          ) : (
+            /* Password Login Mode (Fallback) */
+            <form onSubmit={handlePasswordLogin} className="space-y-5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
+                    <User className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    placeholder="admin"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full bg-brand-navy/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all text-sm"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-brand-teal hover:bg-brand-teal/90 text-brand-navy font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-brand-teal/20"
-            >
-              {loading ? "Logging in..." : "Access Control Panel"}
-            </button>
-          </form>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500">
+                    <Lock className="w-5 h-5" />
+                  </span>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-brand-navy/50 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-brand-teal transition-all text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-brand-teal hover:bg-brand-teal/90 text-brand-navy font-bold py-3.5 rounded-xl transition-all shadow-lg hover:shadow-brand-teal/20"
+              >
+                {loading ? "Logging in..." : "Access Control Panel"}
+              </button>
+            </form>
+          )}
 
           <div className="text-center mt-6">
             <button
