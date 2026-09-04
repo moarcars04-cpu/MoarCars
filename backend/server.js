@@ -14,18 +14,24 @@ import { AdminOtp } from "./models/AdminOtp.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT, 10) || 5000;
 
-// Enable CORS for frontend development server
+// Enable CORS for frontend and live domain
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://moarcars.com", "http://moarcars.com"],
-    methods: ["GET", "POST", "DELETE"],
+    origin: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
+app.options("*", cors());
 
 app.use(express.json());
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({ success: true, message: "Moar Cars API is online", time: new Date().toISOString() });
+});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDist = path.join(__dirname, "../frontend/dist");
@@ -334,8 +340,8 @@ app.get("*", (req, res) => {
 });
 
 // Start listening immediately so web server reverse proxies never get 503
-const server = app.listen(PORT, () => {
-  console.log(`Express server running on port ${PORT}`);
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Express server running on 0.0.0.0:${PORT}`);
 });
 
 // Sync database and seed tables asynchronously in the background
