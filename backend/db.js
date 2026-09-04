@@ -9,20 +9,20 @@ dotenv.config();
 
 let sequelize;
 
-// Check if MySQL credentials are set (Hostinger shared hosting environment)
-const isMysqlConfigured =
-  process.env.DB_HOST &&
-  process.env.DB_USER &&
-  process.env.DB_NAME;
+// In production on Hostinger or if DB_DIALECT is explicitly mysql, use MySQL.
+// Otherwise use SQLite (database.sqlite) for immediate zero-config persistence.
+const useMysql =
+  process.env.DB_DIALECT === "mysql" ||
+  (process.env.NODE_ENV === "production" && process.env.DB_HOST && process.env.DB_NAME);
 
-if (isMysqlConfigured) {
-  console.log("Database Setup: Configuring Sequelize with MySQL (Hostinger/Server)...");
+if (useMysql) {
+  console.log("Database Setup: Configuring Sequelize with MySQL (Hostinger/Production)...");
   sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
     process.env.DB_PASSWORD,
     {
-      host: process.env.DB_HOST,
+      host: process.env.DB_HOST || "localhost",
       dialect: "mysql",
       logging: false,
       pool: {
@@ -34,12 +34,14 @@ if (isMysqlConfigured) {
     }
   );
 } else {
-  console.log("Database Setup: MySQL env variables missing. Falling back to local SQLite database...");
+  console.log("Database Setup: Using high-performance local SQLite database (moar_database.sqlite)...");
   sequelize = new Sequelize({
     dialect: "sqlite",
-    storage: path.join(__dirname, "database.sqlite"),
+    storage: path.join(__dirname, "moar_database.sqlite"),
     logging: false,
   });
 }
 
+
 export { sequelize };
+
