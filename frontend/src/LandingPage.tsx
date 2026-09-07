@@ -1,6 +1,31 @@
 import { useState, useEffect, useMemo } from "react";
-import { ArrowRight, CalendarDays, ChevronDown, ChevronRight, Compass, Headphones, Menu, MapPin, Phone, Play, Search, ShieldCheck, Ticket, X, Users, Fuel, Gauge, Sparkles, CheckCircle2 } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
+  Compass,
+  Headphones,
+  Menu,
+  MapPin,
+  Phone,
+  Play,
+  Search,
+  ShieldCheck,
+  Ticket,
+  X,
+  Users,
+  Fuel,
+  Gauge,
+  Sparkles,
+  CheckCircle2,
+  Heart,
+  User,
+  LogOut,
+  LayoutDashboard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "./context/AuthContext";
 import heroImage from "@/assets/moar-hero.jpg";
 import fleetImage from "@/assets/moar-fleet.jpg";
 
@@ -153,16 +178,28 @@ const benefits = [
   { icon: Headphones, title: "Here when you need us", copy: "Real people and 24/7 roadside assistance." },
 ];
 
-export default function LandingPage() {
+interface LandingPageProps {
+  onNavigate?: (path: string) => void;
+  preselectedCar?: string;
+}
+
+export default function LandingPage({ onNavigate, preselectedCar }: LandingPageProps) {
+  const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [pickup, setPickup] = useState("Tirupati Central Hub");
-  const [startDate, setStartDate] = useState("2026-09-06");
-  const [endDate, setEndDate] = useState("2026-09-08");
+  const [startDate, setStartDate] = useState("2026-09-08");
+  const [endDate, setEndDate] = useState("2026-09-10");
   const [notice, setNotice] = useState("");
   const [selectedFleet, setSelectedFleet] = useState("All cars");
   const [fleet, setFleet] = useState<CarFleetItem[]>(fallbackFleet);
-  const [selectedCar, setSelectedCar] = useState("");
+  const [selectedCar, setSelectedCar] = useState(preselectedCar || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (preselectedCar) setSelectedCar(preselectedCar);
+  }, [preselectedCar]);
 
   // Fetch live fleet data from backend API
   useEffect(() => {
@@ -208,7 +245,7 @@ export default function LandingPage() {
   }, [fleet, selectedFleet]);
 
   const handleSearch = () => {
-    setNotice("Sending booking reservation...");
+    setNotice("Creating confirmed booking reservation...");
     const targetCar = selectedCar || (filteredFleet.length > 0 ? filteredFleet[0].name : "General Search Inquiry");
 
     fetch("/api/bookings", {
@@ -222,54 +259,150 @@ export default function LandingPage() {
         endDate,
         carName: targetCar,
         bookingType: "Self Drive",
-        status: "Pending",
+        status: "Confirmed",
+        customerName: user ? user.name : "Valued Customer",
+        customerPhone: user ? user.phone : "+91 98765 43210",
+        customerEmail: user ? user.email : "customer@moarcars.com",
         bookingSource: "Web Portal",
       }),
     })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          setNotice(`✅ Reservation requested for ${targetCar} in ${pickup} from ${startDate} to ${endDate}! Our fleet manager will contact you.`);
+          setNotice(`✅ Confirmed reservation for ${targetCar} at ${pickup} from ${startDate} to ${endDate}! Visible in your Dashboard.`);
         } else {
           setNotice(`Failed to book: ${res.message || "Please try again"}`);
         }
       })
       .catch((err) => {
         console.error("Booking submission error:", err);
-        setNotice(`Local Search: Showing vehicles available in ${pickup} from ${startDate} to ${endDate}.`);
+        setNotice(`Showing vehicles available in ${pickup} from ${startDate} to ${endDate}.`);
       });
 
     document.getElementById("fleet")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleToggleFavorite = async (carId: number | string | undefined) => {
+    if (!carId) return;
+    if (!user) {
+      openAuthModal("login");
+      return;
+    }
+    const saved = await toggleFavoriteCar(carId);
+    setNotice(saved ? "❤️ Car saved to your favorites!" : "Removed from favorites.");
+  };
+
+  const isCarSaved = (carId: number | string | undefined) => {
+    if (!user || !user.favoriteCars || !carId) return false;
+    return user.favoriteCars.includes(Number(carId)) || user.favoriteCars.includes(String(carId));
+  };
+
   return (
     <main className="min-h-screen overflow-hidden bg-brand-cream text-brand-ink">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/80 backdrop-blur-md">
-        <div className="relative mx-auto max-w-7xl px-5 py-4 sm:px-8 lg:px-10 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/90 backdrop-blur-md">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
           <a href="#top" className="brand-mark flex items-center gap-2 text-xl tracking-tight text-primary-foreground" aria-label="Moar Cars home">
             <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-brand-gold text-sm text-brand-gold font-bold">M</span>
             <span>MOAR <span className="text-brand-gold">CARS</span></span>
           </a>
-          <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-foreground/80 lg:flex">
+
+          <nav className="hidden items-center gap-7 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-foreground/80 lg:flex">
             <a className="text-brand-gold" href="#top">Home</a>
             <a className="transition-colors hover:text-brand-gold" href="#fleet">Our fleet</a>
             <a className="transition-colors hover:text-brand-gold" href="#how-it-works">How it works</a>
             <a className="transition-colors hover:text-brand-gold" href="#explore">Explore</a>
             <a className="transition-colors hover:text-brand-gold" href="#about">About us</a>
-            <a className="transition-colors hover:text-brand-gold" href="/admin">Admin Area</a>
+            <a className="transition-colors hover:text-brand-gold" href="/admin" onClick={(e) => { if (onNavigate) { e.preventDefault(); onNavigate('/admin'); } }}>Admin</a>
           </nav>
-          <div className="hidden items-center gap-5 lg:flex">
+
+          <div className="hidden items-center gap-4 lg:flex">
             <a href="tel:+918500012345" className="flex items-center gap-2 text-xs font-medium text-primary-foreground/85">
               <Phone className="h-3.5 w-3.5 text-brand-gold" /> +91 85000 12345
             </a>
+
+            {/* USER LOGGED IN vs SIGN IN BUTTON */}
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 rounded-full border border-amber-500/40 bg-slate-900/80 p-1 pl-3 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
+                >
+                  <span className="text-brand-gold">{user.name.split(" ")[0]}</span>
+                  <div className="h-7 w-7 rounded-full overflow-hidden border border-brand-gold bg-black shrink-0">
+                    <img
+                      src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <ChevronDown className="h-3.5 w-3.5 text-white/60 mr-1" />
+                </button>
+
+                {userDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-slate-900 border border-amber-500/30 p-2 shadow-2xl space-y-1 text-xs z-50">
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        if (onNavigate) onNavigate("/dashboard");
+                      }}
+                      className="flex items-center gap-2 w-full p-2 rounded-xl text-left font-bold text-white hover:bg-white/10"
+                    >
+                      <LayoutDashboard className="h-4 w-4 text-brand-gold" />
+                      <span>My Dashboard</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        if (onNavigate) onNavigate("/dashboard");
+                      }}
+                      className="flex items-center gap-2 w-full p-2 rounded-xl text-left font-semibold text-white/80 hover:bg-white/10"
+                    >
+                      <CalendarDays className="h-4 w-4 text-brand-gold" />
+                      <span>My Bookings</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        if (onNavigate) onNavigate("/dashboard");
+                      }}
+                      className="flex items-center gap-2 w-full p-2 rounded-xl text-left font-semibold text-white/80 hover:bg-white/10"
+                    >
+                      <ShieldCheck className="h-4 w-4 text-brand-gold" />
+                      <span>KYC Verification</span>
+                    </button>
+                    <div className="border-t border-white/10 my-1" />
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        logout();
+                      }}
+                      className="flex items-center gap-2 w-full p-2 rounded-xl text-left font-bold text-rose-400 hover:bg-rose-500/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => openAuthModal("login")}
+                className="h-9 rounded-xl border-amber-500/40 bg-amber-500/10 text-xs font-bold text-brand-gold hover:bg-amber-500/20"
+              >
+                <User className="h-3.5 w-3.5 mr-1" /> Sign In / Join
+              </Button>
+            )}
+
             <Button
-              className="h-10 rounded-sm bg-brand-gold px-5 text-xs font-bold uppercase tracking-[0.12em] text-brand-navy shadow-none hover:bg-brand-gold-soft"
+              className="h-9 rounded-xl bg-brand-gold px-4 text-xs font-bold uppercase tracking-[0.12em] text-brand-navy shadow-none hover:bg-brand-gold-soft"
               onClick={() => document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" })}
             >
               Book a car <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
+
           <button
             className="rounded-sm p-2 text-primary-foreground lg:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -278,13 +411,35 @@ export default function LandingPage() {
             {menuOpen ? <X /> : <Menu />}
           </button>
         </div>
+
         {menuOpen && (
           <nav className="mx-auto max-w-7xl grid gap-3 px-5 pb-5 text-sm text-primary-foreground lg:hidden">
             <a href="#fleet" onClick={() => setMenuOpen(false)}>Our fleet</a>
             <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
             <a href="#explore" onClick={() => setMenuOpen(false)}>Explore Tirupati</a>
             <a href="#about" onClick={() => setMenuOpen(false)}>About us</a>
-            <a href="/admin" onClick={() => setMenuOpen(false)}>Admin Area</a>
+            {user ? (
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (onNavigate) onNavigate("/dashboard");
+                }}
+                className="text-left text-brand-gold font-bold flex items-center gap-2"
+              >
+                <LayoutDashboard className="h-4 w-4" /> My Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  openAuthModal("login");
+                }}
+                className="text-left text-brand-gold font-bold flex items-center gap-2"
+              >
+                <User className="h-4 w-4" /> Sign In / Register
+              </button>
+            )}
+            <a href="/admin" onClick={(e) => { if (onNavigate) { e.preventDefault(); onNavigate('/admin'); } setMenuOpen(false); }}>Admin Area</a>
           </nav>
         )}
       </header>
@@ -323,7 +478,7 @@ export default function LandingPage() {
           </div>
 
           {/* Booking Bar */}
-          <div id="booking" className="w-full rounded-sm bg-brand-cream p-4 text-brand-ink shadow-2xl shadow-brand-navy/30 sm:p-5 border border-amber-900/10">
+          <div id="booking" className="w-full rounded-2xl bg-brand-cream p-4 text-brand-ink shadow-2xl shadow-brand-navy/30 sm:p-5 border border-amber-900/10">
             <div className="grid gap-3 lg:grid-cols-[1.1fr_1.1fr_1fr_1fr_auto] lg:items-end">
               <label className="grid gap-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Pick-up location
@@ -370,12 +525,12 @@ export default function LandingPage() {
                 </span>
               </label>
 
-              <Button onClick={handleSearch} className="h-12 rounded-sm bg-brand-teal px-7 font-bold text-primary-foreground shadow-none hover:bg-brand-teal/90 flex items-center justify-center gap-2">
+              <Button onClick={handleSearch} className="h-12 rounded-xl bg-brand-teal px-7 font-bold text-primary-foreground shadow-none hover:bg-brand-teal/90 flex items-center justify-center gap-2">
                 Search cars <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
             {notice && (
-              <div role="status" className="mt-3 flex items-center gap-2 rounded bg-brand-teal/10 px-3 py-2 text-xs font-semibold text-brand-teal">
+              <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-brand-teal/10 px-3 py-2 text-xs font-semibold text-brand-teal">
                 <CheckCircle2 className="h-4 w-4 shrink-0" />
                 {notice}
               </div>
@@ -439,8 +594,9 @@ export default function LandingPage() {
           <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredFleet.map((car) => {
               const carImg = car.image || fleetImage;
+              const saved = isCarSaved(car.id);
               return (
-                <article key={car.name} className="group overflow-hidden rounded-md border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl flex flex-col justify-between">
+                <article key={car.name} className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl flex flex-col justify-between">
                   <div className="relative h-60 overflow-hidden bg-brand-navy">
                     <img
                       src={carImg}
@@ -460,9 +616,23 @@ export default function LandingPage() {
                       {car.tag || car.category}
                     </span>
 
+                    {/* Bookmark Heart Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFavorite(car.id)}
+                      className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all ${
+                        saved
+                          ? "bg-rose-500 text-white shadow-lg scale-110"
+                          : "bg-black/40 text-white/80 hover:bg-black/70 hover:text-rose-400"
+                      }`}
+                      title={saved ? "Saved to Favorites" : "Save to Favorites"}
+                    >
+                      <Heart className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
+                    </button>
+
                     {car.status && (
                       <span
-                        className={`absolute right-4 top-4 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        className={`absolute right-14 top-4 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                           car.status === "Available"
                             ? "bg-emerald-600/90 text-white"
                             : car.status === "Booked"
@@ -495,22 +665,22 @@ export default function LandingPage() {
                       {/* Specs Badge Bar */}
                       <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border/60 pt-3 text-[11px] font-semibold text-muted-foreground">
                         {car.seats && (
-                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded">
+                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded-md">
                             <Users className="h-3.5 w-3.5 text-brand-teal" /> {car.seats} Seats
                           </span>
                         )}
                         {car.fuelType && (
-                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded">
+                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded-md">
                             <Fuel className="h-3.5 w-3.5 text-brand-teal" /> {car.fuelType}
                           </span>
                         )}
                         {car.transmission && (
-                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded">
+                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded-md">
                             <Gauge className="h-3.5 w-3.5 text-brand-teal" /> {car.transmission}
                           </span>
                         )}
                         {car.mileage && (
-                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded">
+                          <span className="flex items-center gap-1 bg-brand-mist/60 px-2 py-1 rounded-md">
                             ⚡ {car.mileage}
                           </span>
                         )}
@@ -527,7 +697,7 @@ export default function LandingPage() {
                       </div>
                       <Button
                         variant="outline"
-                        className="rounded-sm border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-primary-foreground font-semibold text-xs"
+                        className="rounded-xl border-brand-teal text-brand-teal hover:bg-brand-teal hover:text-primary-foreground font-semibold text-xs"
                         onClick={() => {
                           setSelectedCar(car.name);
                           setNotice(`🚗 ${car.name} selected! Choose your dates above and click Search.`);
@@ -560,9 +730,9 @@ export default function LandingPage() {
               Why drive with Moar <ArrowRight className="h-4 w-4" />
             </a>
           </div>
-          <div className="relative overflow-hidden rounded-sm border border-primary-foreground/15">
+          <div className="relative overflow-hidden rounded-2xl border border-primary-foreground/15">
             <img src={heroImage} alt="Road winding through the hills around Tirupati" loading="lazy" width={1600} height={900} className="h-[360px] w-full object-cover sm:h-[450px]" />
-            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between border border-primary-foreground/20 bg-brand-navy/80 p-4 backdrop-blur-sm">
+            <div className="absolute bottom-5 left-5 right-5 flex items-center justify-between border border-primary-foreground/20 bg-brand-navy/80 p-4 rounded-xl backdrop-blur-sm">
               <div>
                 <p className="text-2xl font-extrabold">50+</p>
                 <p className="text-xs text-primary-foreground/60">cars ready to go</p>
@@ -594,7 +764,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {destinations.map((destination) => (
-              <a key={destination.name} href="#booking" className="group relative h-72 overflow-hidden rounded-sm bg-brand-navy">
+              <a key={destination.name} href="#booking" className="group relative h-72 overflow-hidden rounded-2xl bg-brand-navy">
                 <img
                   src={heroImage}
                   alt={destination.name}
@@ -669,10 +839,18 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-brand-gold">Company</h3>
+              <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-brand-gold">Customer</h3>
               <div className="mt-5 grid gap-3 text-sm text-primary-foreground/65">
+                {user ? (
+                  <button onClick={() => { if (onNavigate) onNavigate('/dashboard'); }} className="text-left text-brand-gold hover:underline">
+                    My Dashboard
+                  </button>
+                ) : (
+                  <button onClick={() => openAuthModal('login')} className="text-left text-brand-gold hover:underline">
+                    Sign In / Join
+                  </button>
+                )}
                 <a href="#about" className="hover:text-brand-gold">About Moar</a>
-                <a href="mailto:hello@moarcars.in" className="hover:text-brand-gold">Contact us</a>
                 <a href="#booking" className="hover:text-brand-gold">Book a car</a>
               </div>
             </div>
