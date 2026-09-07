@@ -489,7 +489,13 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               HOME
             </a>
             <a
-              href="#search-results"
+              href="/cars"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate("/cars");
+                }
+              }}
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
               CARS
@@ -642,7 +648,16 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             <a href="#top" onClick={() => setMenuOpen(false)} className="text-[#c88d18] font-bold">
               HOME
             </a>
-            <a href="#search-results" onClick={() => setMenuOpen(false)}>
+            <a
+              href="/cars"
+              onClick={(e) => {
+                setMenuOpen(false);
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate("/cars");
+                }
+              }}
+            >
               CARS
             </a>
             <a href="#collections" onClick={() => setMenuOpen(false)}>

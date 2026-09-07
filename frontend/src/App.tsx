@@ -3,6 +3,7 @@ import LandingPage from "./LandingPage.tsx";
 import AdminDashboard from "./AdminDashboard.tsx";
 import { UserDashboard } from "./components/dashboard/UserDashboard.tsx";
 import { CarDetailsPage } from "./CarDetailsPage.tsx";
+import { CarsPage } from "./CarsPage.tsx";
 import { CheckoutPage } from "./CheckoutPage.tsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.tsx";
 import { AuthModal } from "./components/auth/AuthModal.tsx";
@@ -75,6 +76,15 @@ function AppContent() {
           initialCar={checkoutParams?.car}
           initialParams={checkoutParams}
           onNavigate={navigateTo}
+        />
+      ) : path === "/cars" || path === "/cars/" || path === "/fleet" ? (
+        <CarsPage
+          onNavigate={(p, st) => {
+            if (p.startsWith("/car/")) {
+              setSelectedCarForDetails(p.replace("/car/", ""));
+            }
+            navigateTo(p, st);
+          }}
         />
       ) : path.startsWith("/car/") || path === "/car-details" || path === "/car" ? (
         <CarDetailsPage carIdOrName={activeCarParam} onNavigate={navigateTo} />
