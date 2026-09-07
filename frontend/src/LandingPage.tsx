@@ -742,6 +742,7 @@ export default function LandingPage({ onNavigate, preselectedCar }: LandingPageP
         onToggleCompare={handleToggleCompare}
         onOpen360={handleOpen360}
         onBookCar={handleBookCar}
+        onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`)}
         onClearHistory={handleClearRecentlyViewed}
       />
 
@@ -760,6 +761,7 @@ export default function LandingPage({ onNavigate, preselectedCar }: LandingPageP
           onToggleCompare={handleToggleCompare}
           onOpen360={handleOpen360}
           onBookCar={handleBookCar}
+          onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`)}
         />
       </div>
 
@@ -774,6 +776,7 @@ export default function LandingPage({ onNavigate, preselectedCar }: LandingPageP
           onToggleCompare={handleToggleCompare}
           onOpen360={handleOpen360}
           onBookCar={handleBookCar}
+          onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`)}
         />
       </div>
 

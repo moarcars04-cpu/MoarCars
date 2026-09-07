@@ -11,6 +11,7 @@ interface RecentlyViewedSectionProps {
   onToggleCompare: (car: any) => void;
   onOpen360: (car: any) => void;
   onBookCar: (car: any) => void;
+  onViewDetails?: (car: any) => void;
   onClearHistory: () => void;
 }
 
@@ -22,6 +23,7 @@ export const RecentlyViewedSection: React.FC<RecentlyViewedSectionProps> = ({
   onToggleCompare,
   onOpen360,
   onBookCar,
+  onViewDetails,
   onClearHistory,
 }) => {
   if (!recentlyViewedCars || recentlyViewedCars.length === 0) {
@@ -67,6 +69,7 @@ export const RecentlyViewedSection: React.FC<RecentlyViewedSectionProps> = ({
               onToggleCompare={onToggleCompare}
               onOpen360={onOpen360}
               onBookCar={onBookCar}
+              onViewDetails={onViewDetails}
             />
           ))}
         </div>

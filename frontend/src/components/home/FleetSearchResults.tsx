@@ -26,6 +26,7 @@ interface FleetSearchResultsProps {
   onToggleCompare: (car: any) => void;
   onOpen360: (car: any) => void;
   onBookCar: (car: any) => void;
+  onViewDetails?: (car: any) => void;
 }
 
 export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
@@ -37,6 +38,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
   onToggleCompare,
   onOpen360,
   onBookCar,
+  onViewDetails,
 }) => {
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid");
   const [sortBy, setSortBy] = useState<"popularity" | "price_asc" | "price_desc" | "rating" | "distance">("popularity");
@@ -367,6 +369,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
                 onToggleCompare={onToggleCompare}
                 onOpen360={onOpen360}
                 onBookCar={onBookCar}
+                onViewDetails={onViewDetails}
               />
             ))}
           </div>

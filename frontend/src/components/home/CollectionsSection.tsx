@@ -11,6 +11,7 @@ interface CollectionsSectionProps {
   onToggleCompare: (car: any) => void;
   onOpen360: (car: any) => void;
   onBookCar: (car: any) => void;
+  onViewDetails?: (car: any) => void;
 }
 
 export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
@@ -21,6 +22,7 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
   onToggleCompare,
   onOpen360,
   onBookCar,
+  onViewDetails,
 }) => {
   const [activeCollection, setActiveCollection] = useState<"featured" | "luxury" | "suv" | "electric" | "budget">("featured");
 
@@ -114,6 +116,7 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
               onToggleCompare={onToggleCompare}
               onOpen360={onOpen360}
               onBookCar={onBookCar}
+              onViewDetails={onViewDetails}
             />
           ))}
         </div>

@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import LandingPage from "./LandingPage.tsx";
 import AdminDashboard from "./AdminDashboard.tsx";
 import { UserDashboard } from "./components/dashboard/UserDashboard.tsx";
+import { CarDetailsPage } from "./CarDetailsPage.tsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.tsx";
 import { AuthModal } from "./components/auth/AuthModal.tsx";
 
 function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
   const [targetCarToBook, setTargetCarToBook] = useState<string>("");
+  const [selectedCarForDetails, setSelectedCarForDetails] = useState<string | number>("");
   const { openAuthModal } = useAuth();
 
   useEffect(() => {
@@ -36,6 +38,12 @@ function AppContent() {
       return;
     }
 
+    // Extract car ID if path is like /car/3 or /car-details?id=3
+    if (newPath.startsWith("/car/")) {
+      const carParam = newPath.replace("/car/", "");
+      setSelectedCarForDetails(carParam);
+    }
+
     window.history.pushState(null, "", newPath);
     setPath(newPath);
 
@@ -46,6 +54,9 @@ function AppContent() {
     }
   };
 
+  // Determine car ID if directly loaded from URL like /car/3
+  const activeCarParam = path.startsWith("/car/") ? path.replace("/car/", "") : selectedCarForDetails;
+
   return (
     <>
       <AuthModal />
@@ -53,8 +64,18 @@ function AppContent() {
         <AdminDashboard onNavigate={navigateTo} />
       ) : path === "/dashboard" || path === "/dashboard/" || path === "/profile" || path === "/my-bookings" ? (
         <UserDashboard onNavigate={navigateTo} onSelectCarToBook={(car) => setTargetCarToBook(car)} />
+      ) : path.startsWith("/car/") || path === "/car-details" || path === "/car" ? (
+        <CarDetailsPage carIdOrName={activeCarParam} onNavigate={navigateTo} />
       ) : (
-        <LandingPage onNavigate={navigateTo} preselectedCar={targetCarToBook} />
+        <LandingPage
+          onNavigate={(p) => {
+            if (p.startsWith("/car/")) {
+              setSelectedCarForDetails(p.replace("/car/", ""));
+            }
+            navigateTo(p);
+          }}
+          preselectedCar={targetCarToBook}
+        />
       )}
     </>
   );

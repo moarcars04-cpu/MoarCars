@@ -24,6 +24,7 @@ interface CarCardProps {
   onToggleCompare: (car: any) => void;
   onOpen360: (car: any) => void;
   onBookCar: (car: any) => void;
+  onViewDetails?: (car: any) => void;
 }
 
 export const CarCard: React.FC<CarCardProps> = ({
@@ -35,6 +36,7 @@ export const CarCard: React.FC<CarCardProps> = ({
   onToggleCompare,
   onOpen360,
   onBookCar,
+  onViewDetails,
 }) => {
   const isList = viewMode === "list";
 
@@ -161,12 +163,24 @@ export const CarCard: React.FC<CarCardProps> = ({
             </p>
           </div>
 
-          <Button
-            onClick={() => onBookCar(car)}
-            className="h-10 px-5 rounded-2xl bg-brand-teal text-primary-foreground font-black text-xs uppercase hover:bg-brand-teal/90 shadow-lg shadow-teal-900/10 flex items-center gap-1.5 transition-transform hover:scale-105"
-          >
-            Book Now <ArrowRight className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {onViewDetails && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onViewDetails(car)}
+                className="h-10 px-3 rounded-2xl border-border text-brand-navy font-bold text-xs hover:border-brand-teal hover:text-brand-teal"
+              >
+                Details
+              </Button>
+            )}
+            <Button
+              onClick={() => onBookCar(car)}
+              className="h-10 px-4 rounded-2xl bg-brand-teal text-primary-foreground font-black text-xs uppercase hover:bg-brand-teal/90 shadow-lg shadow-teal-900/10 flex items-center gap-1.5 transition-transform hover:scale-105"
+            >
+              Book <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </article>
