@@ -1,194 +1,143 @@
 import React, { useState } from "react";
-import { Star, Quote, CheckCircle2, ThumbsUp, ShieldCheck, Heart, Sparkles } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 
 interface Testimonial {
   id: string;
   name: string;
   location: string;
-  role: string;
-  carRented: string;
-  rating: number;
-  category: "pilgrim" | "luxury" | "family" | "all";
   avatar: string;
-  comment: string;
-  date: string;
-  tripType: string;
+  rating: number;
+  quote: string;
 }
 
-const TESTIMONIALS: Testimonial[] = [
+const TESTIMONIALS_DATA: Testimonial[] = [
   {
     id: "1",
-    name: "Suresh Reddy",
+    name: "Rahul Mehta",
     location: "Hyderabad",
-    role: "Pilgrim & Entrepreneur",
-    carRented: "Toyota Innova Crysta (7-Seater)",
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
     rating: 5,
-    category: "pilgrim",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-    comment:
-      "Seamless experience for our family's Tirumala Darshan! The Innova Crysta was delivered spotless at Renigunta Airport right as we landed. Driving on the Tirumala ghat road was super smooth with great engine power. Deposit refund came back in 2 hours!",
-    date: "August 2026",
-    tripType: "Family Pilgrimage",
+    quote:
+      "“Amazing experience! The car was in perfect condition and the booking process was so smooth. MOAR CARS made our trip unforgettable.”",
   },
   {
     id: "2",
-    name: "Ananya Sharma",
-    location: "Bangalore",
-    role: "Tech Lead",
-    carRented: "BMW 3 Series Gran Limousine",
-    rating: 5,
-    category: "luxury",
+    name: "Sneha Reddy",
+    location: "Bengaluru",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-    comment:
-      "Rented the BMW 3 Series for an executive client visit and VIP darshan in Tirupati. The car was in pristine showroom condition with pristine ambient lighting. The digital key unlock via the Moar Cars app made it ultra-futuristic!",
-    date: "July 2026",
-    tripType: "Corporate & VIP",
+    rating: 5,
+    quote:
+      "“Premium cars, professional service and no hidden charges. Highly recommended for anyone who loves to drive in style!”",
   },
   {
     id: "3",
-    name: "Venkat Ramanathan",
+    name: "Arjun Varma",
     location: "Chennai",
-    role: "Architect",
-    carRented: "Mahindra Scorpio-N 4x4",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
     rating: 5,
-    category: "family",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80",
-    comment:
-      "Booked the Scorpio-N for a multi-day trip covering Tirupati, Talakona Waterfalls, and Horsley Hills. Outstanding suspension and high ground clearance. Transparent fuel policy with zero hidden charges. Highly recommended!",
-    date: "September 2026",
-    tripType: "Weekend Getaway",
+    quote:
+      "“Picked up the car at the airport, super convenient! The vehicle was clean, and the support team was available 24/7. Truly a premium service.”",
   },
   {
     id: "4",
-    name: "Pooja & Karthik Varma",
-    location: "Vijayawada",
-    role: "Software Consultant",
-    carRented: "Tata Nexon EV Max",
-    rating: 5,
-    category: "pilgrim",
+    name: "Pooja Sharma",
+    location: "Mumbai",
     avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
-    comment:
-      "Electric self-drive in Tirupati was such an eco-friendly breeze. 400km range handled our city trips, Srikalahasti, and Kanipakam without needing a recharge. Fast charging point support at Alipiri was a great plus!",
-    date: "August 2026",
-    tripType: "Eco-Temple Tour",
+    rating: 5,
+    quote:
+      "“Rented the BMW for our executive summit. Flawless doorstep delivery and luxury interior. Definitely booking again for our next tour!”",
   },
 ];
 
 export const TestimonialsSection: React.FC = () => {
-  const [filter, setFilter] = useState<"all" | "pilgrim" | "luxury" | "family">("all");
+  const [startIndex, setStartIndex] = useState(0);
 
-  const filteredReviews = filter === "all" ? TESTIMONIALS : TESTIMONIALS.filter((t) => t.category === filter);
+  const handlePrev = () => {
+    setStartIndex((prev) => (prev === 0 ? TESTIMONIALS_DATA.length - 3 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setStartIndex((prev) => (prev >= TESTIMONIALS_DATA.length - 3 ? 0 : prev + 1));
+  };
+
+  const visibleTestimonials = [
+    TESTIMONIALS_DATA[startIndex % TESTIMONIALS_DATA.length],
+    TESTIMONIALS_DATA[(startIndex + 1) % TESTIMONIALS_DATA.length],
+    TESTIMONIALS_DATA[(startIndex + 2) % TESTIMONIALS_DATA.length],
+  ];
 
   return (
-    <section className="py-24 bg-brand-mist/40 border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-brand-teal inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal/10">
-            <Sparkles className="h-3.5 w-3.5" /> Verified Customer Experiences
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-navy tracking-tight">
-            Trusted by Over <span className="text-brand-teal">15,000+ Travellers</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Read authentic reviews from devotees, families, and business travellers who trust Moar Cars for their self-drive journey in Tirupati & Andhra Pradesh.
-          </p>
-        </div>
+    <section className="py-16 sm:py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header with Navigation Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c88d18] block">
+              HAPPY CUSTOMERS
+            </span>
+            <h2 className="mt-1 text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              What Our Customers Say
+            </h2>
+          </div>
 
-        {/* Rating Highlights Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-3xl bg-card border border-border shadow-sm">
-          <div className="text-center space-y-1">
-            <div className="text-3xl font-black text-brand-navy flex items-center justify-center gap-1">
-              4.9 <Star className="h-6 w-6 text-brand-gold fill-brand-gold" />
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            <span className="text-xs text-slate-400 font-medium">Real journeys. Real smiles.</span>
+            <div className="flex items-center gap-1.5 ml-2">
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="Previous review"
+                className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:border-[#c88d18] hover:text-[#c88d18] hover:bg-amber-50/50 transition-all"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="Next review"
+                className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:border-[#c88d18] hover:text-[#c88d18] hover:bg-amber-50/50 transition-all"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
-            <p className="text-xs font-medium text-muted-foreground">Average Rating (2,400+ reviews)</p>
-          </div>
-          <div className="text-center space-y-1 border-l border-border">
-            <div className="text-3xl font-black text-brand-teal">15,000+</div>
-            <p className="text-xs font-medium text-muted-foreground">Successful Trips Completed</p>
-          </div>
-          <div className="text-center space-y-1 border-l border-border">
-            <div className="text-3xl font-black text-brand-navy">100%</div>
-            <p className="text-xs font-medium text-muted-foreground">Ghat Road Certified Fleet</p>
-          </div>
-          <div className="text-center space-y-1 border-l border-border">
-            <div className="text-3xl font-black text-emerald-600">2 Hours</div>
-            <p className="text-xs font-medium text-muted-foreground">Instant Deposit Refund Average</p>
           </div>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {[
-            { id: "all", label: "All Reviews" },
-            { id: "pilgrim", label: "Tirumala Pilgrims" },
-            { id: "luxury", label: "VIP & Luxury" },
-            { id: "family", label: "Road Trips & SUV" },
-          ].map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setFilter(cat.id as any)}
-              className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                filter === cat.id
-                  ? "bg-brand-navy text-white shadow-md"
-                  : "bg-card text-muted-foreground hover:text-brand-navy border border-border"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredReviews.map((rev) => (
+        {/* 3 Testimonial Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {visibleTestimonials.map((t) => (
             <div
-              key={rev.id}
-              className="rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-6 relative overflow-hidden"
+              key={t.id}
+              className="rounded-2xl bg-white border border-slate-200/80 p-6 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between space-y-4 relative"
             >
-              <Quote className="absolute top-4 right-4 h-12 w-12 text-brand-teal/10 pointer-events-none" />
-
-              <div className="space-y-4">
-                {/* Rating & Car */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-brand-gold fill-brand-gold" />
-                    ))}
-                  </div>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-brand-mist text-brand-navy border border-border">
-                    {rev.tripType}
-                  </span>
-                </div>
-
-                {/* Review text */}
-                <p className="text-sm text-foreground/90 leading-relaxed italic">
-                  "{rev.comment}"
-                </p>
+              {/* Star Rating */}
+              <div className="flex items-center gap-1">
+                {[...Array(t.rating)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-[#d49b29] text-[#d49b29]" />
+                ))}
               </div>
 
-              {/* User info & Car Tag */}
-              <div className="pt-4 border-t border-border flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={rev.avatar}
-                    alt={rev.name}
-                    className="h-11 w-11 rounded-full object-cover border-2 border-brand-teal shadow"
-                  />
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-navy flex items-center gap-1.5">
-                      {rev.name}
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500 fill-emerald-100" />
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {rev.role} • {rev.location}
-                    </p>
-                  </div>
-                </div>
+              {/* Review Quote */}
+              <p className="text-xs sm:text-[13px] leading-relaxed text-slate-600 font-normal italic flex-1">
+                {t.quote}
+              </p>
 
-                <div className="text-right">
-                  <span className="text-[11px] font-semibold text-brand-teal block">{rev.carRented}</span>
-                  <span className="text-[10px] text-muted-foreground">{rev.date}</span>
+              {/* User Profile */}
+              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                <div className="h-10 w-10 rounded-full overflow-hidden border border-amber-300/60 bg-slate-100 shrink-0">
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 leading-tight">
+                    {t.name}
+                  </h4>
+                  <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                    {t.location}
+                  </p>
                 </div>
               </div>
             </div>

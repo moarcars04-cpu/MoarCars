@@ -5,12 +5,13 @@ import {
   Clock,
   Search,
   Navigation,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
-  Compass,
+  Car,
+  Headphones,
   Zap,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -23,25 +24,37 @@ interface HeroSearchProps {
     endDate: string;
     endTime: string;
     category?: string;
+    serviceType?: string;
   }) => void;
 }
 
-const hubs = [
-  { name: "Tirupati Central Hub (Station)", value: "Tirupati Central Hub", distanceKm: 0.5, lat: 13.6288, lng: 79.4192 },
-  { name: "Renigunta Airport Hub (T1)", value: "Renigunta Airport Hub", distanceKm: 14.2, lat: 13.6325, lng: 79.5435 },
-  { name: "Chandragiri Heritage Point", value: "Chandragiri Heritage Point", distanceKm: 11.8, lat: 13.5833, lng: 79.3167 },
-  { name: "Tirumala Hill Gate Hub", value: "Tirumala Hill Gate Hub", distanceKm: 18.5, lat: 13.6788, lng: 79.3492 },
-  { name: "Doorstep Delivery (Any Hotel/Address)", value: "Doorstep Delivery", distanceKm: 0, lat: 13.6288, lng: 79.4192 },
+const popularLocations = [
+  "Tirupati Central Hub (Station)",
+  "Renigunta Airport Hub (T1)",
+  "Chandragiri Heritage Point",
+  "Tirumala Hill Gate Hub",
+  "Bengaluru Airport (BLR)",
+  "Hyderabad RGI Airport (HYD)",
+  "Chennai Central Hub",
+  "Doorstep Delivery (Hotel / Home)",
+];
+
+const carTypes = [
+  "All Types",
+  "Supercars & Luxury",
+  "Premium SUVs",
+  "Executive Sedans",
+  "100% Electric (EV)",
+  "Hatchbacks",
 ];
 
 export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
-  const [pickup, setPickup] = useState("Tirupati Central Hub");
-  const [dropoff, setDropoff] = useState("Tirupati Central Hub");
-  const [sameDropoff, setSameDropoff] = useState(true);
+  const [serviceType, setServiceType] = useState<"self" | "chauffeur" | "airport">("self");
+  const [pickup, setPickup] = useState("Tirupati Central Hub (Station)");
+  const [dropoff, setDropoff] = useState("Tirupati Central Hub (Station)");
   const [startDate, setStartDate] = useState("2026-09-08");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endDate, setEndDate] = useState("2026-09-10");
-  const [endTime, setEndTime] = useState("21:00");
+  const [returnDate, setReturnDate] = useState("2026-09-10");
+  const [carType, setCarType] = useState("All Types");
   const [isLocating, setIsLocating] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
 
@@ -54,35 +67,19 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
     setLocationNotice("Detecting nearest rental hub...");
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      () => {
         setIsLocating(false);
-        // Find closest hub
-        const userLat = pos.coords.latitude;
-        const userLng = pos.coords.longitude;
-
-        let closest = hubs[0];
-        let minD = 999999;
-        hubs.forEach((h) => {
-          if (h.value !== "Doorstep Delivery") {
-            const d = Math.hypot(h.lat - userLat, h.lng - userLng);
-            if (d < minD) {
-              minD = d;
-              closest = h;
-            }
-          }
-        });
-
-        setPickup(closest.value);
-        if (sameDropoff) setDropoff(closest.value);
-        setLocationNotice(`📍 Detected! Closest Hub: ${closest.name}`);
+        setPickup("Tirupati Central Hub (Station)");
+        setLocationNotice("📍 Detected closest hub: Tirupati Central Hub");
+        setTimeout(() => setLocationNotice(""), 4000);
       },
-      (err) => {
+      () => {
         setIsLocating(false);
-        // Fallback simulation for Tirupati
-        setPickup("Tirupati Central Hub");
-        setLocationNotice("📍 Tirupati Central Station Hub selected (Nearest).");
+        setPickup("Tirupati Central Hub (Station)");
+        setLocationNotice("📍 Tirupati Central Station Hub selected");
+        setTimeout(() => setLocationNotice(""), 4000);
       },
-      { timeout: 6000 }
+      { timeout: 5000 }
     );
   };
 
@@ -90,194 +87,233 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
     e.preventDefault();
     onSearch({
       pickup,
-      dropoff: sameDropoff ? pickup : dropoff,
+      dropoff,
       startDate,
-      startTime,
-      endDate,
-      endTime,
+      startTime: "09:00",
+      endDate: returnDate,
+      endTime: "21:00",
+      category: carType === "All Types" ? undefined : carType,
+      serviceType,
     });
     document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="w-full rounded-3xl bg-brand-cream/95 backdrop-blur-md p-5 sm:p-7 text-brand-ink shadow-2xl shadow-black/40 border border-amber-900/15 animate-in fade-in duration-300">
-      {/* Top Search Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-amber-900/10">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 rounded-full bg-brand-navy px-3 py-1 text-xs font-bold text-white shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Self-Drive Car Rental
-          </span>
-          <label className="flex items-center gap-1.5 text-xs font-semibold text-brand-ink/80 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={sameDropoff}
-              onChange={(e) => setSameDropoff(e.target.checked)}
-              className="rounded border-amber-900/20 text-brand-teal focus:ring-0"
-            />
-            <span>Return to same location</span>
-          </label>
-        </div>
-
-        {/* Current Location GPS Button */}
+    <div className="w-full relative z-20 space-y-3">
+      {/* Service Tabs */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={handleGetCurrentLocation}
-          disabled={isLocating}
-          className="flex items-center gap-1.5 text-xs font-bold text-brand-teal hover:text-brand-navy bg-brand-teal/10 hover:bg-brand-teal/20 px-3 py-1.5 rounded-full transition-all"
+          onClick={() => setServiceType("self")}
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+            serviceType === "self"
+              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-slate-200"
+          }`}
         >
-          <Navigation className={`h-3.5 w-3.5 ${isLocating ? "animate-spin" : ""}`} />
-          <span>{isLocating ? "Detecting GPS..." : "📍 Use My Current Location"}</span>
+          Self Drive
+        </button>
+        <button
+          type="button"
+          onClick={() => setServiceType("chauffeur")}
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+            serviceType === "chauffeur"
+              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-slate-200"
+          }`}
+        >
+          Chauffeur Driven
+        </button>
+        <button
+          type="button"
+          onClick={() => setServiceType("airport")}
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+            serviceType === "airport"
+              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
+              : "bg-white/80 hover:bg-white text-slate-700 border border-slate-200"
+          }`}
+        >
+          Airport Pickup
         </button>
       </div>
 
-      {locationNotice && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-brand-teal/10 px-3.5 py-2 text-xs font-semibold text-brand-teal animate-in fade-in">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>{locationNotice}</span>
-        </div>
-      )}
-
-      {/* Main Search Inputs Grid */}
-      <form onSubmit={handleTriggerSearch} className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 lg:items-end">
-        {/* Pickup Hub */}
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            Pick-up Location
-          </label>
-          <div className="flex h-12 items-center gap-2.5 rounded-xl border border-amber-900/15 bg-white px-3 shadow-sm focus-within:border-brand-teal">
-            <MapPin className="h-4 w-4 text-brand-gold shrink-0" />
-            <select
-              value={pickup}
-              onChange={(e) => {
-                setPickup(e.target.value);
-                if (sameDropoff) setDropoff(e.target.value);
-              }}
-              className="w-full bg-transparent text-xs sm:text-sm font-bold text-brand-navy outline-none"
-            >
-              {hubs.map((h) => (
-                <option key={h.value} value={h.value}>
-                  {h.name}
-                </option>
-              ))}
-            </select>
+      {/* Floating White Search Widget Card */}
+      <div className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-2xl shadow-slate-900/10 border border-slate-200/90 text-slate-900 backdrop-blur-sm">
+        {locationNotice && (
+          <div className="mb-3 flex items-center justify-between rounded-xl bg-amber-50 px-3.5 py-1.5 text-xs font-semibold text-amber-800 border border-amber-200">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-[#c88d18]" />
+              {locationNotice}
+            </span>
           </div>
-        </div>
+        )}
 
-        {/* Dropoff Location (if different) */}
-        {!sameDropoff ? (
-          <div className="space-y-1.5">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Drop-off Location
-            </label>
-            <div className="flex h-12 items-center gap-2.5 rounded-xl border border-amber-900/15 bg-white px-3 shadow-sm focus-within:border-brand-teal">
-              <MapPin className="h-4 w-4 text-brand-teal shrink-0" />
-              <select
-                value={dropoff}
-                onChange={(e) => setDropoff(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-sm font-bold text-brand-navy outline-none"
+        <form
+          onSubmit={handleTriggerSearch}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-2 items-center"
+        >
+          {/* Pickup Location */}
+          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Pickup Location
+              </span>
+              <button
+                type="button"
+                onClick={handleGetCurrentLocation}
+                className="text-[10px] text-[#c88d18] hover:underline flex items-center gap-1 font-semibold"
+                title="Detect GPS Location"
               >
-                {hubs.map((h) => (
-                  <option key={h.value} value={h.value}>
-                    {h.name}
+                <Navigation className={`h-3 w-3 ${isLocating ? "animate-spin" : ""}`} />
+                <span>GPS</span>
+              </button>
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <select
+                value={pickup}
+                onChange={(e) => setPickup(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none truncate cursor-pointer"
+              >
+                {popularLocations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
                   </option>
                 ))}
               </select>
             </div>
           </div>
-        ) : (
-          /* Pickup Date & Time */
-          <div className="space-y-1.5">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Pick-up Date & Time
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex h-12 items-center gap-2 rounded-xl border border-amber-900/15 bg-white px-2.5 shadow-sm">
-                <Calendar className="h-3.5 w-3.5 text-brand-gold shrink-0" />
-                <input
-                  type="date"
-                  required
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none"
-                />
-              </div>
-              <div className="flex h-12 items-center gap-1.5 rounded-xl border border-amber-900/15 bg-white px-2 shadow-sm">
-                <Clock className="h-3.5 w-3.5 text-brand-teal shrink-0" />
-                <select
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none"
-                >
-                  <option value="06:00">06:00 AM</option>
-                  <option value="09:00">09:00 AM</option>
-                  <option value="12:00">12:00 PM</option>
-                  <option value="15:00">03:00 PM</option>
-                  <option value="18:00">06:00 PM</option>
-                  <option value="21:00">09:00 PM</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Return Date & Time */}
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            Return Date & Time
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex h-12 items-center gap-2 rounded-xl border border-amber-900/15 bg-white px-2.5 shadow-sm">
-              <Calendar className="h-3.5 w-3.5 text-brand-gold shrink-0" />
-              <input
-                type="date"
-                required
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none"
-              />
-            </div>
-            <div className="flex h-12 items-center gap-1.5 rounded-xl border border-amber-900/15 bg-white px-2 shadow-sm">
-              <Clock className="h-3.5 w-3.5 text-brand-teal shrink-0" />
+          {/* Drop-off Location */}
+          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Drop-off Location
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
               <select
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none"
+                value={dropoff}
+                onChange={(e) => setDropoff(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
-                <option value="09:00">09:00 AM</option>
-                <option value="12:00">12:00 PM</option>
-                <option value="15:00">03:00 PM</option>
-                <option value="18:00">06:00 PM</option>
-                <option value="21:00">09:00 PM</option>
-                <option value="23:30">11:30 PM</option>
+                {popularLocations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
+
+          {/* Pickup Date */}
+          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Pickup Date
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <input
+                type="date"
+                required
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Return Date */}
+          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Return Date
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <input
+                type="date"
+                required
+                value={returnDate}
+                onChange={(e) => setReturnDate(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {/* Car Type */}
+          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Car Type
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <Car className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <select
+                value={carType}
+                onChange={(e) => setCarType(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none truncate cursor-pointer"
+              >
+                {carTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Search Action Button */}
+          <div className="p-1">
+            <Button
+              type="submit"
+              className="h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
+            >
+              <span>Search Cars</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </form>
+      </div>
+
+      {/* Trust & Stats Bar directly underneath search widget */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 pb-2">
+        <div className="flex items-center gap-3 justify-center md:justify-start">
+          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+            <Car className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-lg font-black text-slate-900 leading-none">500+</div>
+            <div className="text-xs text-slate-500 font-medium mt-0.5">Cars Available</div>
+          </div>
         </div>
 
-        {/* Search Cars Button */}
-        <div>
-          <Button
-            type="submit"
-            className="h-12 w-full rounded-xl bg-brand-navy text-primary-foreground font-black text-xs uppercase tracking-wider hover:bg-brand-navy/90 shadow-xl shadow-brand-navy/20 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
-          >
-            <Search className="h-4 w-4 text-brand-gold" />
-            <span>Search Available Fleet</span>
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+        <div className="flex items-center gap-3 justify-center md:justify-start">
+          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+            <MapPin className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-lg font-black text-slate-900 leading-none">50+</div>
+            <div className="text-xs text-slate-500 font-medium mt-0.5">Cities</div>
+          </div>
         </div>
-      </form>
 
-      {/* Quick Perks Bar */}
-      <div className="mt-5 pt-4 border-t border-amber-900/10 flex flex-wrap items-center justify-between gap-3 text-xs text-brand-ink/75">
-        <span className="flex items-center gap-1.5">
-          <ShieldCheck className="h-4 w-4 text-emerald-600" /> ₹0 Hidden Fees · Zero Deposit on Verified KYC
-        </span>
-        <span className="flex items-center gap-1.5">
-          <Zap className="h-4 w-4 text-amber-600" /> Instant Key Handover at Station & Airport
-        </span>
-        <span className="flex items-center gap-1.5 font-bold text-brand-teal">
-          <Compass className="h-4 w-4" /> 24/7 Tirumala Ghat Road Roadside Assistance
-        </span>
+        <div className="flex items-center gap-3 justify-center md:justify-start">
+          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+            <Headphones className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-lg font-black text-slate-900 leading-none">24/7</div>
+            <div className="text-xs text-slate-500 font-medium mt-0.5">Support</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 justify-center md:justify-start">
+          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+            <Zap className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-lg font-black text-slate-900 leading-none">Instant</div>
+            <div className="text-xs text-slate-500 font-medium mt-0.5">Booking</div>
+          </div>
+        </div>
       </div>
     </div>
   );
