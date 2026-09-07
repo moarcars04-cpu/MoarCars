@@ -23,6 +23,7 @@ import { useAuth } from "../../context/AuthContext";
 interface LuxuryBookingPanelProps {
   car: any;
   onBookingSuccess?: (bookingId: number) => void;
+  onNavigate?: (path: string, state?: any) => void;
 }
 
 const HUBS = [
@@ -33,7 +34,11 @@ const HUBS = [
   "Horsley Hills Route Hub",
 ];
 
-export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({ car, onBookingSuccess }) => {
+export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
+  car,
+  onBookingSuccess,
+  onNavigate,
+}) => {
   const { user, openAuthModal } = useAuth();
 
   // Booking parameters
@@ -130,30 +135,30 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({ car, onB
     }
   };
 
-  // Submit Booking to Backend API
+  // Submit Booking / Navigate to Checkout
   const handleInstantReserve = async () => {
-    if (!user) {
-      openAuthModal("login");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitError("");
-
     const targetPickup = deliveryMode === "doorstep" ? `Doorstep Delivery (${doorstepAddress || "Tirupati Address"})` : pickupHub;
 
     const payload = {
       pickup: targetPickup,
-      startDate: `${startDate} ${startTime}`,
-      endDate: `${endDate} ${endTime}`,
+      pickupLocation: targetPickup,
+      dropLocation: targetPickup,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
       carName: car.name,
+      car,
+      withDriver,
+      deliveryMode,
       bookingType: withDriver ? "Chauffeur Driven" : "Self Drive",
-      customerName: customerName || user.name || "Valued Guest",
-      customerPhone: customerPhone || user.phone || "+91 98765 43210",
-      customerEmail: customerEmail || user.email || "guest@moarcars.com",
+      customerName: customerName || user?.name || "Valued Guest",
+      customerPhone: customerPhone || user?.phone || "+91 98765 43210",
+      customerEmail: customerEmail || user?.email || "guest@moarcars.com",
       status: "Confirmed",
       bookingSource: "Car Details Portal",
       totalDays: rentalDays,
+      rentalDays,
       baseFare,
       deliveryFee,
       driverFee,
@@ -173,6 +178,19 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({ car, onB
         .join(", ")}`,
     };
 
+    if (onNavigate) {
+      onNavigate("/checkout", payload);
+      return;
+    }
+
+    if (!user) {
+      openAuthModal("login");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -191,7 +209,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({ car, onB
       }
     } catch (err) {
       console.error(err);
-      // Fallback optimistic confirmation
       setBookingSuccessNotice(`🎉 Reservation Confirmed for ${car.name}! Synchronized with your account.`);
       setTimeout(() => {
         onBookingSuccess?.(Date.now());

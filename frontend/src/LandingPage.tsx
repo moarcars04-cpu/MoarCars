@@ -438,7 +438,19 @@ export default function LandingPage({ onNavigate, preselectedCar }: LandingPageP
   // Trigger Booking Flow
   const handleBookCar = (car: CarFleetItem) => {
     addRecentlyViewed(car);
-    setBookingTargetCar(car);
+    if (onNavigate) {
+      onNavigate("/checkout", {
+        car,
+        pickup: searchParams.pickup,
+        dropoff: searchParams.dropoff,
+        startDate: searchParams.startDate,
+        startTime: searchParams.startTime,
+        endDate: searchParams.endDate,
+        endTime: searchParams.endTime,
+      });
+    } else {
+      setBookingTargetCar(car);
+    }
   };
 
   // Hero Search trigger

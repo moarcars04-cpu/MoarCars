@@ -570,6 +570,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
           <div className="lg:col-span-4">
             <LuxuryBookingPanel
               car={currentCar}
+              onNavigate={onNavigate}
               onBookingSuccess={() => {
                 if (onNavigate) onNavigate("/dashboard");
               }}

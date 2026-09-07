@@ -3,6 +3,7 @@ import LandingPage from "./LandingPage.tsx";
 import AdminDashboard from "./AdminDashboard.tsx";
 import { UserDashboard } from "./components/dashboard/UserDashboard.tsx";
 import { CarDetailsPage } from "./CarDetailsPage.tsx";
+import { CheckoutPage } from "./CheckoutPage.tsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.tsx";
 import { AuthModal } from "./components/auth/AuthModal.tsx";
 
@@ -10,6 +11,7 @@ function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
   const [targetCarToBook, setTargetCarToBook] = useState<string>("");
   const [selectedCarForDetails, setSelectedCarForDetails] = useState<string | number>("");
+  const [checkoutParams, setCheckoutParams] = useState<any>(null);
   const { openAuthModal } = useAuth();
 
   useEffect(() => {
@@ -30,12 +32,16 @@ function AppContent() {
     };
   }, [openAuthModal]);
 
-  const navigateTo = (newPath: string) => {
+  const navigateTo = (newPath: string, state?: any) => {
     if (newPath.startsWith("/#")) {
       const hash = newPath.replace("/", "");
       window.location.hash = hash;
       setPath("/");
       return;
+    }
+
+    if (state) {
+      setCheckoutParams(state);
     }
 
     // Extract car ID if path is like /car/3 or /car-details?id=3
@@ -64,15 +70,21 @@ function AppContent() {
         <AdminDashboard onNavigate={navigateTo} />
       ) : path === "/dashboard" || path === "/dashboard/" || path === "/profile" || path === "/my-bookings" ? (
         <UserDashboard onNavigate={navigateTo} onSelectCarToBook={(car) => setTargetCarToBook(car)} />
+      ) : path === "/checkout" || path.startsWith("/checkout") ? (
+        <CheckoutPage
+          initialCar={checkoutParams?.car}
+          initialParams={checkoutParams}
+          onNavigate={navigateTo}
+        />
       ) : path.startsWith("/car/") || path === "/car-details" || path === "/car" ? (
         <CarDetailsPage carIdOrName={activeCarParam} onNavigate={navigateTo} />
       ) : (
         <LandingPage
-          onNavigate={(p) => {
+          onNavigate={(p, st) => {
             if (p.startsWith("/car/")) {
               setSelectedCarForDetails(p.replace("/car/", ""));
             }
-            navigateTo(p);
+            navigateTo(p, st);
           }}
           preselectedCar={targetCarToBook}
         />
