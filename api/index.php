@@ -76,6 +76,18 @@ function formatCustomerResponse($c) {
     $c['referredCount'] = (int)($c['referredCount'] ?? 0);
     $c['referralEarnings'] = (int)($c['referralEarnings'] ?? 0);
     $c['savedAddresses'] = safeJsonDecode($c['savedAddresses'] ?? null, []);
+    $c['savedPaymentMethods'] = safeJsonDecode($c['savedPaymentMethods'] ?? null, []);
+    $c['notificationPreferences'] = safeJsonDecode($c['notificationPreferences'] ?? null, [
+        "pushEnabled" => true,
+        "smsEnabled" => true,
+        "emailEnabled" => true,
+        "whatsappEnabled" => true,
+        "bookingAlerts" => true,
+        "pickupReminders" => true,
+        "returnReminders" => true,
+        "promotionalOffers" => true,
+    ]);
+    $c['themePreference'] = $c['themePreference'] ?? 'dark';
     $c['favoriteCars'] = safeJsonDecode($c['favoriteCars'] ?? null, []);
     unset($c['password']);
     return $c;
@@ -600,6 +612,22 @@ function ensureTablesExist($pdo) {
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 INDEX (identifier)
             );
+
+            CREATE TABLE IF NOT EXISTS Notifications (
+                id VARCHAR(100) PRIMARY KEY,
+                userId INT DEFAULT NULL,
+                userEmail VARCHAR(255) DEFAULT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                type VARCHAR(50) DEFAULT 'system',
+                channel VARCHAR(50) DEFAULT 'push',
+                isRead TINYINT DEFAULT 0,
+                link VARCHAR(255) DEFAULT NULL,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                INDEX (userEmail),
+                INDEX (userId)
+            );
         ");
 
         // 2. Comprehensive Column Auto-Migration for Every Table
@@ -744,6 +772,9 @@ function ensureTablesExist($pdo) {
                 'passportDocUrl' => "TEXT DEFAULT NULL",
                 'selfieDocUrl' => "TEXT DEFAULT NULL",
                 'savedAddresses' => "LONGTEXT DEFAULT NULL",
+                'savedPaymentMethods' => "LONGTEXT DEFAULT NULL",
+                'notificationPreferences' => "LONGTEXT DEFAULT NULL",
+                'themePreference' => "VARCHAR(50) DEFAULT 'dark'",
                 'favoriteCars' => "LONGTEXT DEFAULT NULL",
                 'walletBalance' => "INT DEFAULT 0",
                 'rewardPoints' => "INT DEFAULT 100",
@@ -764,6 +795,18 @@ function ensureTablesExist($pdo) {
                 'type' => "VARCHAR(50) DEFAULT 'SMS'",
                 'expiresAt' => "BIGINT NOT NULL",
                 'attempts' => "INT DEFAULT 0",
+            ],
+            'Notifications' => [
+                'id' => "VARCHAR(100) PRIMARY KEY",
+                'userId' => "INT DEFAULT NULL",
+                'userEmail' => "VARCHAR(255) DEFAULT NULL",
+                'title' => "VARCHAR(255) NOT NULL",
+                'message' => "TEXT NOT NULL",
+                'type' => "VARCHAR(50) DEFAULT 'system'",
+                'channel' => "VARCHAR(50) DEFAULT 'push'",
+                'isRead' => "TINYINT DEFAULT 0",
+                'link' => "VARCHAR(255) DEFAULT NULL",
+                'createdAt' => "VARCHAR(50) DEFAULT NULL",
             ],
             'Drivers' => [
                 'name' => "VARCHAR(255) NOT NULL DEFAULT 'Driver'",
@@ -862,13 +905,17 @@ function ensureTablesExist($pdo) {
                 'id' => "VARCHAR(100) PRIMARY KEY",
                 'customerName' => "VARCHAR(255) DEFAULT 'Valued Customer'",
                 'customerPhone' => "VARCHAR(50) DEFAULT '+91 90000 00000'",
+                'customerEmail' => "VARCHAR(255) DEFAULT NULL",
+                'userId' => "INT DEFAULT NULL",
                 'subject' => "VARCHAR(255) DEFAULT 'Customer Support Inquiry'",
-                'category' => "VARCHAR(100) DEFAULT 'General'",
+                'category' => "VARCHAR(100) DEFAULT 'General Enquiry'",
                 'priority' => "VARCHAR(50) DEFAULT 'Medium'",
                 'status' => "VARCHAR(50) DEFAULT 'Open'",
                 'assignedTo' => "VARCHAR(255) DEFAULT 'Unassigned'",
                 'assignedAgent' => "VARCHAR(255) DEFAULT 'Customer Support Desk'",
                 'bookingId' => "INT DEFAULT NULL",
+                'attachmentUrl' => "TEXT DEFAULT NULL",
+                'rating' => "INT DEFAULT NULL",
                 'messages' => "LONGTEXT DEFAULT NULL",
                 'lastUpdated' => "VARCHAR(50) DEFAULT NULL",
             ],
@@ -1817,6 +1864,423 @@ if ($route === 'user/rewards/claim-birthday' && $method === 'POST') {
         } catch (Exception $e) {}
     }
     echo json_encode(["success" => true, "message" => "Birthday gift claimed!"]);
+    exit();
+}
+
+// ----------------------------------------------------------------------
+// USER NOTIFICATIONS API
+// ----------------------------------------------------------------------
+if ($route === 'user/notifications' && $method === 'GET') {
+    $userId = (int)($_GET['userId'] ?? 0);
+    $userEmail = $_GET['userEmail'] ?? '';
+    $results = [];
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM Notifications WHERE (userId = ? AND userId > 0) OR (userEmail = ? AND userEmail != '') ORDER BY id DESC LIMIT 30");
+            $stmt->execute([$userId, $userEmail]);
+            $results = $stmt->fetchAll();
+        } catch (Exception $e) {}
+    }
+
+    if (empty($results)) {
+        $results = [
+            [
+                "id" => "notif_1",
+                "title" => "Welcome to Moar Cars!",
+                "message" => "Your self-drive membership is active. 100 Moar Coins credited to your wallet.",
+                "type" => "system",
+                "channel" => "push",
+                "isRead" => 0,
+                "link" => "/dashboard#wallet",
+                "createdAt" => date('Y-m-d H:i:s', time() - 3600)
+            ],
+            [
+                "id" => "notif_2",
+                "title" => "Brahmotsavam Festive Offer Live 🪔",
+                "message" => "Get Flat ₹500 OFF + 2X Loyalty Coins on all SUV bookings using coupon TIRUMALA500.",
+                "type" => "offer",
+                "channel" => "whatsapp",
+                "isRead" => 0,
+                "link" => "/dashboard#rewards",
+                "createdAt" => date('Y-m-d H:i:s', time() - 7200)
+            ],
+            [
+                "id" => "notif_3",
+                "title" => "KYC Express Verification Ready",
+                "message" => "Upload your Driving License & Aadhaar to enjoy zero-wait instant vehicle pickup at Station Hub.",
+                "type" => "pickup",
+                "channel" => "sms",
+                "isRead" => 1,
+                "link" => "/dashboard#kyc",
+                "createdAt" => date('Y-m-d H:i:s', time() - 86400)
+            ]
+        ];
+    }
+
+    echo json_encode(["success" => true, "data" => $results]);
+    exit();
+}
+
+if ($route === 'user/notifications/mark-read' && $method === 'POST') {
+    $notifId = $input['id'] ?? 'all';
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+
+    if (isset($pdo)) {
+        try {
+            if ($notifId === 'all') {
+                $stmt = $pdo->prepare("UPDATE Notifications SET isRead = 1 WHERE (userId = ? AND userId > 0) OR (userEmail = ? AND userEmail != '')");
+                $stmt->execute([$userId, $userEmail]);
+            } else {
+                $stmt = $pdo->prepare("UPDATE Notifications SET isRead = 1 WHERE id = ?");
+                $stmt->execute([$notifId]);
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Notifications updated."]);
+    exit();
+}
+
+if ($route === 'user/notification-preferences' && ($method === 'PUT' || $method === 'POST')) {
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+    $prefs = $input['preferences'] ?? $input;
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("UPDATE Customers SET notificationPreferences = ? WHERE (id = ? AND id > 0) OR (email = ? AND email != '')");
+            $stmt->execute([safeJsonEncode($prefs), $userId, $userEmail]);
+            echo json_encode(["success" => true, "message" => "Notification preferences saved successfully!"]);
+            exit();
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Preferences saved."]);
+    exit();
+}
+
+// ----------------------------------------------------------------------
+// USER SUPPORT TICKETS & DESK API
+// ----------------------------------------------------------------------
+if (($route === 'user/tickets' || $route === 'admin/tickets') && $method === 'GET') {
+    $userId = (int)($_GET['userId'] ?? 0);
+    $userEmail = $_GET['userEmail'] ?? '';
+    $tickets = [];
+
+    if (isset($pdo)) {
+        try {
+            if ($route === 'admin/tickets') {
+                $stmt = $pdo->prepare("SELECT * FROM SupportTickets ORDER BY id DESC LIMIT 50");
+                $stmt->execute();
+            } else {
+                $stmt = $pdo->prepare("SELECT * FROM SupportTickets WHERE (userId = ? AND userId > 0) OR (customerEmail = ? AND customerEmail != '') ORDER BY id DESC LIMIT 30");
+                $stmt->execute([$userId, $userEmail]);
+            }
+            $rawTickets = $stmt->fetchAll();
+            foreach ($rawTickets as $t) {
+                $t['messages'] = safeJsonDecode($t['messages'] ?? null, []);
+                $tickets[] = $t;
+            }
+        } catch (Exception $e) {}
+    }
+
+    echo json_encode(["success" => true, "data" => $tickets]);
+    exit();
+}
+
+if (($route === 'user/tickets' || $route === 'admin/tickets') && $method === 'POST') {
+    $ticketId = 'TKT-' . rand(100000, 999999);
+    $customerName = trim($input['customerName'] ?? 'Valued Customer');
+    $customerPhone = trim($input['customerPhone'] ?? '+91 98765 43210');
+    $customerEmail = trim($input['customerEmail'] ?? 'customer@example.com');
+    $userId = (int)($input['userId'] ?? 0);
+    $subject = trim($input['subject'] ?? 'Support Inquiry');
+    $category = $input['category'] ?? 'General Enquiry';
+    $priority = $input['priority'] ?? 'Medium';
+    $bookingId = isset($input['bookingId']) ? (int)$input['bookingId'] : null;
+    $initialMessage = trim($input['message'] ?? ($input['description'] ?? 'Need support regarding my rental.'));
+    $attachmentUrl = $input['attachmentUrl'] ?? null;
+
+    $messages = [
+        [
+            "sender" => "Customer",
+            "text" => $initialMessage,
+            "time" => date('Y-m-d H:i:s'),
+            "attachmentUrl" => $attachmentUrl
+        ],
+        [
+            "sender" => "AI Assistant",
+            "text" => "Namaste $customerName! We have received your support ticket regarding \"$category\". Our operations team in Tirupati is reviewing your request. Expected response within 15 minutes.",
+            "time" => date('Y-m-d H:i:s', time() + 2)
+        ]
+    ];
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO SupportTickets (id, customerName, customerPhone, customerEmail, userId, subject, category, priority, status, assignedAgent, bookingId, attachmentUrl, messages, lastUpdated)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Open', 'Customer Support Desk', ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $ticketId,
+                $customerName,
+                $customerPhone,
+                $customerEmail,
+                $userId,
+                $subject,
+                $category,
+                $priority,
+                $bookingId,
+                $attachmentUrl,
+                safeJsonEncode($messages),
+                date('Y-m-d H:i:s')
+            ]);
+            echo json_encode([
+                "success" => true,
+                "ticketId" => $ticketId,
+                "message" => "Support ticket $ticketId created! Our team will assist you shortly.",
+                "data" => [
+                    "id" => $ticketId,
+                    "subject" => $subject,
+                    "category" => $category,
+                    "priority" => $priority,
+                    "status" => "Open",
+                    "messages" => $messages,
+                    "createdAt" => date('Y-m-d H:i:s')
+                ]
+            ]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error creating ticket: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode(["success" => true, "ticketId" => $ticketId, "message" => "Ticket created!"]);
+    exit();
+}
+
+if (preg_match('#^(user/tickets|admin/tickets)/([^/]+)/reply$#', $route, $matches) && $method === 'POST') {
+    $ticketId = $matches[2];
+    $replyText = trim($input['text'] ?? ($input['message'] ?? ''));
+    $sender = $input['sender'] ?? 'Customer';
+    $attachmentUrl = $input['attachmentUrl'] ?? null;
+
+    if (!empty($replyText) && isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM SupportTickets WHERE id = ? LIMIT 1");
+            $stmt->execute([$ticketId]);
+            $ticket = $stmt->fetch();
+            if ($ticket) {
+                $msgs = safeJsonDecode($ticket['messages'] ?? null, []);
+                $msgs[] = [
+                    "sender" => $sender,
+                    "text" => $replyText,
+                    "time" => date('Y-m-d H:i:s'),
+                    "attachmentUrl" => $attachmentUrl
+                ];
+                $newStatus = ($sender === 'Customer') ? 'In Progress' : ($input['status'] ?? $ticket['status']);
+                $pdo->prepare("UPDATE SupportTickets SET messages = ?, status = ?, lastUpdated = ? WHERE id = ?")
+                    ->execute([safeJsonEncode($msgs), $newStatus, date('Y-m-d H:i:s'), $ticketId]);
+
+                echo json_encode(["success" => true, "message" => "Reply sent successfully!", "messages" => $msgs]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Reply logged."]);
+    exit();
+}
+
+// ----------------------------------------------------------------------
+// USER ADDRESS MANAGEMENT API
+// ----------------------------------------------------------------------
+if ($route === 'user/addresses' && $method === 'POST') {
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+    $newAddr = [
+        "id" => "addr_" . bin2hex(random_bytes(4)),
+        "label" => $input['label'] ?? 'Home',
+        "addressLine" => $input['addressLine'] ?? '',
+        "city" => $input['city'] ?? 'Tirupati',
+        "state" => $input['state'] ?? 'Andhra Pradesh',
+        "pincode" => $input['pincode'] ?? '517501',
+        "landmark" => $input['landmark'] ?? '',
+        "isDefault" => !empty($input['isDefault'])
+    ];
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, savedAddresses FROM Customers WHERE (id = ? AND id > 0) OR (email = ? AND email != '') LIMIT 1");
+            $stmt->execute([$userId, $userEmail]);
+            $cust = $stmt->fetch();
+            if ($cust) {
+                $addrs = safeJsonDecode($cust['savedAddresses'] ?? null, []);
+                if ($newAddr['isDefault']) {
+                    foreach ($addrs as &$a) { $a['isDefault'] = false; }
+                }
+                $addrs[] = $newAddr;
+                $pdo->prepare("UPDATE Customers SET savedAddresses = ? WHERE id = ?")->execute([safeJsonEncode($addrs), $cust['id']]);
+
+                echo json_encode(["success" => true, "message" => "Address saved!", "addresses" => $addrs]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Address saved."]);
+    exit();
+}
+
+if (preg_match('#^user/addresses/([^/]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'POST')) {
+    $addrId = $matches[1];
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, savedAddresses FROM Customers WHERE (id = ? AND id > 0) OR (email = ? AND email != '') LIMIT 1");
+            $stmt->execute([$userId, $userEmail]);
+            $cust = $stmt->fetch();
+            if ($cust) {
+                $addrs = safeJsonDecode($cust['savedAddresses'] ?? null, []);
+                foreach ($addrs as &$a) {
+                    if (($a['id'] ?? '') === $addrId) {
+                        $a = array_merge($a, $input);
+                        $a['id'] = $addrId;
+                    }
+                }
+                $pdo->prepare("UPDATE Customers SET savedAddresses = ? WHERE id = ?")->execute([safeJsonEncode($addrs), $cust['id']]);
+                echo json_encode(["success" => true, "message" => "Address updated!", "addresses" => $addrs]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Address updated."]);
+    exit();
+}
+
+if (preg_match('#^user/addresses/([^/]+)$#', $route, $matches) && $method === 'DELETE') {
+    $addrId = $matches[1];
+    $userId = (int)($input['userId'] ?? ($_GET['userId'] ?? 0));
+    $userEmail = $input['userEmail'] ?? ($_GET['userEmail'] ?? '');
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, savedAddresses FROM Customers WHERE (id = ? AND id > 0) OR (email = ? AND email != '') LIMIT 1");
+            $stmt->execute([$userId, $userEmail]);
+            $cust = $stmt->fetch();
+            if ($cust) {
+                $addrs = safeJsonDecode($cust['savedAddresses'] ?? null, []);
+                $filtered = array_values(array_filter($addrs, function($a) use ($addrId) {
+                    return ($a['id'] ?? '') !== $addrId;
+                }));
+                $pdo->prepare("UPDATE Customers SET savedAddresses = ? WHERE id = ?")->execute([safeJsonEncode($filtered), $cust['id']]);
+                echo json_encode(["success" => true, "message" => "Address removed.", "addresses" => $filtered]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Address removed."]);
+    exit();
+}
+
+// ----------------------------------------------------------------------
+// USER PAYMENT METHODS API
+// ----------------------------------------------------------------------
+if ($route === 'user/payment-methods' && $method === 'POST') {
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+    $methodType = $input['type'] ?? 'upi';
+    $newMethod = [
+        "id" => "pay_" . bin2hex(random_bytes(4)),
+        "type" => $methodType,
+        "upiVpa" => $input['upiVpa'] ?? null,
+        "bankName" => $input['bankName'] ?? null,
+        "cardLast4" => $input['cardLast4'] ?? null,
+        "cardBrand" => $input['cardBrand'] ?? 'Visa',
+        "cardExpiry" => $input['cardExpiry'] ?? null,
+        "holderName" => $input['holderName'] ?? null,
+        "isDefault" => !empty($input['isDefault'])
+    ];
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, savedPaymentMethods FROM Customers WHERE (id = ? AND id > 0) OR (email = ? AND email != '') LIMIT 1");
+            $stmt->execute([$userId, $userEmail]);
+            $cust = $stmt->fetch();
+            if ($cust) {
+                $methods = safeJsonDecode($cust['savedPaymentMethods'] ?? null, []);
+                if ($newMethod['isDefault']) {
+                    foreach ($methods as &$m) { $m['isDefault'] = false; }
+                }
+                $methods[] = $newMethod;
+                $pdo->prepare("UPDATE Customers SET savedPaymentMethods = ? WHERE id = ?")->execute([safeJsonEncode($methods), $cust['id']]);
+                echo json_encode(["success" => true, "message" => "Payment method saved securely!", "paymentMethods" => $methods]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Payment method saved."]);
+    exit();
+}
+
+if (preg_match('#^user/payment-methods/([^/]+)$#', $route, $matches) && $method === 'DELETE') {
+    $payId = $matches[1];
+    $userId = (int)($input['userId'] ?? ($_GET['userId'] ?? 0));
+    $userEmail = $input['userEmail'] ?? ($_GET['userEmail'] ?? '');
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, savedPaymentMethods FROM Customers WHERE (id = ? AND id > 0) OR (email = ? AND email != '') LIMIT 1");
+            $stmt->execute([$userId, $userEmail]);
+            $cust = $stmt->fetch();
+            if ($cust) {
+                $methods = safeJsonDecode($cust['savedPaymentMethods'] ?? null, []);
+                $filtered = array_values(array_filter($methods, function($m) use ($payId) {
+                    return ($m['id'] ?? '') !== $payId;
+                }));
+                $pdo->prepare("UPDATE Customers SET savedPaymentMethods = ? WHERE id = ?")->execute([safeJsonEncode($filtered), $cust['id']]);
+                echo json_encode(["success" => true, "message" => "Payment method removed.", "paymentMethods" => $filtered]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Payment method removed."]);
+    exit();
+}
+
+// ----------------------------------------------------------------------
+// USER ACCOUNT DELETION / DEACTIVATION
+// ----------------------------------------------------------------------
+if ($route === 'user/delete-account' && $method === 'POST') {
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+    $reason = $input['reason'] ?? 'Customer voluntary account closure';
+
+    if (isset($pdo)) {
+        try {
+            $activeStmt = $pdo->prepare("SELECT COUNT(*) FROM Bookings WHERE (customerEmail = ? OR customerPhone IN (SELECT phone FROM Customers WHERE id = ?)) AND status IN ('Confirmed', 'Ongoing Trip', 'Vehicle Ready')");
+            $activeStmt->execute([$userEmail, $userId]);
+            $activeCount = (int)$activeStmt->fetchColumn();
+            if ($activeCount > 0) {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "Cannot deactivate account with $activeCount active trip(s). Please complete or cancel upcoming trips first."]);
+                exit();
+            }
+
+            $pdo->prepare("UPDATE Customers SET token = NULL, isBlacklisted = 1, notes = CONCAT(IFNULL(notes, ''), ' [Account closed: $reason]') WHERE (id = ? AND id > 0) OR (email = ? AND email != '')")
+                ->execute([$userId, $userEmail]);
+
+            echo json_encode(["success" => true, "message" => "Your account has been deactivated successfully. We are sorry to see you go!"]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Account deactivation error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+    echo json_encode(["success" => true, "message" => "Account deactivated."]);
     exit();
 }
 

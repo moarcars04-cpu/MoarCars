@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   User,
   ShieldCheck,
@@ -21,9 +20,11 @@ import {
   Coins,
   Star,
   Share2,
+  Headphones,
+  Scale,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { UserProfile, UserDashboardData, BookingItem } from "../../types/user";
+import { UserProfile, UserDashboardData, BookingItem, NotificationItem } from "../../types/user";
 import { KycSection } from "./KycSection";
 import { BookingsSection } from "./BookingsSection";
 import { ProfileSection } from "./ProfileSection";
@@ -32,6 +33,10 @@ import { RewardsSection } from "./RewardsSection";
 import { ReferralSection } from "./ReferralSection";
 import { ReviewsSection } from "./ReviewsSection";
 import { SavedCarsSection } from "./SavedCarsSection";
+import { SupportSection } from "./SupportSection";
+import { SettingsSection } from "./SettingsSection";
+import { LegalSection } from "./LegalSection";
+import { NotificationsDropdown } from "./NotificationsDropdown";
 import { Button } from "@/components/ui/button";
 
 interface UserDashboardProps {
@@ -53,9 +58,21 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
   } = useAuth();
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "bookings" | "kyc" | "profile" | "saved" | "wallet" | "rewards" | "referral" | "reviews"
+    | "overview"
+    | "bookings"
+    | "kyc"
+    | "profile"
+    | "saved"
+    | "wallet"
+    | "rewards"
+    | "referral"
+    | "reviews"
+    | "support"
+    | "settings"
+    | "legal"
   >("overview");
   const [dashboardData, setDashboardData] = useState<UserDashboardData | null>(null);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
@@ -67,8 +84,42 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
     setIsLoading(false);
   };
 
+  const loadNotifications = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`/api/user/notifications?userId=${user.id}&userEmail=${encodeURIComponent(user.email)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setNotifications(data.data);
+      }
+    } catch {}
+  };
+
+  const handleMarkNotificationRead = async (id: string) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    try {
+      await fetch("/api/user/notifications/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, userId: user?.id, userEmail: user?.email }),
+      });
+    } catch {}
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      await fetch("/api/user/notifications/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: "all", userId: user?.id, userEmail: user?.email }),
+      });
+    } catch {}
+  };
+
   useEffect(() => {
     loadData();
+    loadNotifications();
   }, []);
 
   if (!user) {
@@ -135,7 +186,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
           </div>
 
           {/* Right Header Elements */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4">
+            <NotificationsDropdown
+              notifications={notifications}
+              onMarkRead={handleMarkNotificationRead}
+              onMarkAllRead={handleMarkAllNotificationsRead}
+              onNavigateTab={(tab) => setActiveTab(tab as any)}
+            />
+
             <Button
               variant="outline"
               onClick={() => onNavigate("/")}
@@ -296,6 +354,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
             { id: "rewards", label: "Rewards & Coins", icon: Coins },
             { id: "referral", label: "Refer & Earn", icon: Gift },
             { id: "reviews", label: "Reviews & Ratings", icon: Star },
+            { id: "support", label: "24/7 Support & RSA", icon: Headphones },
+            { id: "settings", label: "Account Settings", icon: Settings },
+            { id: "legal", label: "Legal Policies", icon: Scale },
             { id: "kyc", label: "KYC Documents", icon: ShieldCheck },
             { id: "profile", label: "My Profile", icon: User },
             { id: "saved", label: `Saved Cars (${savedCars.length})`, icon: Heart },
@@ -364,8 +425,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
               </div>
             )}
 
-            {/* Quick 6 Actions Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {/* Quick 8 Actions Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Card 1: KYC Action */}
               <div
                 onClick={() => setActiveTab("kyc")}
@@ -380,9 +441,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">KYC Verification Vault</h4>
+                  <h4 className="text-sm font-bold text-white">KYC Vault</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Driving License, Aadhaar, and selfie status for seamless express vehicle dispatch.
+                    Driving License & Aadhaar status for express dispatch.
                   </p>
                 </div>
               </div>
@@ -401,9 +462,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">Moar Wallet & Withdrawals</h4>
+                  <h4 className="text-sm font-bold text-white">Moar Wallet</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Add balance with bonus tiers, request instant refund to UPI/Bank with zero fee.
+                    Add funds with bonus tiers, 0% fee instant refund to UPI.
                   </p>
                 </div>
               </div>
@@ -422,14 +483,35 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">Rewards & Festival Deals</h4>
+                  <h4 className="text-sm font-bold text-white">Rewards & Coins</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Redeem Moar Coins directly to your wallet, claim birthday voucher & festive discounts.
+                    Redeem Moar Coins to wallet & claim festival discounts.
                   </p>
                 </div>
               </div>
 
-              {/* Card 4: Refer & Earn */}
+              {/* Card 4: 24/7 Support & RSA */}
+              <div
+                onClick={() => setActiveTab("support")}
+                className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-brand-gold">
+                    <Headphones className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
+                    Helpdesk <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">24/7 Support & RSA</h4>
+                  <p className="text-xs text-white/60 mt-1">
+                    Live AI chat, phone helpline, tickets, and roadside assistance.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 5: Refer & Earn */}
               <div
                 onClick={() => setActiveTab("referral")}
                 className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
@@ -439,18 +521,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                     <Gift className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
-                    Share Link <ChevronRight className="h-3.5 w-3.5" />
+                    Share <ChevronRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-white">Refer & Earn ₹500</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Invite friends & family with 1-click WhatsApp link. Earn ₹500 per completed trip.
+                    Invite friends with 1-click WhatsApp link.
                   </p>
                 </div>
               </div>
 
-              {/* Card 5: Reviews & Ratings */}
+              {/* Card 6: Reviews & Ratings */}
               <div
                 onClick={() => setActiveTab("reviews")}
                 className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
@@ -464,30 +546,51 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">Reviews & Photo Ratings</h4>
+                  <h4 className="text-sm font-bold text-white">Reviews & Ratings</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Review your car experience, upload photos & videos, and earn bonus loyalty coins.
+                    Review your car experience, upload photos & videos.
                   </p>
                 </div>
               </div>
 
-              {/* Card 6: Saved Fleet Cars */}
+              {/* Card 7: Account Settings */}
               <div
-                onClick={() => setActiveTab("saved")}
+                onClick={() => setActiveTab("settings")}
                 className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/10 text-rose-400">
-                    <Heart className="h-5 w-5" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-brand-gold">
+                    <Settings className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
-                    View ({savedCars.length}) <ChevronRight className="h-3.5 w-3.5" />
+                    Configure <ChevronRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">Favorite Fleet Cars</h4>
+                  <h4 className="text-sm font-bold text-white">Account Settings</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Quickly reserve your favorite models whenever you visit Tirumala or Horsley Hills.
+                    Manage delivery addresses, cards & notification channels.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 8: Legal & Policies */}
+              <div
+                onClick={() => setActiveTab("legal")}
+                className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-sky-400">
+                    <Scale className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
+                    Read <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Legal & Policies</h4>
+                  <p className="text-xs text-white/60 mt-1">
+                    Terms of rental, 100% refund SLA, and insurance cover.
                   </p>
                 </div>
               </div>
@@ -559,6 +662,27 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
             onBrowseFleet={() => onNavigate("/#fleet")}
           />
         )}
+
+        {activeTab === "support" && (
+          <SupportSection
+            user={currentUser}
+            bookings={upcomingBookings.concat(recentBookings)}
+            userTickets={dashboardData?.tickets}
+          />
+        )}
+
+        {activeTab === "settings" && (
+          <SettingsSection
+            user={currentUser}
+            onProfileUpdated={(updated) =>
+              setDashboardData((prev) => (prev ? { ...prev, user: updated } : null))
+            }
+            onLogout={logout}
+            onNavigateToTab={(tab) => setActiveTab(tab as any)}
+          />
+        )}
+
+        {activeTab === "legal" && <LegalSection />}
       </div>
     </div>
   );

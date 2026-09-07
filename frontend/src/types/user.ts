@@ -33,7 +33,10 @@ export interface UserProfile {
   referredBy?: string;
   referredCount?: number;
   referralEarnings?: number;
-  savedAddresses?: any[];
+  savedAddresses?: SavedAddress[];
+  savedPaymentMethods?: SavedPaymentMethod[];
+  notificationPreferences?: NotificationPreferences;
+  themePreference?: "dark" | "navy" | "contrast";
   favoriteCars?: (number | string)[];
   totalBookings?: number;
   token?: string;
@@ -138,6 +141,72 @@ export interface RewardVoucher {
   category: "birthday" | "festival" | "cashback" | "vip";
 }
 
+export interface SavedAddress {
+  id: string;
+  label: "Home" | "Office" | "Hotel / Temple" | "Other";
+  addressLine: string;
+  city: string;
+  state: string;
+  pincode: string;
+  landmark?: string;
+  isDefault?: boolean;
+}
+
+export interface SavedPaymentMethod {
+  id: string;
+  type: "upi" | "card";
+  upiVpa?: string;
+  bankName?: string;
+  cardLast4?: string;
+  cardBrand?: "Visa" | "Mastercard" | "RuPay" | "Amex";
+  cardExpiry?: string;
+  holderName?: string;
+  isDefault?: boolean;
+}
+
+export interface NotificationPreferences {
+  pushEnabled: boolean;
+  smsEnabled: boolean;
+  emailEnabled: boolean;
+  whatsappEnabled: boolean;
+  bookingAlerts: boolean;
+  pickupReminders: boolean;
+  returnReminders: boolean;
+  promotionalOffers: boolean;
+}
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: "booking" | "pickup" | "return" | "offer" | "support" | "system";
+  channel: "push" | "sms" | "whatsapp" | "email";
+  isRead: boolean;
+  link?: string;
+  timestamp: string;
+}
+
+export interface UserSupportTicket {
+  id: string;
+  bookingId?: number;
+  category: "Booking Issue" | "Car Breakdown" | "Payment / Refund" | "KYC Verification" | "General Enquiry";
+  priority: "Critical" | "High" | "Medium" | "Low";
+  status: "Open" | "In Progress" | "Resolved" | "Closed";
+  assignedAgent?: string;
+  subject: string;
+  messages: { sender: "Customer" | "Agent" | "AI Assistant"; text: string; time: string; attachmentUrl?: string }[];
+  createdAt: string;
+  lastUpdated?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: "user" | "bot" | "agent";
+  text: string;
+  timestamp: string;
+  suggestedActions?: string[];
+}
+
 export interface UserDashboardData {
   user: UserProfile;
   profileProgress: number;
@@ -152,6 +221,9 @@ export interface UserDashboardData {
   totalTrips: number;
   transactions?: TransactionItem[];
   reviews?: ReviewItem[];
+  userReviews?: ReviewItem[];
   referrals?: ReferralFriend[];
   vouchers?: RewardVoucher[];
+  notifications?: NotificationItem[];
+  tickets?: UserSupportTicket[];
 }
