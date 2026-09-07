@@ -17,22 +17,21 @@ export const MoarLogo: React.FC<MoarLogoProps> = ({
   imgClassName = "",
 }) => {
   const heights = {
-    sm: "h-9",
-    md: "h-12 sm:h-14",
-    navbar: "h-14 sm:h-16 md:h-18 lg:h-20",
-    lg: "h-16 sm:h-20 md:h-22",
-    xl: "h-20 sm:h-24 md:h-28",
+    sm: "h-8",
+    md: "h-10",
+    navbar: "h-10 sm:h-11 md:h-12 scale-[1.3] sm:scale-[1.45] origin-left",
+    lg: "h-14 sm:h-16",
+    xl: "h-18 sm:h-20",
   };
 
   return (
     <div className={`flex flex-col items-start justify-center ${className}`}>
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         <img
           src={logoImg}
           alt="MOAR CARS - Drive Luxury. Drive MOAR."
-          className={`${heights[size]} ${imgClassName} w-auto object-contain select-none transition-all duration-300 drop-shadow-sm`}
+          className={`${heights[size]} ${imgClassName} w-auto object-contain select-none transition-transform duration-300 drop-shadow-sm`}
           onError={(e) => {
-            // Graceful fallback to typography if image fails
             (e.target as HTMLElement).style.display = "none";
           }}
         />
@@ -56,7 +55,7 @@ export const MoarLogo: React.FC<MoarLogoProps> = ({
       </div>
       {showTagline && (
         <span
-          className={`mt-1.5 text-[10px] font-bold uppercase tracking-[0.25em] ${
+          className={`mt-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
             variant === "light" ? "text-white/70" : "text-slate-500"
           }`}
         >
