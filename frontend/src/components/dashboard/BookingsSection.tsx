@@ -36,6 +36,9 @@ import {
   CancelBookingModal,
   UpgradeCarModal,
 } from "./trips/TripManagementModals";
+import { PickupInspectionModal } from "./trips/PickupInspectionModal";
+import { TripSupportModal } from "./trips/TripSupportModal";
+import { ReturnInspectionModal } from "./trips/ReturnInspectionModal";
 
 interface BookingsSectionProps {
   upcomingBookings: BookingItem[];
@@ -135,6 +138,9 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
   const [selectedBookingForExtend, setSelectedBookingForExtend] = useState<BookingItem | null>(null);
   const [selectedBookingForCancel, setSelectedBookingForCancel] = useState<BookingItem | null>(null);
   const [selectedBookingForUpgrade, setSelectedBookingForUpgrade] = useState<BookingItem | null>(null);
+  const [selectedBookingForPickup, setSelectedBookingForPickup] = useState<BookingItem | null>(null);
+  const [selectedBookingForSupport, setSelectedBookingForSupport] = useState<BookingItem | null>(null);
+  const [selectedBookingForReturn, setSelectedBookingForReturn] = useState<BookingItem | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<BookingItem | null>(null);
   const [selectedAgreement, setSelectedAgreement] = useState<BookingItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -206,6 +212,27 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
   const handleUpgradeSuccess = (updated: any) => {
     handleUpdateBooking(updated);
     showToast(`✨ Car upgraded successfully to ${updated.carName}!`);
+  };
+
+  const handlePickupSuccess = (updated: any) => {
+    handleUpdateBooking(updated);
+    showToast(`🚗 Handover complete! Keyless digital entry active for ${updated.carName}.`);
+  };
+
+  const handleReturnSuccess = (updated: any) => {
+    handleUpdateBooking(updated);
+    showToast(`🏁 Vehicle return certified! Instant refund of ₹${updated.refundAmount || 3000} initiated.`);
+  };
+
+  const handleTripSupportExtend = (hours: number, amount: number) => {
+    if (selectedBookingForSupport) {
+      handleUpdateBooking({
+        ...selectedBookingForSupport,
+        grandTotal: (selectedBookingForSupport.grandTotal || selectedBookingForSupport.amount || 2499) + amount,
+        notes: `${selectedBookingForSupport.notes || ""} [+${hours}h extended via RSA/Trip Support]`,
+      });
+      showToast(`⏱️ Trip extended by +${hours} hours! New fare updated.`);
+    }
   };
 
   return (
@@ -370,6 +397,9 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
               onOpenUpgrade={(b) => setSelectedBookingForUpgrade(b)}
               onOpenInvoice={(b) => setSelectedInvoice(b)}
               onOpenAgreement={(b) => setSelectedAgreement(b)}
+              onOpenPickupInspection={(b) => setSelectedBookingForPickup(b)}
+              onOpenTripSupport={(b) => setSelectedBookingForSupport(b)}
+              onOpenReturnInspection={(b) => setSelectedBookingForReturn(b)}
               onBookAgain={() => onBrowseFleet()}
             />
           ))}
@@ -605,6 +635,36 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* 8. PICKUP INSPECTION & HANDOVER MODAL */}
+      {selectedBookingForPickup && (
+        <PickupInspectionModal
+          booking={selectedBookingForPickup}
+          isOpen={!!selectedBookingForPickup}
+          onClose={() => setSelectedBookingForPickup(null)}
+          onSuccess={handlePickupSuccess}
+        />
+      )}
+
+      {/* 9. TRIP SUPPORT & ROADSIDE ASSISTANCE MODAL */}
+      {selectedBookingForSupport && (
+        <TripSupportModal
+          booking={selectedBookingForSupport}
+          isOpen={!!selectedBookingForSupport}
+          onClose={() => setSelectedBookingForSupport(null)}
+          onExtendTrip={handleTripSupportExtend}
+        />
+      )}
+
+      {/* 10. RETURN CHECK-IN & SETTLEMENT INSPECTION MODAL */}
+      {selectedBookingForReturn && (
+        <ReturnInspectionModal
+          booking={selectedBookingForReturn}
+          isOpen={!!selectedBookingForReturn}
+          onClose={() => setSelectedBookingForReturn(null)}
+          onSuccess={handleReturnSuccess}
+        />
       )}
     </div>
   );

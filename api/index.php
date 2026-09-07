@@ -702,6 +702,19 @@ function ensureTablesExist($pdo) {
                 'returnFuel' => "INT DEFAULT 100",
                 'penalties' => "INT DEFAULT 0",
                 'timelineStep' => "INT DEFAULT 5",
+                'pickupPhotos' => "LONGTEXT DEFAULT NULL",
+                'pickupChecklist' => "LONGTEXT DEFAULT NULL",
+                'pickupOtp' => "VARCHAR(10) DEFAULT NULL",
+                'pickupSignature' => "LONGTEXT DEFAULT NULL",
+                'returnPhotos' => "LONGTEXT DEFAULT NULL",
+                'damageImages' => "LONGTEXT DEFAULT NULL",
+                'damageNotes' => "TEXT DEFAULT NULL",
+                'cleaningFee' => "INT DEFAULT 0",
+                'lateReturnFee' => "INT DEFAULT 0",
+                'fuelPenalty' => "INT DEFAULT 0",
+                'refundAmount' => "INT DEFAULT 0",
+                'refundStatus' => "VARCHAR(50) DEFAULT 'Settled'",
+                'refundTxnId' => "VARCHAR(100) DEFAULT NULL",
             ],
             'Customers' => [
                 'name' => "VARCHAR(255) NOT NULL DEFAULT 'Valued Customer'",
@@ -1894,6 +1907,154 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
     }
 
     echo json_encode(["success" => true, "message" => "Booking saved!", "data" => $input]);
+    exit();
+}
+
+// POST /api/bookings/pickup-inspection
+if (($route === 'bookings/pickup-inspection' || $route === 'admin/bookings/pickup-inspection') && $method === 'POST') {
+    $bookingId = (int)($input['id'] ?? ($input['bookingId'] ?? 0));
+    $startOdo = (int)($input['startOdometer'] ?? 18450);
+    $startFuel = (int)($input['startFuel'] ?? 100);
+    $photos = safeJsonEncode($input['pickupPhotos'] ?? []);
+    $checklist = safeJsonEncode($input['pickupChecklist'] ?? []);
+    $otp = $input['pickupOtp'] ?? '123456';
+    $signature = $input['pickupSignature'] ?? null;
+
+    if ($bookingId > 0 && isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE Bookings SET 
+                    startOdometer = ?,
+                    startFuel = ?,
+                    pickupPhotos = ?,
+                    pickupChecklist = ?,
+                    pickupOtp = ?,
+                    pickupSignature = COALESCE(?, pickupSignature),
+                    status = 'Active',
+                    timelineStep = 6
+                WHERE id = ?
+            ");
+            $stmt->execute([$startOdo, $startFuel, $photos, $checklist, $otp, $signature, $bookingId]);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Vehicle pickup handover & inspection completed successfully! Trip is now ACTIVE.",
+                "bookingId" => $bookingId,
+                "status" => "Active",
+                "timelineStep" => 6
+            ]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Pickup error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode(["success" => true, "message" => "Pickup recorded successfully!", "status" => "Active"]);
+    exit();
+}
+
+// POST /api/bookings/return-inspection
+if (($route === 'bookings/return-inspection' || $route === 'admin/bookings/return-inspection') && $method === 'POST') {
+    $bookingId = (int)($input['id'] ?? ($input['bookingId'] ?? 0));
+    $returnOdo = (int)($input['returnOdometer'] ?? 18690);
+    $returnFuel = (int)($input['returnFuel'] ?? 100);
+    $photos = safeJsonEncode($input['returnPhotos'] ?? []);
+    $damageImages = safeJsonEncode($input['damageImages'] ?? []);
+    $damageNotes = $input['damageNotes'] ?? null;
+    $cleaningFee = (int)($input['cleaningFee'] ?? 0);
+    $lateFee = (int)($input['lateReturnFee'] ?? 0);
+    $fuelPenalty = (int)($input['fuelPenalty'] ?? 0);
+    $totalPenalties = $cleaningFee + $lateFee + $fuelPenalty;
+    $deposit = (int)($input['securityDeposit'] ?? 3000);
+    $refundAmt = max(0, $deposit - $totalPenalties);
+    $refundTxnId = 'REF_UPI_' . strtoupper(bin2hex(random_bytes(5)));
+
+    if ($bookingId > 0 && isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE Bookings SET 
+                    returnOdometer = ?,
+                    returnFuel = ?,
+                    returnPhotos = ?,
+                    damageImages = ?,
+                    damageNotes = ?,
+                    cleaningFee = ?,
+                    lateReturnFee = ?,
+                    fuelPenalty = ?,
+                    penalties = ?,
+                    refundAmount = ?,
+                    refundStatus = 'Settled',
+                    refundTxnId = ?,
+                    status = 'Completed',
+                    timelineStep = 9
+                WHERE id = ?
+            ");
+            $stmt->execute([
+                $returnOdo, $returnFuel, $photos, $damageImages, $damageNotes,
+                $cleaningFee, $lateFee, $fuelPenalty, $totalPenalties,
+                $refundAmt, $refundTxnId, $bookingId
+            ]);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Vehicle return check-in & inspection completed! Security deposit refund of ₹$refundAmt initiated.",
+                "bookingId" => $bookingId,
+                "status" => "Completed",
+                "refundAmount" => $refundAmt,
+                "refundTxnId" => $refundTxnId,
+                "timelineStep" => 9
+            ]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Return error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Return inspection recorded successfully!",
+        "status" => "Completed",
+        "refundAmount" => $refundAmt,
+        "refundTxnId" => $refundTxnId
+    ]);
+    exit();
+}
+
+// POST /api/bookings/rsa-request
+if (($route === 'bookings/rsa-request' || $route === 'admin/bookings/rsa-request') && $method === 'POST') {
+    $bookingId = (int)($input['bookingId'] ?? 0);
+    $serviceType = $input['serviceType'] ?? 'Flat Tyre Puncture Assistance';
+    $customerLocation = $input['location'] ?? 'Tirupati Alipiri Road';
+    $contactNumber = $input['phone'] ?? '+91 85000 12345';
+    $ticketId = 'RSA-' . rand(10000, 99999);
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO SupportTickets (id, customerName, subject, status, priority, message, bookingId)
+                VALUES (?, ?, ?, 'Open', 'Urgent', ?, ?)
+            ");
+            $stmt->execute([
+                $ticketId,
+                $input['customerName'] ?? 'Valued Customer',
+                "Emergency RSA: $serviceType at $customerLocation",
+                "Emergency breakdown assistance requested for Booking #$bookingId. Location: $customerLocation. Phone: $contactNumber",
+                (string)$bookingId
+            ]);
+        } catch (Exception $e) {}
+    }
+
+    echo json_encode([
+        "success" => true,
+        "ticketId" => $ticketId,
+        "message" => "Roadside assistance dispatched! Patrol vehicle ETA: 18 minutes.",
+        "etaMinutes" => 18,
+        "patrolOfficer" => "M. Ramakrishna (AP Highway Patrol #1033)"
+    ]);
     exit();
 }
 

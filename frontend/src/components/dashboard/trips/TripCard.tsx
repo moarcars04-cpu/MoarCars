@@ -36,6 +36,9 @@ interface TripCardProps {
   onOpenUpgrade: (booking: any) => void;
   onOpenInvoice: (booking: any) => void;
   onOpenAgreement?: (booking: any) => void;
+  onOpenPickupInspection?: (booking: any) => void;
+  onOpenTripSupport?: (booking: any) => void;
+  onOpenReturnInspection?: (booking: any) => void;
   onBookAgain?: (carName: string) => void;
 }
 
@@ -48,6 +51,9 @@ export const TripCard: React.FC<TripCardProps> = ({
   onOpenUpgrade,
   onOpenInvoice,
   onOpenAgreement,
+  onOpenPickupInspection,
+  onOpenTripSupport,
+  onOpenReturnInspection,
   onBookAgain,
 }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -197,6 +203,27 @@ export const TripCard: React.FC<TripCardProps> = ({
                 <Navigation className="h-3.5 w-3.5 animate-pulse" /> Live Tracking
               </Button>
 
+              {onOpenTripSupport && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onOpenTripSupport(booking)}
+                  className="rounded-xl border-amber-500/40 bg-amber-500/10 text-brand-gold hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1 shadow-sm"
+                >
+                  <Phone className="h-3.5 w-3.5" /> 24/7 Support & RSA
+                </Button>
+              )}
+
+              {onOpenReturnInspection && (
+                <Button
+                  size="sm"
+                  onClick={() => onOpenReturnInspection(booking)}
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow"
+                >
+                  <FileText className="h-3.5 w-3.5" /> Return & Inspection
+                </Button>
+              )}
+
               <Button
                 size="sm"
                 variant="outline"
@@ -211,6 +238,16 @@ export const TripCard: React.FC<TripCardProps> = ({
           {/* Upcoming Trip Actions */}
           {isUpcoming && (
             <>
+              {onOpenPickupInspection && (
+                <Button
+                  size="sm"
+                  onClick={() => onOpenPickupInspection(booking)}
+                  className="rounded-xl bg-brand-navy hover:bg-brand-navy/90 text-white text-xs font-extrabold flex items-center gap-1.5 shadow"
+                >
+                  <Camera className="h-3.5 w-3.5 text-brand-gold" /> Pickup & Handover
+                </Button>
+              )}
+
               <Button
                 size="sm"
                 onClick={() => onOpenLiveTracking(booking)}
@@ -262,6 +299,17 @@ export const TripCard: React.FC<TripCardProps> = ({
           {/* Completed Trip Actions */}
           {isCompleted && (
             <>
+              {onOpenReturnInspection && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onOpenReturnInspection(booking)}
+                  className="rounded-xl border-emerald-500/30 text-xs font-bold text-emerald-700 hover:bg-emerald-500/10 flex items-center gap-1 shadow-sm"
+                >
+                  <FileText className="h-3.5 w-3.5 text-emerald-600" /> Inspection Report
+                </Button>
+              )}
+
               {onOpenAgreement && (
                 <Button
                   size="sm"
