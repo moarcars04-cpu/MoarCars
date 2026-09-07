@@ -1379,39 +1379,6 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* 5. "Need Help Choosing?" CTA Banner */}
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6 sm:py-8">
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-[#101b33] to-slate-900 text-white shadow-xl border border-slate-800">
-          {/* Customer support agent background image overlay */}
-          <div className="absolute right-0 top-0 bottom-0 w-full sm:w-1/2 opacity-35 sm:opacity-55 mix-blend-screen pointer-events-none">
-            <img
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
-              alt="MOAR Support"
-              className="h-full w-full object-cover object-center"
-            />
-          </div>
-
-          <div className="relative z-10 px-6 sm:px-10 py-8 sm:py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 max-w-4xl">
-            <div className="space-y-2">
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                Need Help Choosing?
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-lg leading-relaxed">
-                Our team is here to help you find the perfect car for your journey.
-              </p>
-            </div>
-
-            <Button
-              onClick={() => setTalkModalOpen(true)}
-              className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center gap-2 transition-transform hover:scale-105 shrink-0"
-            >
-              <Phone className="h-4 w-4" />
-              <span>Talk to Our Experts</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </section>
 
       {/* 6. Trust Badges Bar (4 in a row) */}
       <div className="w-full bg-white border-y border-slate-100/90 py-5 sm:py-6 shadow-xs">
