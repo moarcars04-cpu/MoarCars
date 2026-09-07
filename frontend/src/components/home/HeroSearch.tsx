@@ -2,16 +2,14 @@ import React, { useState } from "react";
 import {
   MapPin,
   Calendar,
-  Clock,
   Search,
   Navigation,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
   Car,
   Headphones,
   Zap,
   ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +27,7 @@ interface HeroSearchProps {
 }
 
 const popularLocations = [
+  "City, Airport or Area",
   "Tirupati Central Hub (Station)",
   "Renigunta Airport Hub (T1)",
   "Chandragiri Heritage Point",
@@ -60,24 +59,24 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setLocationNotice("Geolocation is not supported by your browser.");
+      setLocationNotice("Geolocation not supported.");
       return;
     }
     setIsLocating(true);
-    setLocationNotice("Detecting nearest rental hub...");
+    setLocationNotice("Detecting nearest hub...");
 
     navigator.geolocation.getCurrentPosition(
       () => {
         setIsLocating(false);
         setPickup("Tirupati Central Hub (Station)");
-        setLocationNotice("📍 Detected closest hub: Tirupati Central Hub");
-        setTimeout(() => setLocationNotice(""), 4000);
+        setLocationNotice("📍 Tirupati Central Hub selected");
+        setTimeout(() => setLocationNotice(""), 3500);
       },
       () => {
         setIsLocating(false);
         setPickup("Tirupati Central Hub (Station)");
-        setLocationNotice("📍 Tirupati Central Station Hub selected");
-        setTimeout(() => setLocationNotice(""), 4000);
+        setLocationNotice("📍 Tirupati Central Hub selected");
+        setTimeout(() => setLocationNotice(""), 3500);
       },
       { timeout: 5000 }
     );
@@ -86,8 +85,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   const handleTriggerSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch({
-      pickup,
-      dropoff,
+      pickup: pickup === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : pickup,
+      dropoff: dropoff === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : dropoff,
       startDate,
       startTime: "09:00",
       endDate: returnDate,
@@ -99,16 +98,16 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="w-full relative z-20 space-y-3">
+    <div className="w-full relative z-20 space-y-2">
       {/* Service Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 pl-1">
         <button
           type="button"
           onClick={() => setServiceType("self")}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
             serviceType === "self"
-              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
-              : "bg-white/80 hover:bg-white text-slate-700 border border-slate-200"
+              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/25"
+              : "bg-white/90 hover:bg-white text-slate-700 border border-slate-200"
           }`}
         >
           Self Drive
@@ -116,10 +115,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("chauffeur")}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
             serviceType === "chauffeur"
-              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
-              : "bg-white/80 hover:bg-white text-slate-700 border border-slate-200"
+              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/25"
+              : "bg-white/90 hover:bg-white text-slate-700 border border-slate-200"
           }`}
         >
           Chauffeur Driven
@@ -127,10 +126,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("airport")}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
             serviceType === "airport"
-              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
-              : "bg-white/80 hover:bg-white text-slate-700 border border-slate-200"
+              ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/25"
+              : "bg-white/90 hover:bg-white text-slate-700 border border-slate-200"
           }`}
         >
           Airport Pickup
@@ -138,11 +137,11 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
       </div>
 
       {/* Floating White Search Widget Card */}
-      <div className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-2xl shadow-slate-900/10 border border-slate-200/90 text-slate-900 backdrop-blur-sm">
+      <div className="rounded-2xl sm:rounded-3xl bg-white p-3 sm:p-4 shadow-xl shadow-slate-900/10 border border-slate-200/90 text-slate-900 backdrop-blur-sm">
         {locationNotice && (
-          <div className="mb-3 flex items-center justify-between rounded-xl bg-amber-50 px-3.5 py-1.5 text-xs font-semibold text-amber-800 border border-amber-200">
+          <div className="mb-2 flex items-center justify-between rounded-xl bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
             <span className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-[#c88d18]" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-[#c88d18]" />
               {locationNotice}
             </span>
           </div>
@@ -150,10 +149,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
 
         <form
           onSubmit={handleTriggerSearch}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-2 items-center"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-1 items-center"
         >
-          {/* Pickup Location */}
-          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
+          {/* 1. Pickup Location */}
+          <div className="p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Pickup Location
@@ -161,10 +160,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
               <button
                 type="button"
                 onClick={handleGetCurrentLocation}
-                className="text-[10px] text-[#c88d18] hover:underline flex items-center gap-1 font-semibold"
+                className="text-[9px] text-[#c88d18] hover:underline flex items-center gap-0.5 font-semibold"
                 title="Detect GPS Location"
               >
-                <Navigation className={`h-3 w-3 ${isLocating ? "animate-spin" : ""}`} />
+                <Navigation className={`h-2.5 w-2.5 ${isLocating ? "animate-spin" : ""}`} />
                 <span>GPS</span>
               </button>
             </div>
@@ -173,7 +172,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
               <select
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none truncate cursor-pointer"
+                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
                 {popularLocations.map((loc) => (
                   <option key={loc} value={loc}>
@@ -184,8 +183,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* Drop-off Location */}
-          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
+          {/* 2. Drop-off Location */}
+          <div className="p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Drop-off Location
             </span>
@@ -194,7 +193,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
               <select
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none truncate cursor-pointer"
+                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
                 {popularLocations.map((loc) => (
                   <option key={loc} value={loc}>
@@ -205,8 +204,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* Pickup Date */}
-          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+          {/* 3. Pickup Date */}
+          <div className="p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Pickup Date
             </span>
@@ -217,13 +216,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none cursor-pointer"
+                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
               />
             </div>
           </div>
 
-          {/* Return Date */}
-          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+          {/* 4. Return Date */}
+          <div className="p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Return Date
             </span>
@@ -234,13 +233,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 required
                 value={returnDate}
                 onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none cursor-pointer"
+                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
               />
             </div>
           </div>
 
-          {/* Car Type */}
-          <div className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+          {/* 5. Car Type */}
+          <div className="p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Car Type
             </span>
@@ -249,7 +248,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
               <select
                 value={carType}
                 onChange={(e) => setCarType(e.target.value)}
-                className="w-full bg-transparent text-xs sm:text-[13px] font-bold text-slate-800 outline-none truncate cursor-pointer"
+                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
                 {carTypes.map((type) => (
                   <option key={type} value={type}>
@@ -260,14 +259,14 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* Search Action Button */}
+          {/* 6. Action Button */}
           <div className="p-1">
             <Button
               type="submit"
-              className="h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
+              className="h-11 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center justify-center gap-1.5 transition-transform hover:scale-[1.02]"
             >
               <span>Search Cars</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
         </form>
@@ -280,7 +279,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             <Car className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-lg font-black text-slate-900 leading-none">500+</div>
+            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">500+</div>
             <div className="text-xs text-slate-500 font-medium mt-0.5">Cars Available</div>
           </div>
         </div>
@@ -290,7 +289,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             <MapPin className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-lg font-black text-slate-900 leading-none">50+</div>
+            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">50+</div>
             <div className="text-xs text-slate-500 font-medium mt-0.5">Cities</div>
           </div>
         </div>
@@ -300,7 +299,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             <Headphones className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-lg font-black text-slate-900 leading-none">24/7</div>
+            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">24/7</div>
             <div className="text-xs text-slate-500 font-medium mt-0.5">Support</div>
           </div>
         </div>
@@ -310,7 +309,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             <Zap className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-lg font-black text-slate-900 leading-none">Instant</div>
+            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">Instant</div>
             <div className="text-xs text-slate-500 font-medium mt-0.5">Booking</div>
           </div>
         </div>

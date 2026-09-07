@@ -690,15 +690,13 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         id="top"
         className="relative pt-18 sm:pt-20 pb-8 sm:pb-12 bg-white overflow-hidden"
       >
-        {/* Crisp Luxury Showroom Background Image (100% full clarity, zero heavy white wash) */}
+        {/* Crisp Luxury Showroom Background Image (100% full clarity, cars on right) */}
         <div className="absolute inset-0 z-0 pointer-events-none">
           <img
             src={heroLuxuryImg}
             alt="MOAR CARS Luxury Showroom"
             className="w-full h-full object-cover object-right sm:object-center opacity-100"
           />
-          {/* Subtle soft gradient only under left text area to preserve 100% car clarity on right/bottom */}
-          <div className="absolute inset-y-0 left-0 w-full sm:w-2/5 bg-gradient-to-r from-white/70 via-white/30 to-transparent pointer-events-none" />
         </div>
 
         {/* Floating Typography Watermarks */}
@@ -715,19 +713,23 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         {/* Hero Content Container */}
         <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-4 sm:space-y-6">
           {/* Left Title & CTA Hero Header */}
-          <div className="max-w-xl pt-2 sm:pt-4 space-y-2.5">
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-black text-slate-900 tracking-tight leading-[1.05] drop-shadow-sm">
+          <div className="max-w-xl pt-3 sm:pt-5 space-y-2.5">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 block mb-1">
+              PREMIUM CAR RENTALS
+            </span>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
               Drive Luxury.
               <br />
               Drive <span className="text-[#d49b29]">MOAR.</span>
             </h1>
 
-            <p className="text-xs sm:text-sm font-semibold text-slate-700 tracking-wide drop-shadow-sm">
+            <p className="text-xs sm:text-[13px] font-medium text-slate-600 tracking-wide drop-shadow-sm">
               Premium Car Rentals • Self Drive • Chauffeur Service • Airport Pickup
             </p>
 
             {/* Dual CTAs */}
-            <div className="pt-1.5 flex flex-wrap items-center gap-3">
+            <div className="pt-2 flex flex-wrap items-center gap-3">
               <Button
                 onClick={() => {
                   document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
@@ -749,17 +751,18 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             </div>
 
             {/* Tagline Rule */}
-            <div className="pt-1 flex items-center gap-2.5">
+            <div className="pt-2 flex items-center gap-2.5">
               <div className="h-0.5 w-8 bg-[#c88d18]" />
               <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#c88d18]">
                 DRIVE MORE. EXPLORE MORE.
               </span>
+              <div className="h-0.5 w-8 bg-[#c88d18]" />
             </div>
           </div>
 
           {/* Cursive script floating badge */}
           <div className="flex justify-end pr-4 sm:pr-8 -mt-2">
-            <span className="font-serif italic text-base sm:text-xl text-slate-500/90 font-medium tracking-wide select-none drop-shadow-sm">
+            <span className="font-serif italic text-base sm:text-xl text-slate-600/90 font-medium tracking-wide select-none drop-shadow-sm">
               More Than Just a Ride
             </span>
           </div>
