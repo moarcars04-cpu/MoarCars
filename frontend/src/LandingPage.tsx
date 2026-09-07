@@ -492,7 +492,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {/* 2. Hero Section */}
       <section
         id="top"
-        className="relative pt-6 sm:pt-14 pb-4 sm:pb-6 bg-white overflow-hidden"
+        className="relative min-h-screen flex flex-col justify-between pt-20 sm:pt-24 pb-6 sm:pb-8 bg-white overflow-hidden"
       >
         {/* Crisp Luxury Showroom Background Image (Desktop) */}
         <div className="hidden lg:block absolute inset-0 z-0 pointer-events-none">
@@ -506,7 +506,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         </div>
 
         {/* Floating Typography Watermarks (Desktop) */}
-        <div className="absolute top-20 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none">
+        <div className="absolute top-24 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none">
           <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-slate-700/80 leading-relaxed drop-shadow-sm">
             LUXURY
             <br />
@@ -517,16 +517,16 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         </div>
 
         {/* Hero Content Container */}
-        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col space-y-3 sm:space-y-6">
+        <div className="relative z-10 max-w-[1600px] w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex-1 flex flex-col justify-between space-y-4 sm:space-y-6">
           {/* Headline (Visible on Mobile at Top & Desktop) */}
-          <div className="max-w-xl space-y-2 pt-1 sm:pt-4">
-            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.08] drop-shadow-sm">
+          <div className="max-w-2xl space-y-2 pt-2 sm:pt-4">
+            <h1 className="text-3xl sm:text-5xl lg:text-[54px] xl:text-[60px] font-serif font-black text-slate-900 tracking-tight leading-[1.08] drop-shadow-sm">
               Drive Luxury.
               <br />
               Drive <span className="text-[#c88d18]">MOAR.</span>
             </h1>
 
-            <p className="text-xs sm:text-[13px] font-medium text-slate-600 tracking-wide leading-relaxed">
+            <p className="text-xs sm:text-[14px] font-medium text-slate-600 tracking-wide leading-relaxed max-w-xl">
               Premium Car Rentals • Self Drive • Chauffeur Service • Airport Pickup & Drop
             </p>
           </div>
@@ -541,7 +541,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
 
           {/* Floating Search Widget */}
-          <div className="w-full">
+          <div className="w-full pb-1 sm:pb-2">
             <HeroSearch onSearch={handleHeroSearch} />
           </div>
         </div>

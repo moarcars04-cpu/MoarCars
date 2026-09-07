@@ -418,7 +418,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             {/* Search Icon Shortcut */}
             <button
               onClick={() => {
-                document.getElementById("cars-hero-search")?.focus();
+                document.getElementById("cars-catalog-search")?.focus();
               }}
               aria-label="Search cars"
               className="p-2 text-slate-700 hover:text-[#c88d18] transition-colors rounded-full hover:bg-slate-100"
@@ -513,79 +513,6 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
         </div>
       </header>
 
-      {/* 2. Hero Section: "Find Your Perfect Drive" */}
-      <section className="relative pt-10 sm:pt-14 pb-10 sm:pb-14 bg-[#090e18] text-white overflow-hidden border-b border-slate-800/40">
-        {/* Subtle Dark Luxury Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#070c16] via-[#0b1329] to-[#070c16]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#d49b29]/10 via-transparent to-transparent pointer-events-none" />
-
-        {/* Floating Typography Watermark on Top Right */}
-        <div className="absolute top-8 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none opacity-40">
-          <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-white/50 leading-relaxed drop-shadow-sm">
-            DRIVE
-            <br />
-            MOAR.
-            <br />
-            EXPLORE
-            <br />
-            MOAR.
-          </div>
-        </div>
-
-        {/* Hero Content Container */}
-        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col justify-center min-h-[260px] sm:min-h-[300px]">
-          <div className="max-w-2xl space-y-3 sm:space-y-4">
-            {/* Small uppercase tag */}
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#d49b29] block">
-              EXPLORE OUR VERIFIED FLEET
-            </span>
-
-            {/* Serif Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif font-bold text-white tracking-tight leading-[1.1] drop-shadow-md">
-              Find Your Perfect Drive
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl leading-relaxed">
-              Available live in Tirupati & Andhra Pradesh. 100% verified, sanitized, and ready for instant booking.
-            </p>
-
-            {/* Search Input Bar with Golden Button */}
-            <div className="pt-2 sm:pt-4 max-w-xl">
-              <div className="relative flex items-center bg-white rounded-xl sm:rounded-2xl p-1.5 sm:p-2 shadow-2xl border border-white/20">
-                <Search className="h-5 w-5 text-slate-400 ml-2.5 sm:ml-3 shrink-0" />
-                <input
-                  id="cars-hero-search"
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Search Swift, Innova, Scorpio, BMW, EV..."
-                  className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none font-medium"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="p-1 text-slate-400 hover:text-slate-600 mr-1"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-                <Button
-                  onClick={() => {
-                    document.getElementById("fleet-catalog-grid")?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="h-10 sm:h-11 px-5 sm:px-7 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#c88d18]/30 shrink-0"
-                >
-                  Search
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 3. Category Filter Tabs Bar (Horizontal Pills Bar) */}
       <div className="bg-white border-b border-slate-100 shadow-xs sticky top-16 sm:top-18 z-40">
@@ -836,29 +763,56 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
           <div className="lg:col-span-9 space-y-6">
             {/* Top Results & Sort Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
-              <span className="text-xs sm:text-sm font-semibold text-slate-600">
-                Showing{" "}
-                <strong className="text-slate-900">
-                  {filteredCars.length > 0 ? (currentPage - 1) * carsPerPage + 1 : 0}–
-                  {Math.min(currentPage * carsPerPage, filteredCars.length)}
-                </strong>{" "}
-                of <strong className="text-slate-900">{filteredCars.length}</strong> vehicles in database
-              </span>
+              <div className="flex items-center gap-3 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    id="cars-catalog-search"
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Search Swift, Innova, Scorpio, BMW, EV..."
+                    className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white pl-9 pr-8 py-2 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:border-[#c88d18] outline-none transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
 
-              {/* Sort By Dropdown */}
-              <div className="flex items-center gap-2 self-end sm:self-auto">
-                <span className="text-xs text-slate-500 font-medium">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-[#c88d18]"
-                >
-                  <option value="popular">Popular First</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="trips">Most Trips</option>
-                </select>
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">
+                  Showing{" "}
+                  <strong className="text-slate-900">
+                    {filteredCars.length > 0 ? (currentPage - 1) * carsPerPage + 1 : 0}–
+                    {Math.min(currentPage * carsPerPage, filteredCars.length)}
+                  </strong>{" "}
+                  of <strong className="text-slate-900">{filteredCars.length}</strong> cars
+                </span>
+
+                {/* Sort By Dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-[#c88d18]"
+                  >
+                    <option value="popular">Popular First</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="trips">Most Trips</option>
+                  </select>
+                </div>
               </div>
             </div>
 
