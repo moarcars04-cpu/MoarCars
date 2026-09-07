@@ -23,6 +23,7 @@ interface AuthContextType {
   toggleFavoriteCar: (carId: number | string) => Promise<boolean>;
   addWalletFunds: (amount: number) => Promise<{ success: boolean; message: string; newBalance?: number }>;
   redeemRewards: (points: number) => Promise<{ success: boolean; message: string }>;
+  claimBirthdayReward: () => Promise<{ success: boolean; message: string }>;
   fetchDashboardData: () => Promise<UserDashboardData | null>;
 }
 
@@ -342,6 +343,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const claimBirthdayReward = async () => {
+    if (!user) return { success: false, message: "User not logged in." };
+    try {
+      const res = await fetch("/api/user/rewards/claim-birthday", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, userEmail: user.email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const updatedUser = {
+          ...user,
+          walletBalance: data.newBalance ?? (user.walletBalance + 500),
+          rewardPoints: data.newPoints ?? (user.rewardPoints + 500),
+        };
+        saveSession(updatedUser, token);
+        return { success: true, message: data.message || "Birthday bonus ₹500 added to your wallet!" };
+      }
+      return { success: false, message: data.message || "Could not claim birthday reward." };
+    } catch (err: any) {
+      return { success: false, message: err?.message || "Network error." };
+    }
+  };
+
   const fetchDashboardData = async (): Promise<UserDashboardData | null> => {
     if (!user) return null;
     try {
@@ -381,6 +406,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleFavoriteCar,
         addWalletFunds,
         redeemRewards,
+        claimBirthdayReward,
         fetchDashboardData,
       }}
     >

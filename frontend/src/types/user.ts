@@ -77,6 +77,67 @@ export interface BookingItem {
   createdAt?: string;
 }
 
+export interface TransactionItem {
+  id: string;
+  title: string;
+  amount: number;
+  type: "credit" | "debit";
+  category: "topup" | "booking_paid" | "cashback" | "deposit_refund" | "referral_bonus" | "withdrawal";
+  status: "Captured" | "Pending" | "Refunded" | "Settled";
+  date: string;
+  invoiceNumber?: string;
+  gateway?: string;
+  transactionId?: string;
+  notes?: string;
+}
+
+export interface ReviewItem {
+  id: number;
+  customerName: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerAvatar?: string;
+  carName: string;
+  rating: number;
+  cleanlinessRating?: number;
+  performanceRating?: number;
+  handoverRating?: number;
+  valueRating?: number;
+  comment: string;
+  photoUrls?: string[];
+  videoUrl?: string;
+  date: string;
+  status: "Approved" | "Pending" | "Rejected";
+  isFeatured?: boolean;
+  adminReply?: string;
+  bookingId?: number;
+  likesCount?: number;
+  isReported?: boolean;
+  reportReason?: string;
+}
+
+export interface ReferralFriend {
+  id: number;
+  name: string;
+  phone: string;
+  avatar?: string;
+  joinedDate: string;
+  status: "Signed Up" | "First Trip Booked" | "Trip Completed";
+  rewardEarned: number;
+}
+
+export interface RewardVoucher {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  discountValue: number;
+  minBooking: number;
+  expiryDate: string;
+  isClaimed: boolean;
+  category: "birthday" | "festival" | "cashback" | "vip";
+}
+
 export interface UserDashboardData {
   user: UserProfile;
   profileProgress: number;
@@ -89,4 +150,8 @@ export interface UserDashboardData {
   recentBookings: BookingItem[];
   savedCars: any[];
   totalTrips: number;
+  transactions?: TransactionItem[];
+  reviews?: ReviewItem[];
+  referrals?: ReferralFriend[];
+  vouchers?: RewardVoucher[];
 }

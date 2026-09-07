@@ -18,6 +18,9 @@ import {
   Phone,
   Settings,
   Bell,
+  Coins,
+  Star,
+  Share2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile, UserDashboardData, BookingItem } from "../../types/user";
@@ -25,6 +28,9 @@ import { KycSection } from "./KycSection";
 import { BookingsSection } from "./BookingsSection";
 import { ProfileSection } from "./ProfileSection";
 import { WalletSection } from "./WalletSection";
+import { RewardsSection } from "./RewardsSection";
+import { ReferralSection } from "./ReferralSection";
+import { ReviewsSection } from "./ReviewsSection";
 import { SavedCarsSection } from "./SavedCarsSection";
 import { Button } from "@/components/ui/button";
 
@@ -42,10 +48,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
     toggleFavoriteCar,
     addWalletFunds,
     redeemRewards,
+    claimBirthdayReward,
     fetchDashboardData,
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<"overview" | "bookings" | "kyc" | "profile" | "saved" | "wallet">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "bookings" | "kyc" | "profile" | "saved" | "wallet" | "rewards" | "referral" | "reviews"
+  >("overview");
   const [dashboardData, setDashboardData] = useState<UserDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -282,11 +291,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
           {[
             { id: "overview", label: "Overview", icon: Home },
-            { id: "bookings", label: `My Bookings (${upcomingBookings.length})`, icon: CalendarDays },
+            { id: "bookings", label: `My Trips (${upcomingBookings.length})`, icon: CalendarDays },
+            { id: "wallet", label: "Moar Wallet", icon: Wallet },
+            { id: "rewards", label: "Rewards & Coins", icon: Coins },
+            { id: "referral", label: "Refer & Earn", icon: Gift },
+            { id: "reviews", label: "Reviews & Ratings", icon: Star },
             { id: "kyc", label: "KYC Documents", icon: ShieldCheck },
             { id: "profile", label: "My Profile", icon: User },
             { id: "saved", label: `Saved Cars (${savedCars.length})`, icon: Heart },
-            { id: "wallet", label: "Wallet & Rewards", icon: Wallet },
           ].map((tabItem) => {
             const Icon = tabItem.icon;
             const isActive = activeTab === tabItem.id;
@@ -352,8 +364,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
               </div>
             )}
 
-            {/* Quick 3 Actions Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Quick 6 Actions Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
               {/* Card 1: KYC Action */}
               <div
                 onClick={() => setActiveTab("kyc")}
@@ -389,14 +401,77 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                   </span>
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white">Moar Wallet & Points</h4>
+                  <h4 className="text-sm font-bold text-white">Moar Wallet & Withdrawals</h4>
                   <p className="text-xs text-white/60 mt-1">
-                    Add balance with zero fees, redeem reward coins, and share referral codes.
+                    Add balance with bonus tiers, request instant refund to UPI/Bank with zero fee.
                   </p>
                 </div>
               </div>
 
-              {/* Card 3: Saved Cars Action */}
+              {/* Card 3: Rewards & Loyalty Coins */}
+              <div
+                onClick={() => setActiveTab("rewards")}
+                className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-400">
+                    <Coins className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
+                    Redeem <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Rewards & Festival Deals</h4>
+                  <p className="text-xs text-white/60 mt-1">
+                    Redeem Moar Coins directly to your wallet, claim birthday voucher & festive discounts.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 4: Refer & Earn */}
+              <div
+                onClick={() => setActiveTab("referral")}
+                className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-brand-gold">
+                    <Gift className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
+                    Share Link <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Refer & Earn ₹500</h4>
+                  <p className="text-xs text-white/60 mt-1">
+                    Invite friends & family with 1-click WhatsApp link. Earn ₹500 per completed trip.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 5: Reviews & Ratings */}
+              <div
+                onClick={() => setActiveTab("reviews")}
+                className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10 text-amber-400">
+                    <Star className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-bold text-brand-gold flex items-center gap-1">
+                    Rate Trips <ChevronRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white">Reviews & Photo Ratings</h4>
+                  <p className="text-xs text-white/60 mt-1">
+                    Review your car experience, upload photos & videos, and earn bonus loyalty coins.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 6: Saved Fleet Cars */}
               <div
                 onClick={() => setActiveTab("saved")}
                 className="cursor-pointer rounded-2xl border border-white/10 bg-slate-900/80 p-5 hover:border-brand-gold/50 transition-all shadow-lg space-y-3"
@@ -458,6 +533,30 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
             user={currentUser}
             onAddFunds={addWalletFunds}
             onRedeemCoins={redeemRewards}
+          />
+        )}
+
+        {activeTab === "rewards" && (
+          <RewardsSection
+            user={currentUser}
+            onRedeemCoins={redeemRewards}
+            onClaimBirthday={claimBirthdayReward}
+            onBookFleet={() => onNavigate("/#fleet")}
+          />
+        )}
+
+        {activeTab === "referral" && (
+          <ReferralSection
+            user={currentUser}
+            onBrowseFleet={() => onNavigate("/#fleet")}
+          />
+        )}
+
+        {activeTab === "reviews" && (
+          <ReviewsSection
+            userReviews={dashboardData?.userReviews || []}
+            completedBookings={upcomingBookings.concat(recentBookings)}
+            onBrowseFleet={() => onNavigate("/#fleet")}
           />
         )}
       </div>

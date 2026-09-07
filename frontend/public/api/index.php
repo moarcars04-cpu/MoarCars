@@ -838,9 +838,21 @@ function ensureTablesExist($pdo) {
             'Reviews' => [
                 'customerName' => "VARCHAR(255) NOT NULL DEFAULT 'Customer'",
                 'customerPhone' => "VARCHAR(50) DEFAULT NULL",
+                'customerEmail' => "VARCHAR(255) DEFAULT NULL",
+                'customerAvatar' => "VARCHAR(500) DEFAULT NULL",
                 'carName' => "VARCHAR(255) NOT NULL DEFAULT 'Self Drive Vehicle'",
                 'rating' => "INT DEFAULT 5",
+                'cleanlinessRating' => "INT DEFAULT 5",
+                'performanceRating' => "INT DEFAULT 5",
+                'handoverRating' => "INT DEFAULT 5",
+                'valueRating' => "INT DEFAULT 5",
                 'comment' => "TEXT NULL",
+                'photoUrls' => "LONGTEXT DEFAULT NULL",
+                'videoUrl' => "VARCHAR(500) DEFAULT NULL",
+                'bookingId' => "INT DEFAULT NULL",
+                'likesCount' => "INT DEFAULT 0",
+                'isReported' => "TINYINT DEFAULT 0",
+                'reportReason' => "VARCHAR(255) DEFAULT NULL",
                 'date' => "VARCHAR(50) DEFAULT NULL",
                 'status' => "VARCHAR(50) DEFAULT 'Approved'",
                 'isFeatured' => "TINYINT DEFAULT 0",
@@ -1709,6 +1721,103 @@ if ($route === 'user/wallet/redeem-points' && $method === 'POST') {
             }
         } catch (Exception $e) {}
     }
+}
+
+if ($route === 'user/wallet/refund' && $method === 'POST') {
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+    $withdrawAmount = (int)($input['amount'] ?? 0);
+    $payoutUpi = $input['payoutUpi'] ?? 'customer@okhdfcbank';
+
+    if ($withdrawAmount > 0 && isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, name, walletBalance FROM Customers WHERE " . ($userId > 0 ? "id = ?" : "email = ?") . " LIMIT 1");
+            $stmt->execute([$userId > 0 ? $userId : $userEmail]);
+            $cust = $stmt->fetch();
+
+            if ($cust && (int)$cust['walletBalance'] >= $withdrawAmount) {
+                $newBal = (int)$cust['walletBalance'] - $withdrawAmount;
+                $pdo->prepare("UPDATE Customers SET walletBalance = ? WHERE id = ?")->execute([$newBal, $cust['id']]);
+
+                $txId = 'TXN_WDR_' . strtoupper(bin2hex(random_bytes(6)));
+                $pdo->prepare("
+                    INSERT INTO Payments (id, customerName, amount, depositAmount, gstAmount, balanceDue, gateway, status, date, transactionId, invoiceNumber, notes)
+                    VALUES (?, ?, ?, 0, 0, 0, 'Instant UPI Withdrawal', 'Refunded', ?, ?, ?, ?)
+                ")->execute([
+                    $txId,
+                    $cust['name'],
+                    $withdrawAmount,
+                    date('Y-m-d H:i:s'),
+                    $txId,
+                    'WDR-' . rand(10000, 99999),
+                    "Wallet withdrawal to UPI ID: $payoutUpi (0% processing fee)"
+                ]);
+
+                echo json_encode([
+                    "success" => true,
+                    "newBalance" => $newBal,
+                    "transactionId" => $txId,
+                    "message" => "₹$withdrawAmount withdrawal initiated! Funds will be credited to $payoutUpi within 2 hours."
+                ]);
+                exit();
+            } else {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "Insufficient wallet balance for withdrawal."]);
+                exit();
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Refund error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+    echo json_encode(["success" => true, "message" => "Withdrawal request received."]);
+    exit();
+}
+
+if ($route === 'user/wallet/transactions' && $method === 'GET') {
+    $userId = (int)($_GET['userId'] ?? 0);
+    $userEmail = $_GET['userEmail'] ?? '';
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM Payments ORDER BY id DESC LIMIT 50");
+            $stmt->execute();
+            $all = $stmt->fetchAll();
+            echo json_encode(["success" => true, "data" => $all]);
+            exit();
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "data" => []]);
+    exit();
+}
+
+if ($route === 'user/rewards/claim-birthday' && $method === 'POST') {
+    $userId = (int)($input['userId'] ?? 0);
+    $userEmail = $input['userEmail'] ?? '';
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, rewardPoints, walletBalance FROM Customers WHERE " . ($userId > 0 ? "id = ?" : "email = ?") . " LIMIT 1");
+            $stmt->execute([$userId > 0 ? $userId : $userEmail]);
+            $cust = $stmt->fetch();
+
+            if ($cust) {
+                $bonusCoins = 500;
+                $newPoints = (int)$cust['rewardPoints'] + $bonusCoins;
+                $pdo->prepare("UPDATE Customers SET rewardPoints = ? WHERE id = ?")->execute([$newPoints, $cust['id']]);
+
+                echo json_encode([
+                    "success" => true,
+                    "newRewardPoints" => $newPoints,
+                    "message" => "🎉 Happy Birthday! 500 Birthday Moar Coins credited to your account!"
+                ]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Birthday gift claimed!"]);
+    exit();
 }
 
 // ----------------------------------------------------------------------
@@ -2610,8 +2719,33 @@ if (preg_match('#^admin/reviews/([0-9]+)/reply$#', $route, $matches) && $method 
     exit();
 }
 
-if (preg_match('#^admin/reviews/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
-    $rid = (int)$matches[1];
+if (preg_match('#^(reviews|admin/reviews)/([0-9]+)/report$#', $route, $matches) && $method === 'POST') {
+    $rid = (int)$matches[2];
+    $reason = $input['reason'] ?? 'Inappropriate content';
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("UPDATE Reviews SET isReported = 1, reportReason = ? WHERE id = ?");
+            $stmt->execute([$reason, $rid]);
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Review reported for moderation review. Thank you for keeping Moar community safe."]);
+    exit();
+}
+
+if (preg_match('#^(reviews|admin/reviews)/([0-9]+)/like$#', $route, $matches) && $method === 'POST') {
+    $rid = (int)$matches[2];
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("UPDATE Reviews SET likesCount = likesCount + 1 WHERE id = ?");
+            $stmt->execute([$rid]);
+        } catch (Exception $e) {}
+    }
+    echo json_encode(["success" => true, "message" => "Helpful vote recorded!"]);
+    exit();
+}
+
+if (preg_match('#^(reviews|admin/reviews)/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
+    $rid = (int)$matches[2];
     if (isset($pdo)) {
         try {
             $validCols = getTableColumns($pdo, 'Reviews');
@@ -2628,7 +2762,7 @@ if (preg_match('#^admin/reviews/([0-9]+)$#', $route, $matches) && ($method === '
                 $stmt = $pdo->prepare("UPDATE Reviews SET " . implode(", ", $fields) . " WHERE id = ?");
                 $stmt->execute($params);
             }
-            echo json_encode(["success" => true, "message" => "Review updated!"]);
+            echo json_encode(["success" => true, "message" => "Review updated successfully!"]);
             exit();
         } catch (Exception $e) {}
     }
@@ -2636,15 +2770,15 @@ if (preg_match('#^admin/reviews/([0-9]+)$#', $route, $matches) && ($method === '
     exit();
 }
 
-if (preg_match('#^admin/reviews/([0-9]+)$#', $route, $matches) && $method === 'DELETE') {
-    $rid = (int)$matches[1];
+if (preg_match('#^(reviews|admin/reviews)/([0-9]+)$#', $route, $matches) && $method === 'DELETE') {
+    $rid = (int)$matches[2];
     if (isset($pdo)) {
         try {
             $stmt = $pdo->prepare("DELETE FROM Reviews WHERE id = ?");
             $stmt->execute([$rid]);
         } catch (Exception $e) {}
     }
-    echo json_encode(["success" => true, "message" => "Review removed."]);
+    echo json_encode(["success" => true, "message" => "Review removed successfully."]);
     exit();
 }
 
