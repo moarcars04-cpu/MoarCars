@@ -473,15 +473,15 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   return (
     <main className="min-h-screen overflow-x-hidden bg-white text-slate-900 font-sans">
       {/* 1. Top Luxury Header / Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
-          {/* Logo */}
-          <a href="#top" className="flex items-center gap-2" aria-label="MOAR CARS Home">
-            <MoarLogo size="md" />
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100/90 shadow-sm transition-all">
+        <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 h-20 sm:h-24 flex items-center justify-between">
+          {/* Logo (Increased Size & Prominence) */}
+          <a href="#top" className="flex items-center gap-3 py-1 group" aria-label="MOAR CARS Home">
+            <MoarLogo size="navbar" />
           </a>
 
           {/* Center Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
+          <nav className="hidden lg:flex items-center gap-8 xl:gap-10 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-700">
             <a
               href="#top"
               className="text-[#c88d18] font-bold border-b-2 border-[#c88d18] pb-1 transition-colors"
@@ -521,7 +521,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </nav>
 
           {/* Right Action Icons & Book Now Button */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-5 xl:gap-6">
             {/* Search Trigger */}
             <button
               onClick={() => {
@@ -531,7 +531,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               title="Search Cars"
               aria-label="Search fleet"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-4.5 w-4.5" />
             </button>
 
             {/* Wishlist Button */}
@@ -543,9 +543,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               className="p-2 text-slate-600 hover:text-rose-500 transition-colors relative"
               title="Saved Cars"
             >
-              <Heart className={`h-4 w-4 ${wishlistIds.length > 0 ? "fill-rose-500 text-rose-500" : ""}`} />
+              <Heart className={`h-4.5 w-4.5 ${wishlistIds.length > 0 ? "fill-rose-500 text-rose-500" : ""}`} />
               {wishlistIds.length > 0 && (
-                <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">
+                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">
                   {wishlistIds.length}
                 </span>
               )}
@@ -556,17 +556,17 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 px-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50 py-1.5 px-3.5 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors"
                 >
                   <span className="text-[#c88d18]">{user.name.split(" ")[0]}</span>
-                  <div className="h-6 w-6 rounded-full overflow-hidden border border-[#c88d18] bg-slate-200 shrink-0">
+                  <div className="h-7 w-7 rounded-full overflow-hidden border border-[#c88d18] bg-slate-200 shrink-0">
                     <img
                       src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"}
                       alt={user.name}
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <ChevronDown className="h-3 w-3 text-slate-400" />
+                  <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 </button>
 
                 {userDropdownOpen && (
@@ -608,7 +608,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             ) : (
               <button
                 onClick={() => openAuthModal("login")}
-                className="text-xs font-bold text-slate-700 hover:text-[#c88d18] px-2 py-1"
+                className="text-xs font-bold text-slate-700 hover:text-[#c88d18] px-2.5 py-1.5"
               >
                 Sign In
               </button>
@@ -619,7 +619,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               onClick={() => {
                 document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="h-10 px-5 rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center gap-1.5 transition-transform hover:scale-[1.02]"
+              className="h-11 px-6 rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center gap-2 transition-transform hover:scale-[1.02]"
             >
               <span>Book Now</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -632,13 +632,13 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
           >
-            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {menuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
           </button>
         </div>
 
         {/* Mobile Navigation Dropdown */}
         {menuOpen && (
-          <nav className="mx-auto max-w-7xl px-6 py-5 bg-white border-t border-slate-100 grid gap-3.5 text-sm font-semibold text-slate-800 lg:hidden shadow-xl">
+          <nav className="mx-auto max-w-[1600px] px-6 py-5 bg-white border-t border-slate-100 grid gap-3.5 text-sm font-semibold text-slate-800 lg:hidden shadow-xl">
             <a href="#top" onClick={() => setMenuOpen(false)} className="text-[#c88d18] font-bold">
               Home
             </a>
@@ -688,7 +688,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {/* 2. Hero Section */}
       <section
         id="top"
-        className="relative pt-24 sm:pt-28 pb-12 sm:pb-16 bg-gradient-to-b from-[#f8f9fc] via-white to-white overflow-hidden"
+        className="relative pt-28 sm:pt-36 pb-14 sm:pb-20 bg-gradient-to-b from-[#f8f9fc] via-white to-white overflow-hidden"
       >
         {/* Background Luxury Showroom Image & Accents */}
         <div className="absolute inset-0 z-0">
@@ -702,7 +702,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         </div>
 
         {/* Floating Typography Watermarks */}
-        <div className="absolute top-28 right-8 sm:right-16 z-0 hidden md:block text-right select-none pointer-events-none opacity-40">
+        <div className="absolute top-32 right-8 sm:right-16 z-0 hidden md:block text-right select-none pointer-events-none opacity-40">
           <div className="text-[11px] font-black uppercase tracking-[0.35em] text-slate-700 leading-relaxed">
             LUXURY
             <br />
@@ -713,7 +713,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         </div>
 
         {/* Hero Content Container */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+        <div className="relative z-10 max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-14 xl:px-20 space-y-8 sm:space-y-10">
           {/* Left Title & CTA Hero Header */}
           <div className="max-w-2xl pt-6 sm:pt-10 space-y-4">
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-serif font-black text-slate-900 tracking-tight leading-[1.05]">
