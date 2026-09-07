@@ -30,7 +30,7 @@ import heroLuxuryImg from "@/assets/moar-hero-luxury.jpg";
 import { MoarLogo } from "@/components/common/MoarLogo";
 
 // Home Subcomponents
-import { HeroSearch } from "./components/home/HeroSearch";
+import { HeroSearch, TrustBadgesBar } from "./components/home/HeroSearch";
 import { CollectionsSection } from "./components/home/CollectionsSection";
 import { WhyChooseMoarSection } from "./components/home/WhyChooseMoarSection";
 import { WeekendDealBanner } from "./components/home/WeekendDealBanner";
@@ -712,15 +712,27 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </div>
 
-        {/* Hero Content Container */}
-        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-4 sm:space-y-6">
+        {/* Hero Content Container: On mobile filter search comes first, on desktop headline comes first */}
+        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col space-y-4 sm:space-y-6">
+          {/* On Mobile: Filter/Search option comes first! On Desktop: Sits below headline */}
+          <div className="order-1 lg:order-2">
+            {/* Cursive script floating badge */}
+            <div className="hidden lg:flex justify-end pr-4 sm:pr-8 -mb-2">
+              <span className="font-serif italic text-base sm:text-xl text-slate-600/90 font-medium tracking-wide select-none drop-shadow-sm">
+                More Than Just a Ride
+              </span>
+            </div>
+            {/* Floating Search Widget */}
+            <HeroSearch onSearch={handleHeroSearch} />
+          </div>
+
           {/* Left Title & CTA Hero Header */}
-          <div className="max-w-xl pt-3 sm:pt-5 space-y-2.5">
+          <div className="order-2 lg:order-1 max-w-xl pt-2 sm:pt-4 space-y-2.5">
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 block mb-1">
               PREMIUM CAR RENTALS
             </span>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
+            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
               Drive Luxury.
               <br />
               Drive <span className="text-[#d49b29]">MOAR.</span>
@@ -761,18 +773,11 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               <div className="h-0.5 w-8 bg-[#c88d18]" />
             </div>
           </div>
-
-          {/* Cursive script floating badge */}
-          <div className="flex justify-end pr-4 sm:pr-8 -mt-2">
-            <span className="font-serif italic text-base sm:text-xl text-slate-600/90 font-medium tracking-wide select-none drop-shadow-sm">
-              More Than Just a Ride
-            </span>
-          </div>
-
-          {/* Floating Search Widget Component & Stats Bar */}
-          <HeroSearch onSearch={handleHeroSearch} />
         </div>
       </section>
+
+      {/* 2.5. Trust & Stats Badges Bar on clean white background above collections */}
+      <TrustBadgesBar />
 
       {/* 3. Our Luxury Collection Section */}
       <div id="collections">

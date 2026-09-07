@@ -8,7 +8,6 @@ import {
   Car,
   Headphones,
   Zap,
-  ChevronDown,
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ interface HeroSearchProps {
     category?: string;
     serviceType?: string;
   }) => void;
+  showBadges?: boolean;
 }
 
 const popularLocations = [
@@ -47,7 +47,57 @@ const carTypes = [
   "Hatchbacks",
 ];
 
-export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
+export const TrustBadgesBar: React.FC = () => {
+  return (
+    <div className="w-full bg-white border-y border-slate-100 py-6 sm:py-7">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+          <div className="flex items-center gap-3.5 justify-center md:justify-start">
+            <div className="h-11 w-11 rounded-full border border-amber-300/80 bg-amber-50/70 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+              <Car className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-base sm:text-xl font-black text-slate-900 leading-none">500+</div>
+              <div className="text-xs text-slate-500 font-semibold mt-1">Cars Available</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3.5 justify-center md:justify-start">
+            <div className="h-11 w-11 rounded-full border border-amber-300/80 bg-amber-50/70 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-base sm:text-xl font-black text-slate-900 leading-none">50+</div>
+              <div className="text-xs text-slate-500 font-semibold mt-1">Cities</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3.5 justify-center md:justify-start">
+            <div className="h-11 w-11 rounded-full border border-amber-300/80 bg-amber-50/70 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+              <Headphones className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-base sm:text-xl font-black text-slate-900 leading-none">24/7</div>
+              <div className="text-xs text-slate-500 font-semibold mt-1">Support</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3.5 justify-center md:justify-start">
+            <div className="h-11 w-11 rounded-full border border-amber-300/80 bg-amber-50/70 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
+              <Zap className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-base sm:text-xl font-black text-slate-900 leading-none">Instant</div>
+              <div className="text-xs text-slate-500 font-semibold mt-1">Booking</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, showBadges = false }) => {
   const [serviceType, setServiceType] = useState<"self" | "chauffeur" | "airport">("self");
   const [pickup, setPickup] = useState("Tirupati Central Hub (Station)");
   const [dropoff, setDropoff] = useState("Tirupati Central Hub (Station)");
@@ -104,7 +154,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("self")}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
             serviceType === "self"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/25"
               : "bg-white/90 hover:bg-white text-slate-700 border border-slate-200"
@@ -115,7 +165,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("chauffeur")}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
             serviceType === "chauffeur"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/25"
               : "bg-white/90 hover:bg-white text-slate-700 border border-slate-200"
@@ -126,7 +176,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("airport")}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+          className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
             serviceType === "airport"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/25"
               : "bg-white/90 hover:bg-white text-slate-700 border border-slate-200"
@@ -272,48 +322,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         </form>
       </div>
 
-      {/* Trust & Stats Bar directly underneath search widget */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 pb-2">
-        <div className="flex items-center gap-3 justify-center md:justify-start">
-          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
-            <Car className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">500+</div>
-            <div className="text-xs text-slate-500 font-medium mt-0.5">Cars Available</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 justify-center md:justify-start">
-          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
-            <MapPin className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">50+</div>
-            <div className="text-xs text-slate-500 font-medium mt-0.5">Cities</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 justify-center md:justify-start">
-          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
-            <Headphones className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">24/7</div>
-            <div className="text-xs text-slate-500 font-medium mt-0.5">Support</div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 justify-center md:justify-start">
-          <div className="h-10 w-10 rounded-full border border-amber-300 bg-amber-50 flex items-center justify-center text-[#c88d18] shrink-0 shadow-sm">
-            <Zap className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="text-base sm:text-lg font-black text-slate-900 leading-none">Instant</div>
-            <div className="text-xs text-slate-500 font-medium mt-0.5">Booking</div>
-          </div>
-        </div>
-      </div>
+      {showBadges && <TrustBadgesBar />}
     </div>
   );
 };
