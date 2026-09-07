@@ -1096,6 +1096,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           dbReviews,
           dbTickets,
           dbLogs,
+          dbSettings,
         ] = await Promise.all([
           adminApi.getCars(),
           adminApi.getBookings(),
@@ -1107,6 +1108,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           adminApi.getReviews(),
           adminApi.getSupportTickets(),
           adminApi.getActivityLogs(),
+          adminApi.getSettings(),
         ]);
 
         if (!isMounted) return;
@@ -1121,6 +1123,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         if (dbReviews && dbReviews.length > 0) setReviews(dbReviews);
         if (dbTickets && dbTickets.length > 0) setTickets(dbTickets);
         if (dbLogs && dbLogs.length > 0) setActivityLogs(dbLogs);
+        if (dbSettings) {
+          if (Array.isArray(dbSettings.cms_banners) && dbSettings.cms_banners.length > 0) setBanners(dbSettings.cms_banners);
+          if (Array.isArray(dbSettings.cms_offers) && dbSettings.cms_offers.length > 0) setOffers(dbSettings.cms_offers);
+          if (Array.isArray(dbSettings.cms_testimonials) && dbSettings.cms_testimonials.length > 0) setTestimonials(dbSettings.cms_testimonials);
+          if (Array.isArray(dbSettings.cms_faqs) && dbSettings.cms_faqs.length > 0) setFaqs(dbSettings.cms_faqs);
+          if (Array.isArray(dbSettings.cms_blogs) && dbSettings.cms_blogs.length > 0) setBlogs(dbSettings.cms_blogs);
+          if (Array.isArray(dbSettings.notification_templates) && dbSettings.notification_templates.length > 0) setTemplates(dbSettings.notification_templates);
+        }
       } catch (err) {
         console.warn("[Admin] Live DB initial load fallback active:", err);
       }
@@ -1195,9 +1205,13 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         tyreHealth: "Excellent",
         batteryHealth: "Good",
       };
-      setFleet([newCar, ...fleet]);
+      setFleet((prev) => [newCar, ...prev]);
       setNotice({ type: "success", text: `Vehicle "${newCar.name}" added to live fleet!` });
-      adminApi.createCar(newCar);
+      adminApi.createCar(newCar).then((saved) => {
+        if (saved && (saved as any).id) {
+          setFleet((prev) => prev.map((c) => (c.id === newCar.id ? { ...c, id: (saved as any).id } : c)));
+        }
+      });
     }
     setIsAddCarModalOpen(false);
     setEditingCar(null);
@@ -3758,9 +3772,13 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                     penalties: 0,
                     timelineStep: 2,
                   };
-                  setBookings([newB, ...bookings]);
+                  setBookings((prev) => [newB, ...prev]);
                   setNotice({ type: "success", text: `Reservation #${newB.id} created successfully!` });
-                  adminApi.createBooking(newB);
+                  adminApi.createBooking(newB).then((saved) => {
+                    if (saved && (saved as any).id) {
+                      setBookings((prev) => prev.map((b) => (b.id === newB.id ? { ...b, id: (saved as any).id } : b)));
+                    }
+                  });
                 }
 
                 setIsCreateBookingModalOpen(false);

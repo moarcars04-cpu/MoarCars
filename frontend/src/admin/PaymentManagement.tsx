@@ -15,6 +15,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { PaymentItem } from "./types";
+import { adminApi } from "./adminApi";
 
 interface PaymentManagementProps {
   payments: PaymentItem[];
@@ -68,6 +69,7 @@ export default function PaymentManagement({
       type: "success",
       text: `Security deposit refund of ₹${netRefund.toLocaleString()} released via instant UPI! (Deductions: ₹${damageDeduction})`,
     });
+    adminApi.refundPayment(payment.id, { damageDeduction, refundAmount: netRefund });
     setSelectedPaymentForRefund(null);
     setDamageDeduction(0);
     setDeductionReason("");

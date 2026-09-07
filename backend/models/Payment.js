@@ -5,18 +5,19 @@ const Payment = sequelize.define("Payment", {
   id: {
     type: DataTypes.STRING,
     primaryKey: true,
+    defaultValue: () => `PAY-${Math.floor(1000 + Math.random() * 9000)}`,
   },
   bookingId: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    defaultValue: 1001,
   },
   customerName: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "Valued Customer",
   },
   amount: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    defaultValue: 0,
   },
   depositAmount: {
     type: DataTypes.INTEGER,
@@ -38,6 +39,10 @@ const Payment = sequelize.define("Payment", {
     type: DataTypes.STRING,
     defaultValue: "2026-09-04",
   },
+  advancePaid: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
   partialPaid: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
@@ -46,9 +51,29 @@ const Payment = sequelize.define("Payment", {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  cgstAmount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  sgstAmount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  tdsAmount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  transactionId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   refundStatus: {
     type: DataTypes.STRING,
     defaultValue: "Not Applicable",
+  },
+  refundAmount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
   },
 });
 

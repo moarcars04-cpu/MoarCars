@@ -13,11 +13,11 @@ const Customer = sequelize.define("Customer", {
   },
   phone: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "+91 90000 00000",
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "customer@example.com",
   },
   avatar: {
     type: DataTypes.TEXT,
@@ -37,6 +37,26 @@ const Customer = sequelize.define("Customer", {
   },
   passportNumber: {
     type: DataTypes.STRING,
+    allowNull: true,
+  },
+  dlExpiry: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  dlFrontDocUrl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  dlBackDocUrl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  aadhaarFrontDocUrl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  aadhaarBackDocUrl: {
+    type: DataTypes.TEXT,
     allowNull: true,
   },
   dlDocUrl: {
@@ -59,17 +79,29 @@ const Customer = sequelize.define("Customer", {
     type: DataTypes.INTEGER,
     defaultValue: 100,
   },
+  loyaltyTier: {
+    type: DataTypes.STRING,
+    defaultValue: "Gold",
+  },
   referralCode: {
     type: DataTypes.STRING,
     defaultValue: "MOAR100",
   },
+  referredCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  referralEarnings: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
   savedAddresses: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    type: DataTypes.JSON,
+    defaultValue: [],
   },
   favoriteCars: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    type: DataTypes.JSON,
+    defaultValue: [],
   },
   isBlacklisted: {
     type: DataTypes.BOOLEAN,

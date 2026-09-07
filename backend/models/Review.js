@@ -11,6 +11,10 @@ const Review = sequelize.define("Review", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  customerPhone: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   carName: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -21,7 +25,7 @@ const Review = sequelize.define("Review", {
   },
   comment: {
     type: DataTypes.TEXT,
-    allowNull: false,
+    defaultValue: "Excellent car condition and smooth pickup experience.",
   },
   date: {
     type: DataTypes.STRING,

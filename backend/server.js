@@ -66,6 +66,17 @@ app.get(["/api/cars", "/api/admin/cars"], async (req, res) => {
   }
 });
 
+app.get(["/api/cars/:id", "/api/admin/cars/:id"], async (req, res) => {
+  try {
+    const car = await Car.findByPk(req.params.id);
+    if (!car) return res.status(404).json({ success: false, message: "Car not found." });
+    res.json({ success: true, data: car });
+  } catch (error) {
+    console.error("Error fetching car:", error);
+    res.status(500).json({ success: false, message: "Error reading car from database." });
+  }
+});
+
 app.post(["/api/cars", "/api/admin/cars"], async (req, res) => {
   try {
     const newCar = await Car.create(req.body);
@@ -182,6 +193,17 @@ app.put("/api/admin/customers/:id", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/customers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Customer.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Customer not found." });
+    res.json({ success: true, message: "Customer removed from system." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ======================================================================
 // 4. DRIVERS API
 // ======================================================================
@@ -210,6 +232,17 @@ app.put("/api/admin/drivers/:id", async (req, res) => {
     if (!driver) return res.status(404).json({ success: false, message: "Driver not found." });
     await driver.update(req.body);
     res.json({ success: true, message: "Driver status updated!", data: driver });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.delete("/api/admin/drivers/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Driver.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Driver not found." });
+    res.json({ success: true, message: "Driver removed from roster." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -248,12 +281,23 @@ app.put("/api/admin/branches/:id", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/branches/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Branch.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Branch not found." });
+    res.json({ success: true, message: "Station hub removed." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ======================================================================
 // 6. PAYMENTS & ESCROW API
 // ======================================================================
 app.get("/api/admin/payments", async (req, res) => {
   try {
-    const payments = await Payment.findAll({ order: [["id", "DESC"]] });
+    const payments = await Payment.findAll({ order: [["date", "DESC"]] });
     res.json({ success: true, data: payments });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -272,10 +316,26 @@ app.post("/api/admin/payments", async (req, res) => {
 app.post("/api/admin/payments/:id/refund", async (req, res) => {
   try {
     const { id } = req.params;
+    const { refundAmount } = req.body || {};
     const payment = await Payment.findByPk(id);
     if (!payment) return res.status(404).json({ success: false, message: "Transaction not found." });
-    await payment.update({ status: "Refunded", refundStatus: "Processed" });
+    await payment.update({
+      status: "Refunded",
+      refundStatus: "Processed",
+      refundAmount: refundAmount !== undefined ? refundAmount : payment.depositAmount,
+    });
     res.json({ success: true, message: "Security deposit refunded successfully!", data: payment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.delete("/api/admin/payments/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Payment.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Transaction not found." });
+    res.json({ success: true, message: "Payment transaction removed." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -314,13 +374,33 @@ app.put("/api/admin/coupons/:id", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/coupons/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Coupon.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Coupon not found." });
+    res.json({ success: true, message: "Coupon removed." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ======================================================================
 // 8. REVIEWS & MODERATION API
 // ======================================================================
-app.get("/api/admin/reviews", async (req, res) => {
+app.get(["/api/reviews", "/api/admin/reviews"], async (req, res) => {
   try {
     const reviews = await Review.findAll({ order: [["id", "DESC"]] });
     res.json({ success: true, data: reviews });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.post(["/api/reviews", "/api/admin/reviews"], async (req, res) => {
+  try {
+    const newReview = await Review.create(req.body);
+    res.status(201).json({ success: true, message: "Review submitted successfully!", data: newReview });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -351,10 +431,21 @@ app.post("/api/admin/reviews/:id/reply", async (req, res) => {
   }
 });
 
+app.delete("/api/admin/reviews/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Review.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Review not found." });
+    res.json({ success: true, message: "Review removed." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ======================================================================
 // 9. SUPPORT DESK API
 // ======================================================================
-app.get("/api/admin/support/tickets", async (req, res) => {
+app.get(["/api/support/tickets", "/api/admin/support/tickets"], async (req, res) => {
   try {
     const tickets = await SupportTicket.findAll({ order: [["createdAt", "DESC"]] });
     res.json({ success: true, data: tickets });
@@ -363,9 +454,13 @@ app.get("/api/admin/support/tickets", async (req, res) => {
   }
 });
 
-app.post("/api/admin/support/tickets", async (req, res) => {
+app.post(["/api/support/tickets", "/api/admin/support/tickets"], async (req, res) => {
   try {
-    const ticket = await SupportTicket.create(req.body);
+    const ticketData = {
+      ...req.body,
+      id: req.body.id || `TICK-${Math.floor(1000 + Math.random() * 9000)}`,
+    };
+    const ticket = await SupportTicket.create(ticketData);
     res.status(201).json({ success: true, message: "Support ticket opened!", data: ticket });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -379,6 +474,17 @@ app.put("/api/admin/support/tickets/:id", async (req, res) => {
     if (!ticket) return res.status(404).json({ success: false, message: "Ticket not found." });
     await ticket.update(req.body);
     res.json({ success: true, message: "Ticket updated!", data: ticket });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.delete("/api/admin/support/tickets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await SupportTicket.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: "Ticket not found." });
+    res.json({ success: true, message: "Support ticket deleted." });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -408,7 +514,7 @@ app.post("/api/admin/logs", async (req, res) => {
 // ======================================================================
 // 11. CMS, NOTIFICATIONS & SYSTEM SETTINGS KEY-VALUE API
 // ======================================================================
-app.get("/api/admin/settings", async (req, res) => {
+app.get(["/api/settings", "/api/admin/settings"], async (req, res) => {
   try {
     const settings = await Setting.findAll();
     const map = {};
@@ -425,7 +531,8 @@ app.get("/api/admin/settings", async (req, res) => {
   }
 });
 
-app.put("/api/admin/settings", async (req, res) => {
+app.all(["/api/settings", "/api/admin/settings"], async (req, res, next) => {
+  if (req.method !== "POST" && req.method !== "PUT") return next();
   try {
     const entries = req.body;
     for (const [k, v] of Object.entries(entries)) {
@@ -622,9 +729,38 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 // Sync database and seed tables asynchronously in the background
 (async () => {
   try {
-    await sequelize.sync({ alter: true });
-    console.log("Database tables synced successfully.");
+    const models = [Car, Booking, Customer, Driver, Branch, Payment, Coupon, Review, SupportTicket, ActivityLog, Setting, Admin, AdminOtp];
+    const queryInterface = sequelize.getQueryInterface();
 
+    for (const model of models) {
+      const tableName = model.getTableName();
+      let tableExists = true;
+      let existingColumns = {};
+
+      try {
+        existingColumns = await queryInterface.describeTable(tableName);
+      } catch (tableErr) {
+        tableExists = false;
+      }
+
+      if (!tableExists) {
+        console.log(`Database Setup: Creating table ${tableName}...`);
+        await model.sync();
+      } else {
+        const attributes = model.rawAttributes;
+        for (const [colName, colDef] of Object.entries(attributes)) {
+          if (!existingColumns[colName]) {
+            try {
+              console.log(`Database Setup: Adding missing column ${colName} to ${tableName}...`);
+              await queryInterface.addColumn(tableName, colName, colDef);
+            } catch (colErr) {
+              console.warn(`Database Setup notice for ${colName} in ${tableName}:`, colErr.message);
+            }
+          }
+        }
+      }
+    }
+    console.log("Database Setup: All tables & columns verified and synchronized.");
 
     // Seed default cars if empty
     const carCount = await Car.count();
@@ -1395,20 +1531,28 @@ const server = app.listen(PORT, "0.0.0.0", () => {
     if (logCount === 0) {
       await ActivityLog.bulkCreate([
         {
-          actorName: "Executive Super Admin",
-          actorRole: "Super Admin",
+          adminName: "Executive Super Admin",
+          adminUser: "Super Admin",
+          module: "Fleet",
           action: "Vehicle Status Update",
+          actionType: "Status Change",
           target: "Mahindra Scorpio-N (#3)",
+          targetId: "3",
           details: "Changed status from Available to Booked for Booking #1042",
+          description: "Changed status from Available to Booked for Booking #1042",
           ipAddress: "192.168.1.100",
           timestamp: "2026-09-04 18:30:15",
         },
         {
-          actorName: "Executive Super Admin",
-          actorRole: "Super Admin",
+          adminName: "Executive Super Admin",
+          adminUser: "Super Admin",
+          module: "Payments",
           action: "Refund Processed",
+          actionType: "Refund",
           target: "Payment #PAY-9904",
+          targetId: "PAY-9904",
           details: "Initiated instant UPI security deposit refund of ₹3,000 for Praveen Rao",
+          description: "Initiated instant UPI security deposit refund of ₹3,000 for Praveen Rao",
           ipAddress: "192.168.1.100",
           timestamp: "2026-09-02 09:15:22",
         },

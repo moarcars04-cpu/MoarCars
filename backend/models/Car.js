@@ -37,11 +37,13 @@ const Car = sequelize.define("Car", {
   },
   detail: {
     type: DataTypes.TEXT,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: "Comfortable and reliable self-drive rental vehicle.",
   },
   price: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: "₹1,999/day",
   },
   pricePerHour: {
     type: DataTypes.INTEGER,
@@ -144,12 +146,12 @@ const Car = sequelize.define("Car", {
     defaultValue: "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80",
   },
   galleryImages: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    type: DataTypes.JSON,
+    defaultValue: [],
   },
   angle360Images: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    type: DataTypes.JSON,
+    defaultValue: [],
   },
   videoUrl: {
     type: DataTypes.STRING,

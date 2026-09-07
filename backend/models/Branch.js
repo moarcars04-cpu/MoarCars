@@ -21,7 +21,7 @@ const Branch = sequelize.define("Branch", {
   },
   address: {
     type: DataTypes.TEXT,
-    allowNull: false,
+    defaultValue: "Main Branch Address, Tirupati",
   },
   phone: {
     type: DataTypes.STRING,
@@ -34,6 +34,10 @@ const Branch = sequelize.define("Branch", {
   managerPhone: {
     type: DataTypes.STRING,
     defaultValue: "+91 98765 11122",
+  },
+  managerEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   operatingHours: {
     type: DataTypes.STRING,

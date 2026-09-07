@@ -79,6 +79,7 @@ export default function BranchManagement({
     if (confirm("Are you sure you want to delete this station hub?")) {
       setBranches((prev) => prev.filter((b) => b.id !== id));
       setNotice({ type: "info", text: `Station Hub #${id} deleted.` });
+      adminApi.deleteBranch(id);
     }
   };
 

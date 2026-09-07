@@ -104,6 +104,12 @@ export const adminApi = {
       body: JSON.stringify(customer),
     });
   },
+  async deleteCustomer(id: number): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/customers/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
+  },
 
   // Drivers
   async getDrivers(): Promise<DriverItem[] | null> {
@@ -122,6 +128,12 @@ export const adminApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(driver),
     });
+  },
+  async deleteDriver(id: number): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/drivers/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
   },
 
   // Branches
@@ -142,15 +154,36 @@ export const adminApi = {
       body: JSON.stringify(branch),
     });
   },
+  async deleteBranch(id: number): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/branches/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
+  },
 
   // Payments
   async getPayments(): Promise<PaymentItem[] | null> {
     return fetchJson<PaymentItem[]>(`${API_BASE}/admin/payments`);
   },
-  async refundPayment(id: string): Promise<PaymentItem | null> {
+  async createPayment(payment: Partial<PaymentItem>): Promise<PaymentItem | null> {
+    return fetchJson<PaymentItem>(`${API_BASE}/admin/payments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payment),
+    });
+  },
+  async refundPayment(id: string, payload?: { damageDeduction?: number; refundAmount?: number }): Promise<PaymentItem | null> {
     return fetchJson<PaymentItem>(`${API_BASE}/admin/payments/${id}/refund`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {}),
     });
+  },
+  async deletePayment(id: string): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/payments/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
   },
 
   // Coupons
@@ -171,10 +204,23 @@ export const adminApi = {
       body: JSON.stringify(coupon),
     });
   },
+  async deleteCoupon(id: number): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/coupons/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
+  },
 
   // Reviews
   async getReviews(): Promise<ReviewItem[] | null> {
     return fetchJson<ReviewItem[]>(`${API_BASE}/admin/reviews`);
+  },
+  async createReview(review: Partial<ReviewItem>): Promise<ReviewItem | null> {
+    return fetchJson<ReviewItem>(`${API_BASE}/admin/reviews`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(review),
+    });
   },
   async replyReview(id: number, reply: string): Promise<ReviewItem | null> {
     return fetchJson<ReviewItem>(`${API_BASE}/admin/reviews/${id}/reply`, {
@@ -190,10 +236,23 @@ export const adminApi = {
       body: JSON.stringify(review),
     });
   },
+  async deleteReview(id: number): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/reviews/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
+  },
 
   // Support Tickets
   async getSupportTickets(): Promise<SupportTicketItem[] | null> {
     return fetchJson<SupportTicketItem[]>(`${API_BASE}/admin/support/tickets`);
+  },
+  async createSupportTicket(ticket: Partial<SupportTicketItem>): Promise<SupportTicketItem | null> {
+    return fetchJson<SupportTicketItem>(`${API_BASE}/admin/support/tickets`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ticket),
+    });
   },
   async updateSupportTicket(id: string, ticket: Partial<SupportTicketItem>): Promise<SupportTicketItem | null> {
     return fetchJson<SupportTicketItem>(`${API_BASE}/admin/support/tickets/${id}`, {
@@ -201,6 +260,12 @@ export const adminApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(ticket),
     });
+  },
+  async deleteSupportTicket(id: string): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/support/tickets/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
   },
 
   // Activity Logs

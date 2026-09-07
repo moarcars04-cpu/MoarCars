@@ -28,6 +28,10 @@ const Coupon = sequelize.define("Coupon", {
     type: DataTypes.INTEGER,
     defaultValue: 2000,
   },
+  maxDiscount: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   maxDiscountCap: {
     type: DataTypes.INTEGER,
     allowNull: true,

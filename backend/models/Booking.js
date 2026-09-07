@@ -13,15 +13,15 @@ const Booking = sequelize.define("Booking", {
   },
   pickup: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "Tirupati Central Hub",
   },
   startDate: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "2026-09-10",
   },
   endDate: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "2026-09-12",
   },
   carName: {
     type: DataTypes.STRING,
@@ -72,8 +72,8 @@ const Booking = sequelize.define("Booking", {
     defaultValue: "2 Days",
   },
   extras: {
-    type: DataTypes.TEXT,
-    allowNull: true,
+    type: DataTypes.JSON,
+    defaultValue: [],
   },
   insurancePlan: {
     type: DataTypes.STRING,

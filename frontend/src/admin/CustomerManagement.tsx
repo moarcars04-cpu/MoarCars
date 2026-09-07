@@ -121,6 +121,7 @@ export default function CustomerManagement({
     if (confirm("Are you sure you want to delete this customer profile?")) {
       setCustomers((prev) => prev.filter((c) => c.id !== id));
       setNotice({ type: "info", text: `Customer #${id} removed from system.` });
+      adminApi.deleteCustomer(id);
     }
   };
 

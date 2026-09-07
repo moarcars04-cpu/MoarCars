@@ -78,6 +78,7 @@ export default function CouponEngine({
     if (confirm("Are you sure you want to delete this promotional coupon?")) {
       setCoupons((prev) => prev.filter((c) => c.id !== id));
       setNotice({ type: "info", text: `Coupon #${id} deleted.` });
+      adminApi.deleteCoupon(id);
     }
   };
 

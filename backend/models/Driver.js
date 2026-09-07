@@ -13,11 +13,11 @@ const Driver = sequelize.define("Driver", {
   },
   phone: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "+91 90000 00000",
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
+    defaultValue: "driver@moarcars.com",
   },
   avatar: {
     type: DataTypes.TEXT,
@@ -34,6 +34,14 @@ const Driver = sequelize.define("Driver", {
   licenseExpiry: {
     type: DataTypes.STRING,
     defaultValue: "2029-08-15",
+  },
+  licenseDocUrl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  bgDocUrl: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
   bgVerification: {
     type: DataTypes.STRING,
@@ -68,6 +76,10 @@ const Driver = sequelize.define("Driver", {
     defaultValue: "Available",
   },
   isHillCertified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+  },
+  hillDrivingCertified: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
