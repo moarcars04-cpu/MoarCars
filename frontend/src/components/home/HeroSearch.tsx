@@ -166,12 +166,12 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto relative z-20">
-      {/* Service Tabs (Nestled on top-left of the centered container) */}
-      <div className="flex items-center gap-2 pl-2 mb-2 sm:mb-2.5">
+      {/* Service Tabs (3 pills across width on mobile) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-2.5">
         <button
           type="button"
           onClick={() => setServiceType("self")}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
+          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
             serviceType === "self"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
@@ -184,20 +184,20 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("chauffeur")}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
+          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
             serviceType === "chauffeur"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
           }`}
         >
           <User className="h-3.5 w-3.5" />
-          <span>Chauffeur Driven</span>
+          <span>Chauffeur</span>
         </button>
 
         <button
           type="button"
           onClick={() => setServiceType("airport")}
-          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
+          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
             serviceType === "airport"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
@@ -209,7 +209,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
       </div>
 
       {/* Centered White Search Widget Card */}
-      <div className="rounded-2xl sm:rounded-3xl bg-white p-3 sm:p-4 shadow-2xl shadow-slate-900/15 border border-slate-200/90 text-slate-900">
+      <div className="rounded-2xl sm:rounded-3xl bg-white p-3 sm:p-4 shadow-xl shadow-slate-900/10 border border-slate-200/90 text-slate-900">
         {locationNotice && (
           <div className="mb-2.5 flex items-center justify-between rounded-xl bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
             <span className="flex items-center gap-2">
@@ -276,37 +276,40 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* 3. Pickup Date Box */}
-          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-              Pickup Date
-            </span>
-            <div className="mt-1 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
-              <input
-                type="date"
-                required
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
-              />
+          {/* 3 & 4. Dates in 2-Column Grid on Mobile */}
+          <div className="grid grid-cols-2 gap-2 sm:col-span-2 lg:col-span-2">
+            {/* Pickup Date Box */}
+            <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+                Pickup Date
+              </span>
+              <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+                <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
+                <input
+                  type="date"
+                  required
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* 4. Return Date Box */}
-          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-              Return Date
-            </span>
-            <div className="mt-1 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
-              <input
-                type="date"
-                required
-                value={returnDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
-              />
+            {/* Return Date Box */}
+            <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
+                Return Date
+              </span>
+              <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+                <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
+                <input
+                  type="date"
+                  required
+                  value={returnDate}
+                  onChange={(e) => setReturnDate(e.target.value)}
+                  className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"
+                />
+              </div>
             </div>
           </div>
 
@@ -332,12 +335,12 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
           </div>
 
           {/* 6. Action Button */}
-          <div className="p-0.5">
+          <div className="p-0.5 sm:col-span-2 lg:col-span-1">
             <Button
               type="submit"
-              className="h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
+              className="h-11 sm:h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
             >
-              <span>SEARCH CARS</span>
+              <span>Search Cars</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

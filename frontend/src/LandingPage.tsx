@@ -76,220 +76,9 @@ export interface CarFleetItem {
   rating?: number;
 }
 
-const fallbackFleet: CarFleetItem[] = [
-  {
-    id: 1,
-    name: "Lamborghini Huracán Evo",
-    brand: "Lamborghini",
-    model: "Huracán",
-    variant: "LP 610-4 V10",
-    detail: "Breathtaking 640hp naturally aspirated V10 supercar. Dynamic steering and active aerodynamics.",
-    price: "₹24,999",
-    pricePerDay: 24999,
-    tag: "Supercar",
-    category: "Supercar",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    seats: 2,
-    mileage: "7 km/l",
-    color: "Nero Noctis Black",
-    status: "Available",
-    branch: "Renigunta Airport Hub",
-    location: "Renigunta Airport Hub",
-    image: "https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=800&q=80",
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    doorstepDelivery: true,
-    rating: 5.0,
-  },
-  {
-    id: 2,
-    name: "BMW X5 xDrive40i M Sport",
-    brand: "BMW",
-    model: "X5",
-    variant: "xDrive40i M Sport",
-    detail: "Commanding luxury SUV with TwinPower Turbo inline 6, panoramic sky lounge and air suspension.",
-    price: "₹6,999",
-    pricePerDay: 6999,
-    tag: "VIP Luxury",
-    category: "SUV",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    seats: 5,
-    mileage: "12 km/l",
-    color: "Phytonic Blue Metallic",
-    status: "Available",
-    branch: "Tirupati Central Hub",
-    location: "Tirupati Central Hub",
-    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80",
-    hasSunroof: true,
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    doorstepDelivery: true,
-    rating: 4.9,
-  },
-  {
-    id: 3,
-    name: "Mercedes-Benz E-Class Exclusive",
-    brand: "Mercedes-Benz",
-    model: "E-Class",
-    variant: "E 220d AMG Line",
-    detail: "Executive rear reclining lounge seating, Burmester 3D sound, and whisper-quiet road refinement.",
-    price: "₹7,499",
-    pricePerDay: 7499,
-    tag: "Chauffeur",
-    category: "Luxury",
-    fuelType: "Diesel",
-    transmission: "Automatic",
-    seats: 5,
-    mileage: "16 km/l",
-    color: "Polar White",
-    status: "Available",
-    branch: "Renigunta Airport Hub",
-    location: "Renigunta Airport Hub",
-    image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&q=80",
-    hasSunroof: true,
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    freeCancellation: true,
-    rating: 5.0,
-  },
-  {
-    id: 4,
-    name: "Audi RS7 Sportback",
-    brand: "Audi",
-    model: "RS7",
-    variant: "Performance Quattro",
-    detail: "High-octane luxury grand tourer with matrix laser headlights and sport adaptive air suspension.",
-    price: "₹14,999",
-    pricePerDay: 14999,
-    tag: "Performance",
-    category: "Supercar",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    seats: 4,
-    mileage: "9 km/l",
-    color: "Daytona Grey Pearl",
-    status: "Available",
-    branch: "Tirupati Central Hub",
-    location: "Tirupati Central Hub",
-    image: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80",
-    hasSunroof: true,
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    rating: 4.9,
-  },
-  {
-    id: 5,
-    name: "Porsche 911 Carrera GTS",
-    brand: "Porsche",
-    model: "911",
-    variant: "Carrera GTS PDK",
-    detail: "Iconic rear-engine precision sports car with sport chrono package and active sports exhaust.",
-    price: "₹18,999",
-    pricePerDay: 18999,
-    tag: "Iconic",
-    category: "Supercar",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    seats: 2,
-    mileage: "10 km/l",
-    color: "GT Silver Metallic",
-    status: "Available",
-    branch: "Renigunta Airport Hub",
-    location: "Renigunta Airport Hub",
-    image: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=800&q=80",
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    rating: 5.0,
-  },
-  {
-    id: 6,
-    name: "Range Rover Autobiography",
-    brand: "Range Rover",
-    model: "Range Rover",
-    variant: "Autobiography LWB",
-    detail: "Peerless luxury flagship SUV. Executive Class seating with hot stone massage & all-wheel steering.",
-    price: "₹16,999",
-    pricePerDay: 16999,
-    tag: "Flagship",
-    category: "SUV",
-    fuelType: "Diesel",
-    transmission: "Automatic",
-    seats: 5,
-    mileage: "11 km/l",
-    color: "Santorini Black",
-    status: "Available",
-    branch: "Tirupati Central Hub",
-    location: "Tirupati Central Hub",
-    image: "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&w=800&q=80",
-    hasSunroof: true,
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    doorstepDelivery: true,
-    rating: 5.0,
-  },
-  {
-    id: 7,
-    name: "Toyota Innova Crysta ZX",
-    brand: "Toyota",
-    model: "Innova Crysta",
-    variant: "2.4 ZX Captain Seats",
-    detail: "Unmatched pilgrimage luxury, captain seats with climate control & generous luggage capacity.",
-    price: "₹3,499",
-    pricePerDay: 3499,
-    tag: "Pilgrimage",
-    category: "Luxury",
-    fuelType: "Diesel",
-    transmission: "Automatic",
-    seats: 7,
-    mileage: "14 km/l",
-    color: "Super White",
-    status: "Available",
-    branch: "Chandragiri Heritage Point",
-    location: "Chandragiri Heritage Point",
-    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    freeCancellation: true,
-    doorstepDelivery: true,
-    rating: 5.0,
-  },
-  {
-    id: 8,
-    name: "Mahindra Scorpio-N Z8L 4x4",
-    brand: "Mahindra",
-    model: "Scorpio-N",
-    variant: "Z8L 4x4 Automatic Diesel",
-    detail: "Dominant 7-seater luxury SUV, 4Xplorer terrain modes specifically tuned for Tirumala ghat roads.",
-    price: "₹2,499",
-    pricePerDay: 2499,
-    tag: "Popular",
-    category: "SUV",
-    fuelType: "Diesel",
-    transmission: "Automatic",
-    seats: 7,
-    mileage: "15 km/l",
-    color: "Napoli Black",
-    status: "Available",
-    branch: "Tirupati Central Hub",
-    location: "Tirupati Central Hub",
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
-    hasSunroof: true,
-    hasAC: true,
-    hasGPS: true,
-    instantBooking: true,
-    doorstepDelivery: true,
-    rating: 4.9,
-  },
-];
+import { DEFAULT_DATABASE_CARS } from "@/data/defaultCars";
+
+const fallbackFleet: CarFleetItem[] = DEFAULT_DATABASE_CARS;
 
 interface LandingPageProps {
   onNavigate?: (path: string, state?: any) => void;
@@ -703,21 +492,21 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {/* 2. Hero Section */}
       <section
         id="top"
-        className="relative pt-16 sm:pt-18 pb-4 sm:pb-6 bg-white overflow-hidden"
+        className="relative pt-6 sm:pt-14 pb-4 sm:pb-6 bg-white overflow-hidden"
       >
-        {/* Crisp Luxury Showroom Background Image (100% full clarity, cars on right) */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* Crisp Luxury Showroom Background Image (Desktop) */}
+        <div className="hidden lg:block absolute inset-0 z-0 pointer-events-none">
           <img
             src={heroLuxuryImg}
             alt="MOAR CARS Luxury Showroom"
-            className="w-full h-full object-cover object-right sm:object-center opacity-100"
+            className="w-full h-full object-cover object-right opacity-100"
           />
           {/* Soft white gradient on left side to highlight text readability */}
-          <div className="absolute inset-y-0 left-0 w-full sm:w-3/5 lg:w-[48%] bg-gradient-to-r from-white via-white/85 to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 left-0 w-3/5 lg:w-[48%] bg-gradient-to-r from-white via-white/85 to-transparent pointer-events-none" />
         </div>
 
-        {/* Floating Typography Watermarks */}
-        <div className="absolute top-22 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none">
+        {/* Floating Typography Watermarks (Desktop) */}
+        <div className="absolute top-20 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none">
           <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-slate-700/80 leading-relaxed drop-shadow-sm">
             LUXURY
             <br />
@@ -727,69 +516,33 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </div>
 
-        {/* Hero Content Container: On mobile filter search comes first, on desktop headline comes first */}
-        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col space-y-4 sm:space-y-6">
-          {/* On Mobile: Filter/Search option comes first! On Desktop: Sits below headline */}
-          <div className="order-1 lg:order-2">
-            {/* Cursive script floating badge */}
-            <div className="hidden lg:flex justify-end pr-4 sm:pr-8 -mb-2">
-              <span className="font-serif italic text-base sm:text-xl text-slate-600/90 font-medium tracking-wide select-none drop-shadow-sm">
-                More Than Just a Ride
-              </span>
-            </div>
-            {/* Floating Search Widget */}
-            <HeroSearch onSearch={handleHeroSearch} />
-          </div>
-
-          {/* Left Title & CTA Hero Header */}
-          <div className="order-2 lg:order-1 max-w-xl pt-2 sm:pt-4 space-y-2.5">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
-                PREMIUM CAR RENTALS
-              </span>
-              <div className="h-0.5 w-10 bg-[#c88d18]" />
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif italic font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
+        {/* Hero Content Container */}
+        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col space-y-3 sm:space-y-6">
+          {/* Headline (Visible on Mobile at Top & Desktop) */}
+          <div className="max-w-xl space-y-2 pt-1 sm:pt-4">
+            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.08] drop-shadow-sm">
               Drive Luxury.
               <br />
-              Drive <span className="text-[#d49b29]">MOAR.</span>
+              Drive <span className="text-[#c88d18]">MOAR.</span>
             </h1>
 
-            <p className="text-xs sm:text-[13px] font-medium text-slate-600 tracking-wide drop-shadow-sm">
-              Premium Car Rentals • Self Drive • Chauffeur Service • Airport Pickup
+            <p className="text-xs sm:text-[13px] font-medium text-slate-600 tracking-wide leading-relaxed">
+              Premium Car Rentals • Self Drive • Chauffeur Service • Airport Pickup & Drop
             </p>
+          </div>
 
-            {/* Dual CTAs */}
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <Button
-                onClick={() => {
-                  document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/25 flex items-center gap-2 transition-transform hover:scale-[1.02]"
-              >
-                <span>Explore Cars</span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+          {/* On Mobile: Hero Car Image */}
+          <div className="lg:hidden w-full rounded-2xl overflow-hidden shadow-md my-1 bg-slate-900">
+            <img
+              src={heroLuxuryImg}
+              alt="Drive MOAR Luxury Fleet"
+              className="w-full h-44 sm:h-56 object-cover object-center"
+            />
+          </div>
 
-              <Button
-                onClick={() => {
-                  document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="h-11 px-6 rounded-xl bg-[#0b1329] hover:bg-[#152345] text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-black/20 flex items-center gap-2 transition-transform hover:scale-[1.02]"
-              >
-                <span>Book Instantly</span>
-              </Button>
-            </div>
-
-            {/* Tagline Rule */}
-            <div className="pt-2 flex items-center gap-2.5">
-              <div className="h-0.5 w-8 bg-[#c88d18]" />
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#c88d18]">
-                DRIVE MORE. EXPLORE MORE.
-              </span>
-              <div className="h-0.5 w-8 bg-[#c88d18]" />
-            </div>
+          {/* Floating Search Widget */}
+          <div className="w-full">
+            <HeroSearch onSearch={handleHeroSearch} />
           </div>
         </div>
       </section>

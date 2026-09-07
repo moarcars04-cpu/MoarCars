@@ -11,7 +11,7 @@ interface RecentlyViewedSectionProps {
   onToggleCompare: (car: any) => void;
   onOpen360: (car: any) => void;
   onBookCar: (car: any) => void;
-  onViewDetails?: (car: any) => void;
+  onViewDetails?: ((car: any) => void) | undefined;
   onClearHistory: () => void;
 }
 

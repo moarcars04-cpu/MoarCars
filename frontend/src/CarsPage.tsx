@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -26,492 +26,16 @@ import {
   Youtube,
   LayoutDashboard,
   LogOut,
+  MapPin,
+  Star,
+  Rotate3d,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";
 import { MoarLogo } from "@/components/common/MoarLogo";
-import heroImg from "@/assets/hero.png";
-
-export interface CarItem {
-  id: number | string;
-  name: string;
-  brand: string;
-  model?: string;
-  category: "SUV" | "Sedan" | "Hatchback" | "Luxury" | "Electric" | "Convertible" | "Vans" | string;
-  subCategory: string;
-  tag?: "Featured" | "Popular" | "Best Seller" | "Luxury" | "Electric" | "Performance" | "Executive" | "Convertible" | "Pilgrimage" | string;
-  seats: number;
-  transmission: "Automatic" | "Manual";
-  fuelType: "Petrol" | "Diesel" | "Electric" | "Hybrid";
-  pricePerDay: number;
-  priceDisplay: string;
-  image: string;
-  rating?: number;
-  tripsCount?: number;
-  detail?: string;
-}
-
-const ALL_CARS: CarItem[] = [
-  // Row 1
-  {
-    id: 1,
-    name: "Lamborghini Huracán",
-    brand: "Lamborghini",
-    model: "Huracán EVO",
-    category: "Luxury",
-    subCategory: "Supercar",
-    tag: "Featured",
-    seats: 2,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 1499,
-    priceDisplay: "$1,499",
-    image: "https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=800&q=80",
-    rating: 5.0,
-    tripsCount: 28,
-    detail: "V10 Naturally Aspirated engine delivering 640 HP, aerodynamic perfection and pure luxury emotion.",
-  },
-  {
-    id: 2,
-    name: "BMW X5",
-    brand: "BMW",
-    model: "X5 xDrive40i",
-    category: "SUV",
-    subCategory: "Luxury SUV",
-    tag: "Popular",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 299,
-    priceDisplay: "$299",
-    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 64,
-    detail: "Executive luxury SUV with panoramic Sky Lounge sunroof, Harman Kardon audio and adaptive air suspension.",
-  },
-  {
-    id: 3,
-    name: "Mercedes-Benz E-Class",
-    brand: "Mercedes-Benz",
-    model: "E 220d",
-    category: "Sedan",
-    subCategory: "Luxury Sedan",
-    tag: "Best Seller",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 249,
-    priceDisplay: "$249",
-    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 92,
-    detail: "Masterpiece of intelligence. Chauffeur comfort with reclining rear seats and Burmester surround sound.",
-  },
-
-  // Row 2
-  {
-    id: 4,
-    name: "Audi Q7",
-    brand: "Audi",
-    model: "Q7 55 TFSI",
-    category: "SUV",
-    subCategory: "Luxury SUV",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 279,
-    priceDisplay: "$279",
-    image: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    tripsCount: 51,
-    detail: "Commanding luxury SUV with Quattro all-wheel drive and Matrix LED technology.",
-  },
-  {
-    id: 5,
-    name: "Porsche 911",
-    brand: "Porsche",
-    model: "911 Carrera S",
-    category: "Luxury",
-    subCategory: "Sports Car",
-    seats: 2,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 999,
-    priceDisplay: "$999",
-    image: "https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?auto=format&fit=crop&w=800&q=80",
-    rating: 5.0,
-    tripsCount: 35,
-    detail: "Timeless sports car silhouette with twin-turbo flat-six engine and PDK dual-clutch transmission.",
-  },
-  {
-    id: 6,
-    name: "Range Rover Sport",
-    brand: "Range Rover",
-    model: "Sport Dynamic SE",
-    category: "SUV",
-    subCategory: "Luxury SUV",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 349,
-    priceDisplay: "$349",
-    image: "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 47,
-    detail: "Peerless presence and off-road supremacy with Terrain Response 2 and semi-aniline leather.",
-  },
-
-  // Row 3
-  {
-    id: 7,
-    name: "Tesla Model Y",
-    brand: "Tesla",
-    model: "Model Y Long Range",
-    category: "Electric",
-    subCategory: "Electric SUV",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Electric",
-    pricePerDay: 199,
-    priceDisplay: "$199",
-    image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 88,
-    detail: "Dual motor all-wheel drive, autopilot convenience, glass roof and 530+ km electric range.",
-  },
-  {
-    id: 8,
-    name: "Toyota Fortuner",
-    brand: "Toyota",
-    model: "Fortuner Legender 4x4",
-    category: "SUV",
-    subCategory: "SUV",
-    seats: 7,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 159,
-    priceDisplay: "$159",
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    tripsCount: 110,
-    detail: "Legendary rugged reliability and dominating stance. Perfect for Tirumala ghat roads and highway cruising.",
-  },
-  {
-    id: 9,
-    name: "Audi A6",
-    brand: "Audi",
-    model: "A6 Technology 45 TFSI",
-    category: "Sedan",
-    subCategory: "Luxury Sedan",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 229,
-    priceDisplay: "$229",
-    image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    tripsCount: 67,
-    detail: "Progressive executive sedan with dual MMI touchscreens, ambient lighting and Matrix LED.",
-  },
-
-  // Row 4
-  {
-    id: 10,
-    name: "Mercedes-Benz C-Class",
-    brand: "Mercedes-Benz",
-    model: "C 200 Avantgarde",
-    category: "Sedan",
-    subCategory: "Luxury Sedan",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 219,
-    priceDisplay: "$219",
-    image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    tripsCount: 75,
-    detail: "Baby S-Class styling with portrait touchscreen display and active safety assist systems.",
-  },
-  {
-    id: 11,
-    name: "BMW M4 Competition",
-    brand: "BMW",
-    model: "M4 Coupe",
-    category: "Luxury",
-    subCategory: "Sports Coupe",
-    tag: "Featured",
-    seats: 4,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 499,
-    priceDisplay: "$499",
-    image: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&q=80",
-    rating: 5.0,
-    tripsCount: 39,
-    detail: "503 HP twin-turbo inline 6-cylinder beast. Carbon fiber bucket seats and M xDrive precision.",
-  },
-  {
-    id: 12,
-    name: "Toyota Innova Crysta ZX",
-    brand: "Toyota",
-    model: "Innova Crysta 2.4 ZX",
-    category: "Vans",
-    subCategory: "Luxury MPV",
-    tag: "Popular",
-    seats: 7,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 149,
-    priceDisplay: "$149",
-    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 140,
-    detail: "Ultimate family & pilgrimage comfort with rear captain seats, superior ride quality and luggage space.",
-  },
-
-  // Additional Fleet Items for Complete 60 Cars Catalog
-  {
-    id: 13,
-    name: "Kia Carnival Limousine",
-    brand: "Others",
-    model: "Carnival Limousine Plus",
-    category: "Vans",
-    subCategory: "Luxury Van",
-    seats: 7,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 179,
-    priceDisplay: "$179",
-    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 52,
-  },
-  {
-    id: 14,
-    name: "BMW Z4 Roadster",
-    brand: "BMW",
-    model: "Z4 M40i Roadster",
-    category: "Convertible",
-    subCategory: "Convertible",
-    seats: 2,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 399,
-    priceDisplay: "$399",
-    image: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 30,
-  },
-  {
-    id: 15,
-    name: "Ford Mustang GT Convertible",
-    brand: "Others",
-    model: "Mustang GT 5.0 V8",
-    category: "Convertible",
-    subCategory: "Convertible",
-    seats: 4,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 349,
-    priceDisplay: "$349",
-    image: "https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    tripsCount: 44,
-  },
-  {
-    id: 16,
-    name: "Maruti Swift ZXi+",
-    brand: "Others",
-    model: "Swift ZXi Plus",
-    category: "Hatchback",
-    subCategory: "Hatchback",
-    seats: 5,
-    transmission: "Manual",
-    fuelType: "Petrol",
-    pricePerDay: 79,
-    priceDisplay: "$79",
-    image: "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80",
-    rating: 4.8,
-    tripsCount: 160,
-  },
-  {
-    id: 17,
-    name: "Hyundai i20 Asta Turbo",
-    brand: "Others",
-    model: "i20 Asta Dual Tone",
-    category: "Hatchback",
-    subCategory: "Hatchback",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 89,
-    priceDisplay: "$89",
-    image: "https://images.unsplash.com/photo-1619682817481-e994891cd1f5?auto=format&fit=crop&w=800&q=80",
-    rating: 4.7,
-    tripsCount: 95,
-  },
-  {
-    id: 18,
-    name: "Tesla Model 3 Performance",
-    brand: "Tesla",
-    model: "Model 3 Performance",
-    category: "Electric",
-    subCategory: "Electric Sedan",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Electric",
-    pricePerDay: 189,
-    priceDisplay: "$189",
-    image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 78,
-  },
-  {
-    id: 19,
-    name: "Mercedes-Benz G-Wagon G63",
-    brand: "Mercedes-Benz",
-    model: "G 63 AMG",
-    category: "Luxury",
-    subCategory: "Luxury SUV",
-    tag: "Featured",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 899,
-    priceDisplay: "$899",
-    image: "https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80",
-    rating: 5.0,
-    tripsCount: 42,
-  },
-  {
-    id: 20,
-    name: "Porsche Panamera Turbo",
-    brand: "Porsche",
-    model: "Panamera Turbo S",
-    category: "Luxury",
-    subCategory: "Luxury Sedan",
-    seats: 4,
-    transmission: "Automatic",
-    fuelType: "Hybrid",
-    pricePerDay: 749,
-    priceDisplay: "$749",
-    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 31,
-  },
-  {
-    id: 21,
-    name: "BMW 7 Series",
-    brand: "BMW",
-    model: "740Li M Sport",
-    category: "Sedan",
-    subCategory: "Flagship Sedan",
-    tag: "Luxury",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 399,
-    priceDisplay: "$399",
-    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 58,
-  },
-  {
-    id: 22,
-    name: "Audi RS6 Avant",
-    brand: "Audi",
-    model: "RS6 Avant Performance",
-    category: "Luxury",
-    subCategory: "Performance Wagon",
-    seats: 5,
-    transmission: "Automatic",
-    fuelType: "Petrol",
-    pricePerDay: 599,
-    priceDisplay: "$599",
-    image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80",
-    rating: 5.0,
-    tripsCount: 22,
-  },
-  {
-    id: 23,
-    name: "Range Rover Defender 110",
-    brand: "Range Rover",
-    model: "Defender 110 HSE",
-    category: "SUV",
-    subCategory: "Luxury SUV",
-    tag: "Popular",
-    seats: 7,
-    transmission: "Automatic",
-    fuelType: "Diesel",
-    pricePerDay: 329,
-    priceDisplay: "$329",
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80",
-    rating: 4.9,
-    tripsCount: 65,
-  },
-  {
-    id: 24,
-    name: "Toyota Vellfire Executive Lounge",
-    brand: "Toyota",
-    model: "Vellfire Hybrid",
-    category: "Vans",
-    subCategory: "VIP Lounge Van",
-    tag: "Best Seller",
-    seats: 7,
-    transmission: "Automatic",
-    fuelType: "Hybrid",
-    pricePerDay: 379,
-    priceDisplay: "$379",
-    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
-    rating: 5.0,
-    tripsCount: 71,
-  },
-];
-
-const CATEGORY_TABS = [
-  { id: "all", label: "All Cars", icon: Car },
-  { id: "SUV", label: "SUV", icon: Car },
-  { id: "Sedan", label: "Sedan", icon: Car },
-  { id: "Hatchback", label: "Hatchback", icon: Car },
-  { id: "Luxury", label: "Luxury", icon: Award },
-  { id: "Electric", label: "Electric", icon: Zap },
-  { id: "Convertible", label: "Convertible", icon: Sparkles },
-  { id: "Vans", label: "Vans", icon: Users },
-];
-
-const BRANDS_LIST = [
-  { name: "BMW", count: 12 },
-  { name: "Mercedes-Benz", count: 10 },
-  { name: "Audi", count: 8 },
-  { name: "Porsche", count: 6 },
-  { name: "Range Rover", count: 7 },
-  { name: "Lamborghini", count: 4 },
-  { name: "Tesla", count: 5 },
-  { name: "Toyota", count: 9 },
-  { name: "Others", count: 15 },
-];
-
-const CAR_TYPES_LIST = [
-  { id: "SUV", label: "SUV", count: 24 },
-  { id: "Sedan", label: "Sedan", count: 18 },
-  { id: "Hatchback", label: "Hatchback", count: 12 },
-  { id: "Luxury", label: "Luxury", count: 20 },
-  { id: "Electric", label: "Electric", count: 8 },
-  { id: "Convertible", label: "Convertible", count: 6 },
-  { id: "Vans", label: "Vans", count: 10 },
-];
-
-const TRANSMISSIONS_LIST = [
-  { id: "Automatic", label: "Automatic", count: 48 },
-  { id: "Manual", label: "Manual", count: 12 },
-];
-
-const FUEL_TYPES_LIST = [
-  { id: "Petrol", label: "Petrol", count: 30 },
-  { id: "Diesel", label: "Diesel", count: 12 },
-  { id: "Electric", label: "Electric", count: 8 },
-  { id: "Hybrid", label: "Hybrid", count: 10 },
-];
+import { DEFAULT_DATABASE_CARS, CarFleetItem } from "@/data/defaultCars";
+import { Viewer360Modal } from "@/components/home/360ViewerModal";
+import { QuickBookingModal } from "@/components/home/QuickBookingModal";
 
 interface CarsPageProps {
   onNavigate?: (path: string, state?: any) => void;
@@ -520,6 +44,10 @@ interface CarsPageProps {
 export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
+  // Fleet state initialized with database defaults
+  const [fleet, setFleet] = useState<CarFleetItem[]>(DEFAULT_DATABASE_CARS);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategoryTab, setActiveCategoryTab] = useState("all");
@@ -527,8 +55,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedTransmissions, setSelectedTransmissions] = useState<string[]>([]);
   const [selectedFuels, setSelectedFuels] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(2000);
-  const [minPrice] = useState<number>(50);
+  const [maxPrice, setMaxPrice] = useState<number>(10000);
+  const [minPrice] = useState<number>(1000);
   const [sortBy, setSortBy] = useState<string>("popular");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -537,7 +65,128 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
   const [talkModalOpen, setTalkModalOpen] = useState(false);
 
+  // Modals state
+  const [selected360Car, setSelected360Car] = useState<CarFleetItem | null>(null);
+  const [bookingTargetCar, setBookingTargetCar] = useState<CarFleetItem | null>(null);
+
   const carsPerPage = 12;
+
+  // Fetch live fleet data from backend database API
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    fetch("/api/cars")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const mapped: CarFleetItem[] = res.data.map((car: any) => ({
+            ...car,
+            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "1699").replace(/[^0-9]/g, ""), 10) || 1699,
+            priceDisplay: car.priceDisplay || (car.price ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(car.pricePerDay || 1699).toLocaleString("en-IN")}`),
+            subCategory: car.subCategory || car.variant || `${car.category || "Fleet"} Vehicle`,
+            hasSunroof: car.hasSunroof ?? (car.name?.includes("ZX") || car.name?.includes("Scorpio") || car.name?.includes("Creta") || car.name?.includes("BMW") || car.name?.includes("Mercedes")),
+            hasGPS: car.hasGPS ?? true,
+            hasAC: car.hasAC ?? true,
+            instantBooking: car.instantBooking ?? true,
+            freeCancellation: car.freeCancellation ?? true,
+            doorstepDelivery: car.doorstepDelivery ?? true,
+            rating: car.rating || 4.8,
+            tripsCount: car.totalTrips || car.tripsCount || 35,
+          }));
+          setFleet(mapped);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not fetch live cars from database, using verified database defaults:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Dynamic Category Tabs derived from actual database fleet
+  const categoryTabs = useMemo(() => {
+    const counts: Record<string, number> = {};
+    fleet.forEach((c) => {
+      const cat = c.category || "Other";
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+      SUV: Car,
+      Sedan: Car,
+      Hatchback: Car,
+      Luxury: Award,
+      Electric: Zap,
+      Vans: Users,
+      Convertible: Sparkles,
+    };
+
+    const tabs = [
+      { id: "all", label: "All Cars", icon: Car, count: fleet.length },
+      ...Object.keys(counts).map((cat) => ({
+        id: cat,
+        label: cat,
+        icon: categoryIcons[cat] || Car,
+        count: counts[cat] || 0,
+      })),
+    ];
+
+    return tabs;
+  }, [fleet]);
+
+  // Dynamic Brands Filter derived from actual database fleet
+  const brandsList = useMemo(() => {
+    const counts: Record<string, number> = {};
+    fleet.forEach((c) => {
+      const b = c.brand || "Other";
+      counts[b] = (counts[b] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [fleet]);
+
+  // Dynamic Car Types Filter derived from actual database fleet
+  const carTypesList = useMemo(() => {
+    const counts: Record<string, number> = {};
+    fleet.forEach((c) => {
+      const t = c.category || "Other";
+      counts[t] = (counts[t] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([id, count]) => ({ id, label: id, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [fleet]);
+
+  // Dynamic Transmissions Filter derived from actual database fleet
+  const transmissionsList = useMemo(() => {
+    const counts: Record<string, number> = {};
+    fleet.forEach((c) => {
+      const t = c.transmission || "Manual";
+      counts[t] = (counts[t] || 0) + 1;
+    });
+    return Object.entries(counts).map(([id, count]) => ({ id, label: id, count }));
+  }, [fleet]);
+
+  // Dynamic Fuel Types Filter derived from actual database fleet
+  const fuelTypesList = useMemo(() => {
+    const counts: Record<string, number> = {};
+    fleet.forEach((c) => {
+      const f = c.fuelType || "Petrol";
+      counts[f] = (counts[f] || 0) + 1;
+    });
+    return Object.entries(counts).map(([id, count]) => ({ id, label: id, count }));
+  }, [fleet]);
 
   // Toggle filter helper
   const toggleArrayFilter = (setArr: React.Dispatch<React.SetStateAction<string[]>>, item: string) => {
@@ -552,14 +201,14 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
     setSelectedBrands([]);
     setSelectedTransmissions([]);
     setSelectedFuels([]);
-    setMaxPrice(2000);
+    setMaxPrice(10000);
     setSortBy("popular");
     setCurrentPage(1);
   };
 
   // Filtered & Sorted Cars
   const filteredCars = useMemo(() => {
-    let result = ALL_CARS;
+    let result = fleet;
 
     // Search query
     if (searchQuery.trim()) {
@@ -567,10 +216,12 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
       result = result.filter(
         (c) =>
           c.name.toLowerCase().includes(q) ||
-          c.brand.toLowerCase().includes(q) ||
+          (c.brand && c.brand.toLowerCase().includes(q)) ||
           (c.model && c.model.toLowerCase().includes(q)) ||
-          c.subCategory.toLowerCase().includes(q) ||
-          c.category.toLowerCase().includes(q)
+          (c.variant && c.variant.toLowerCase().includes(q)) ||
+          (c.subCategory && c.subCategory.toLowerCase().includes(q)) ||
+          (c.category && c.category.toLowerCase().includes(q)) ||
+          (c.location && c.location.toLowerCase().includes(q))
       );
     }
 
@@ -578,27 +229,25 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
     if (activeCategoryTab !== "all") {
       result = result.filter(
         (c) =>
-          c.category.toLowerCase() === activeCategoryTab.toLowerCase() ||
-          c.subCategory.toLowerCase().includes(activeCategoryTab.toLowerCase())
+          (c.category && c.category.toLowerCase() === activeCategoryTab.toLowerCase()) ||
+          (c.subCategory && c.subCategory.toLowerCase().includes(activeCategoryTab.toLowerCase()))
       );
     }
 
     // Car Types checkbox
     if (selectedTypes.length > 0) {
       result = result.filter((c) =>
-        selectedTypes.some((t) => c.category.toLowerCase() === t.toLowerCase() || c.subCategory.toLowerCase().includes(t.toLowerCase()))
+        selectedTypes.some(
+          (t) =>
+            (c.category && c.category.toLowerCase() === t.toLowerCase()) ||
+            (c.subCategory && c.subCategory.toLowerCase().includes(t.toLowerCase()))
+        )
       );
     }
 
     // Brands checkbox
     if (selectedBrands.length > 0) {
-      result = result.filter((c) => {
-        if (selectedBrands.includes("Others")) {
-          const mainBrands = ["BMW", "Mercedes-Benz", "Audi", "Porsche", "Range Rover", "Lamborghini", "Tesla", "Toyota"];
-          if (!mainBrands.includes(c.brand)) return true;
-        }
-        return selectedBrands.includes(c.brand);
-      });
+      result = result.filter((c) => selectedBrands.includes(c.brand));
     }
 
     // Transmission checkbox
@@ -622,11 +271,12 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
     } else if (sortBy === "rating") {
       result = [...result].sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === "trips") {
-      result = [...result].sort((a, b) => (b.tripsCount || 0) - (a.tripsCount || 0));
+      result = [...result].sort((a, b) => (b.totalTrips || b.tripsCount || 0) - (a.totalTrips || a.tripsCount || 0));
     }
 
     return result;
   }, [
+    fleet,
     searchQuery,
     activeCategoryTab,
     selectedTypes,
@@ -639,11 +289,11 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   ]);
 
   // Paginated Cars
-  const totalPages = Math.max(5, Math.ceil(filteredCars.length / carsPerPage) || 1);
+  const totalPages = Math.ceil(filteredCars.length / carsPerPage) || 1;
   const paginatedCars = useMemo(() => {
     const start = (currentPage - 1) * carsPerPage;
     return filteredCars.slice(start, start + carsPerPage);
-  }, [filteredCars, currentPage]);
+  }, [filteredCars, currentPage, carsPerPage]);
 
   const wishlistIds = useMemo(() => {
     return user?.favoriteCars || [];
@@ -657,9 +307,11 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
     await toggleFavoriteCar(carId);
   };
 
-  const handleCardClick = (car: CarItem) => {
+  const handleCardClick = (car: CarFleetItem) => {
     if (onNavigate) {
-      onNavigate(`/car/${car.id || car.name}`, { car });
+      onNavigate(`/car/${car.id}`, { car });
+    } else {
+      window.location.href = `/car/${car.id}`;
     }
   };
 
@@ -761,42 +413,45 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             </a>
           </nav>
 
-          {/* Right Action Icons & Book Now */}
+          {/* Right Action Icons & User Menu */}
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Search Icon Trigger */}
+            {/* Search Icon Shortcut */}
             <button
               onClick={() => {
                 document.getElementById("cars-hero-search")?.focus();
               }}
-              aria-label="Search"
-              className="h-9 w-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors"
+              aria-label="Search cars"
+              className="p-2 text-slate-700 hover:text-[#c88d18] transition-colors rounded-full hover:bg-slate-100"
             >
-              <Search className="h-4 w-4" />
+              <Search className="h-5 w-5" />
             </button>
 
-            {/* Wishlist Icon with count */}
+            {/* Wishlist Shortcut */}
             <button
               onClick={() => {
-                if (!user) openAuthModal("login");
-                else if (onNavigate) onNavigate("/dashboard");
+                if (!user) {
+                  openAuthModal("login");
+                } else if (onNavigate) {
+                  onNavigate("/dashboard?tab=wishlist");
+                }
               }}
               aria-label="Wishlist"
-              className="relative h-9 w-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-700 transition-colors"
+              className="p-2 text-slate-700 hover:text-rose-500 transition-colors rounded-full hover:bg-slate-100 relative"
             >
-              <Heart className="h-4 w-4" />
+              <Heart className="h-5 w-5" />
               {wishlistIds.length > 0 && (
-                <span className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-[#c88d18] text-white text-[9px] font-black flex items-center justify-center">
+                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
                   {wishlistIds.length}
                 </span>
               )}
             </button>
 
-            {/* User Dropdown / Sign In */}
+            {/* User Profile / Login */}
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-1.5 p-1 rounded-full border border-amber-500/30 hover:bg-amber-50/50 transition-colors"
+                  className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                 >
                   <div className="h-7 w-7 rounded-full overflow-hidden bg-slate-900 border border-[#d49b29]">
                     <img
@@ -859,28 +514,21 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
       </header>
 
       {/* 2. Hero Section: "Find Your Perfect Drive" */}
-      <section className="relative pt-12 sm:pt-16 pb-12 sm:pb-16 bg-[#090e18] text-white overflow-hidden">
-        {/* Background Image of Mercedes / Luxury Car on right with seamless left overlay */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <img
-            src={heroImg}
-            alt="Find Your Perfect Drive"
-            className="w-full h-full object-cover object-right sm:object-center opacity-85"
-          />
-          {/* Dark luxury gradient overlay across left side */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#070c16] via-[#070c16]/90 to-transparent sm:w-3/4 lg:w-[65%]" />
-        </div>
+      <section className="relative pt-10 sm:pt-14 pb-10 sm:pb-14 bg-[#090e18] text-white overflow-hidden border-b border-slate-800/40">
+        {/* Subtle Dark Luxury Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#070c16] via-[#0b1329] to-[#070c16]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#d49b29]/10 via-transparent to-transparent pointer-events-none" />
 
         {/* Floating Typography Watermark on Top Right */}
-        <div className="absolute top-10 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none">
+        <div className="absolute top-8 right-6 sm:right-14 z-10 hidden md:block text-right select-none pointer-events-none opacity-40">
           <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-white/50 leading-relaxed drop-shadow-sm">
             DRIVE
             <br />
-            MORE.
+            MOAR.
             <br />
             EXPLORE
             <br />
-            MORE.
+            MOAR.
           </div>
         </div>
 
@@ -889,7 +537,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
           <div className="max-w-2xl space-y-3 sm:space-y-4">
             {/* Small uppercase tag */}
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#d49b29] block">
-              EXPLORE OUR FLEET
+              EXPLORE OUR VERIFIED FLEET
             </span>
 
             {/* Serif Headline */}
@@ -899,7 +547,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
 
             {/* Subtitle */}
             <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl leading-relaxed">
-              Premium cars for every journey. Luxury, comfort and performance — all in one place.
+              Available live in Tirupati & Andhra Pradesh. 100% verified, sanitized, and ready for instant booking.
             </p>
 
             {/* Search Input Bar with Golden Button */}
@@ -914,7 +562,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                     setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  placeholder="Search by brand, model or keyword..."
+                  placeholder="Search Swift, Innova, Scorpio, BMW, EV..."
                   className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 outline-none font-medium"
                 />
                 {searchQuery && (
@@ -943,7 +591,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
       <div className="bg-white border-b border-slate-100 shadow-xs sticky top-16 sm:top-18 z-40">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-3 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-2 sm:gap-3 min-w-max">
-            {CATEGORY_TABS.map((tab) => {
+            {categoryTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeCategoryTab === tab.id;
               return (
@@ -961,6 +609,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 >
                   <Icon className={`h-4 w-4 ${isActive ? "text-[#d49b29]" : "text-slate-500"}`} />
                   <span>{tab.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"}`}>
+                    {tab.count}
+                  </span>
                 </button>
               );
             })}
@@ -1007,7 +658,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               </div>
               <div className="space-y-2 pt-1">
-                {CAR_TYPES_LIST.map((t) => {
+                {carTypesList.map((t) => {
                   const isChecked = selectedTypes.includes(t.id);
                   return (
                     <label
@@ -1043,7 +694,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               </div>
               <div className="space-y-2 pt-1">
-                {BRANDS_LIST.map((b) => {
+                {brandsList.map((b) => {
                   const isChecked = selectedBrands.includes(b.name);
                   return (
                     <label
@@ -1072,18 +723,18 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
 
             <div className="border-t border-slate-100" />
 
-            {/* 3. Price Range (per day) */}
+            {/* 3. Price Range (per day in INR) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Price Range (per day)</h4>
+                <h4 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Tariff / Day (₹)</h4>
                 <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               </div>
               <div className="pt-1 space-y-3">
                 <input
                   type="range"
-                  min={50}
-                  max={2000}
-                  step={25}
+                  min={1000}
+                  max={10000}
+                  step={200}
                   value={maxPrice}
                   onChange={(e) => {
                     setMaxPrice(Number(e.target.value));
@@ -1092,8 +743,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                   className="w-full accent-[#c88d18] cursor-pointer"
                 />
                 <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                  <span>${minPrice}</span>
-                  <span className="text-[#c88d18] font-black">${maxPrice}</span>
+                  <span>₹{minPrice.toLocaleString("en-IN")}</span>
+                  <span className="text-[#c88d18] font-black">Up to ₹{maxPrice.toLocaleString("en-IN")}</span>
                 </div>
               </div>
             </div>
@@ -1107,7 +758,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               </div>
               <div className="space-y-2 pt-1">
-                {TRANSMISSIONS_LIST.map((t) => {
+                {transmissionsList.map((t) => {
                   const isChecked = selectedTransmissions.includes(t.id);
                   return (
                     <label
@@ -1143,7 +794,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
               </div>
               <div className="space-y-2 pt-1">
-                {FUEL_TYPES_LIST.map((f) => {
+                {fuelTypesList.map((f) => {
                   const isChecked = selectedFuels.includes(f.id);
                   return (
                     <label
@@ -1189,9 +840,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 Showing{" "}
                 <strong className="text-slate-900">
                   {filteredCars.length > 0 ? (currentPage - 1) * carsPerPage + 1 : 0}–
-                  {Math.min(currentPage * carsPerPage, 60)}
+                  {Math.min(currentPage * carsPerPage, filteredCars.length)}
                 </strong>{" "}
-                of <strong className="text-slate-900">60</strong> cars
+                of <strong className="text-slate-900">{filteredCars.length}</strong> vehicles in database
               </span>
 
               {/* Sort By Dropdown */}
@@ -1199,24 +850,21 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <span className="text-xs text-slate-500 font-medium">Sort by:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 px-3 py-1.5 outline-none focus:border-[#c88d18]"
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-[#c88d18]"
                 >
-                  <option value="popular">Popular</option>
+                  <option value="popular">Popular First</option>
                   <option value="price_asc">Price: Low to High</option>
                   <option value="price_desc">Price: High to Low</option>
                   <option value="rating">Highest Rated</option>
-                  <option value="trips">Most Booked</option>
+                  <option value="trips">Most Trips</option>
                 </select>
               </div>
             </div>
 
-            {/* Cars Cards Grid: 3 columns */}
+            {/* 3x4 Cars Grid */}
             {paginatedCars.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
                 {paginatedCars.map((car) => {
                   const isFavorited = wishlistIds.includes(car.id);
                   return (
@@ -1227,7 +875,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                       {/* Top Photo & Badges */}
                       <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-100">
                         <img
-                          src={car.image}
+                          src={car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"}
                           alt={car.name}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -1251,20 +899,43 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                           </div>
                         )}
 
-                        {/* Top-Right Favorite/Wishlist Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleToggleWishlist(car.id);
-                          }}
-                          aria-label="Save to Wishlist"
-                          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md flex items-center justify-center text-slate-600 hover:text-rose-500 hover:scale-110 transition-all"
-                        >
-                          <Heart
-                            className={`h-4 w-4 ${isFavorited ? "fill-rose-500 text-rose-500" : ""}`}
-                          />
-                        </button>
+                        {/* Top-Right Favorite/Wishlist & 360 Buttons */}
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected360Car(car);
+                            }}
+                            title="360° Studio View"
+                            className="h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md flex items-center justify-center text-slate-700 hover:text-[#c88d18] hover:scale-110 transition-all"
+                          >
+                            <Rotate3d className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleWishlist(car.id);
+                            }}
+                            aria-label="Save to Wishlist"
+                            className="h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md flex items-center justify-center text-slate-600 hover:text-rose-500 hover:scale-110 transition-all"
+                          >
+                            <Heart
+                              className={`h-4 w-4 ${isFavorited ? "fill-rose-500 text-rose-500" : ""}`}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Bottom Location & Rating Badge */}
+                        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-xs text-white drop-shadow">
+                          <span className="flex items-center gap-1 text-[11px] font-bold bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                            <MapPin className="h-3 w-3 text-amber-400" /> {car.location || "Tirupati Hub"}
+                          </span>
+                          <span className="flex items-center gap-1 text-[11px] font-bold bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full text-amber-300">
+                            <Star className="h-3 w-3 fill-current" /> {car.rating || 4.8}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Card Content */}
@@ -1275,14 +946,14 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                             {car.name}
                           </h4>
                           <p className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-0.5">
-                            {car.subCategory}
+                            {car.variant || car.subCategory || car.category}
                           </p>
 
                           {/* 3 Specs Badges */}
                           <div className="flex items-center gap-3 sm:gap-4 mt-3 text-[11px] font-bold text-slate-600">
                             <div className="flex items-center gap-1">
                               <User className="h-3.5 w-3.5 text-slate-400" />
-                              <span>{car.seats}</span>
+                              <span>{car.seats} Seats</span>
                             </div>
                             <div className="flex items-center gap-1">
                               <Gauge className="h-3.5 w-3.5 text-slate-400" />
@@ -1299,18 +970,25 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                         <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                           <div>
                             <span className="text-lg sm:text-xl font-black text-slate-900">
-                              {car.priceDisplay}
+                              ₹{car.pricePerDay.toLocaleString("en-IN")}
                             </span>
                             <span className="text-[11px] text-slate-500 font-semibold ml-1">/ day</span>
+                            {car.securityDeposit && (
+                              <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                                <ShieldCheck className="h-3 w-3" /> Dep: ₹{car.securityDeposit.toLocaleString("en-IN")}
+                              </p>
+                            )}
                           </div>
 
-                          <Button
-                            onClick={() => handleCardClick(car)}
-                            className="h-9 px-4 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs shadow-md shadow-[#c88d18]/25 flex items-center gap-1 transition-transform hover:scale-[1.02]"
-                          >
-                            <span>View Details</span>
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              onClick={() => handleCardClick(car)}
+                              className="h-9 px-3.5 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs shadow-md shadow-[#c88d18]/25 flex items-center gap-1 transition-transform hover:scale-[1.02]"
+                            >
+                              <span>Details</span>
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1320,9 +998,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             ) : (
               <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/90 space-y-4">
                 <Car className="h-12 w-12 text-slate-300 mx-auto" />
-                <h4 className="text-lg font-bold text-slate-900">No cars found matching your filters</h4>
+                <h4 className="text-lg font-bold text-slate-900">No vehicles found matching your filters</h4>
                 <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Try adjusting your price range, car type, or search term to see more available luxury vehicles.
+                  Try adjusting your tariff range, car type, or search keyword to see available fleet vehicles.
                 </p>
                 <Button onClick={handleClearAll} className="h-9 px-5 rounded-xl bg-[#0b1329] text-white text-xs font-bold">
                   Reset All Filters
@@ -1330,7 +1008,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               </div>
             )}
 
-            {/* Pagination Controls */}
+            {/* Dynamic Pagination Controls */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 pt-4">
                 <button
@@ -1345,7 +1023,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                   <ChevronLeft className="h-4 w-4" />
                 </button>
 
-                {[1, 2, 3, 4, 5].map((page) => (
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => {
@@ -1363,9 +1041,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 ))}
 
                 <button
-                  disabled={currentPage === 5}
+                  disabled={currentPage === totalPages}
                   onClick={() => {
-                    setCurrentPage((p) => Math.min(5, p + 1));
+                    setCurrentPage((p) => Math.min(totalPages, p + 1));
                     document.getElementById("fleet-catalog-grid")?.scrollIntoView({ behavior: "smooth" });
                   }}
                   aria-label="Next Page"
@@ -1379,6 +1057,88 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
         </div>
       </div>
 
+      {/* 5. Mobile Filter Modal Drawer */}
+      {showMobileFilterModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end">
+          <div className="w-full max-w-sm bg-white h-full p-6 overflow-y-auto space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-extrabold text-base text-slate-900">Filter Vehicles</h3>
+              <button
+                onClick={() => setShowMobileFilterModal(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Car Types */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold text-slate-900 uppercase">Car Type</h4>
+              <div className="space-y-2">
+                {carTypesList.map((t) => (
+                  <label key={t.id} className="flex items-center justify-between text-xs text-slate-700">
+                    <span className="font-medium">{t.label}</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedTypes.includes(t.id)}
+                      onChange={() => toggleArrayFilter(setSelectedTypes, t.id)}
+                      className="rounded border-slate-300 text-[#0b1329]"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Brands */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold text-slate-900 uppercase">Brand</h4>
+              <div className="space-y-2">
+                {brandsList.map((b) => (
+                  <label key={b.name} className="flex items-center justify-between text-xs text-slate-700">
+                    <span className="font-medium">{b.name}</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.includes(b.name)}
+                      onChange={() => toggleArrayFilter(setSelectedBrands, b.name)}
+                      className="rounded border-slate-300 text-[#0b1329]"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-extrabold text-slate-900 uppercase">Tariff / Day (₹)</h4>
+              <input
+                type="range"
+                min={1000}
+                max={10000}
+                step={200}
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                className="w-full accent-[#c88d18]"
+              />
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>₹{minPrice.toLocaleString("en-IN")}</span>
+                <span className="text-[#c88d18]">Up to ₹{maxPrice.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            <div className="pt-4 flex gap-2">
+              <Button onClick={handleClearAll} variant="outline" className="flex-1 rounded-xl text-xs font-bold">
+                Reset
+              </Button>
+              <Button
+                onClick={() => setShowMobileFilterModal(false)}
+                className="flex-1 rounded-xl bg-[#0b1329] text-white text-xs font-bold"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 6. Trust Badges Bar (4 in a row) */}
       <div className="w-full bg-white border-y border-slate-100/90 py-5 sm:py-6 shadow-xs">
@@ -1390,7 +1150,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-sm sm:text-base font-extrabold text-slate-900 leading-none">Verified Cars</div>
+                <div className="text-sm sm:text-base font-extrabold text-slate-900 leading-none">Verified Fleet</div>
                 <div className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-1">Inspected & Sanitized</div>
               </div>
             </div>
@@ -1440,7 +1200,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             <div className="space-y-4">
               <MoarLogo variant="light" size="lg" showTagline={true} />
               <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-                Premium car rentals for extraordinary journeys. Drive luxury. Drive MOAR.
+                Premium car rentals for extraordinary journeys in Tirupati & Andhra Pradesh. Drive luxury. Drive MOAR.
               </p>
               {/* Social Icons */}
               <div className="flex items-center gap-3 pt-2">
@@ -1573,32 +1333,27 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               <ul className="space-y-2 text-xs text-slate-400">
                 <li>
                   <a href="/cars" className="hover:text-[#c88d18] transition-colors">
-                    Self Drive
+                    Self Drive Rentals
                   </a>
                 </li>
                 <li>
                   <a href="/cars" className="hover:text-[#c88d18] transition-colors">
-                    Chauffeur Service
+                    Chauffeur Driven
                   </a>
                 </li>
                 <li>
                   <a href="/#hubs" className="hover:text-[#c88d18] transition-colors">
-                    Airport Pickup
+                    Renigunta Airport Pickup
                   </a>
                 </li>
                 <li>
                   <a href="/cars" className="hover:text-[#c88d18] transition-colors">
-                    Corporate Rentals
+                    Tirumala Pilgrimage Packages
                   </a>
                 </li>
                 <li>
                   <a href="/cars" className="hover:text-[#c88d18] transition-colors">
-                    Long Term Rentals
-                  </a>
-                </li>
-                <li>
-                  <a href="/#weekend-deals" className="hover:text-[#c88d18] transition-colors">
-                    Special Offers
+                    Long Term Monthly Fleet
                   </a>
                 </li>
               </ul>
@@ -1610,7 +1365,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 Newsletter
               </h4>
               <p className="text-xs text-slate-400">
-                Get the latest deals and luxury updates.
+                Get the latest deals and exclusive updates in Tirupati.
               </p>
 
               {newsletterSubscribed ? (
@@ -1623,7 +1378,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                     <input
                       type="email"
                       required
-                      placeholder="Enter your email address"
+                      placeholder="Enter your email"
                       value={newsletterEmail}
                       onChange={(e) => setNewsletterEmail(e.target.value)}
                       className="w-full h-10 px-3.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder:text-slate-500 outline-none focus:border-[#c88d18]"
@@ -1642,10 +1397,10 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               {/* Tagline watermark */}
               <div className="pt-2 border-l border-slate-800 pl-3">
                 <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#d49b29] block">
-                  DRIVE MORE.
+                  DRIVE MOAR.
                 </span>
                 <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-slate-500 block">
-                  EXPLORE MORE.
+                  EXPLORE MOAR.
                 </span>
               </div>
             </div>
@@ -1653,7 +1408,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
 
           {/* Bottom Copyright & Legal Links */}
           <div className="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-            <p>© 2024 MOAR CARS. All rights reserved.</p>
+            <p>© 2026 MOAR CARS. All rights reserved.</p>
             <div className="flex items-center gap-6">
               <span className="hover:text-slate-300 cursor-pointer transition-colors">Privacy Policy</span>
               <span className="hover:text-slate-300 cursor-pointer transition-colors">Terms & Conditions</span>
@@ -1662,6 +1417,35 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
           </div>
         </div>
       </footer>
+
+      {/* 360 Studio Viewer Modal */}
+      {selected360Car && (
+        <Viewer360Modal
+          car={selected360Car}
+          onClose={() => setSelected360Car(null)}
+          onBookNow={(car) => {
+            setSelected360Car(null);
+            setBookingTargetCar(car);
+          }}
+        />
+      )}
+
+      {/* Quick Booking Modal */}
+      {bookingTargetCar && (
+        <QuickBookingModal
+          car={bookingTargetCar}
+          searchParams={{
+            pickup: bookingTargetCar.location || "Tirupati Central Hub",
+            dropoff: bookingTargetCar.location || "Tirupati Central Hub",
+            startDate: new Date().toISOString().split("T")[0] || "2026-09-08",
+            startTime: "09:00",
+            endDate: new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0] || "2026-09-10",
+            endTime: "21:00",
+          }}
+          onClose={() => setBookingTargetCar(null)}
+          onNavigate={onNavigate}
+        />
+      )}
 
       {/* Talk to Our Experts Modal */}
       {talkModalOpen && (
@@ -1678,7 +1462,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             </div>
             <h3 className="text-xl font-black text-slate-900">Talk to a Luxury Fleet Concierge</h3>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Our 24/7 fleet specialists are ready to help you customize your booking, Ghat road advice, and airport handovers.
+              Our 24/7 fleet specialists are ready to help you customize your booking, Tirumala ghat road advice, and airport handovers.
             </p>
             <div className="space-y-2 pt-2">
               <a
@@ -1689,7 +1473,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 <span>Call Now: +91 85000 12345</span>
               </a>
               <a
-                href="https://wa.me/918500012345?text=Hello%20MOAR%20CARS,%20I%20would%20like%20assistance%20choosing%20a%20luxury%20car."
+                href="https://wa.me/918500012345?text=Hello%20MOAR%20CARS,%20I%20would%20like%20assistance%20choosing%20a%20car."
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#0b1329] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#162447]"

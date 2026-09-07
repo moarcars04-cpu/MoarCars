@@ -17,14 +17,14 @@ import { Button } from "@/components/ui/button";
 
 interface CarCardProps {
   car: any;
-  viewMode?: "grid" | "list";
+  viewMode?: "grid" | "list" | undefined;
   isWishlisted: boolean;
   isCompared: boolean;
   onToggleWishlist: (carId: number | string) => void;
   onToggleCompare: (car: any) => void;
   onOpen360: (car: any) => void;
   onBookCar: (car: any) => void;
-  onViewDetails?: (car: any) => void;
+  onViewDetails?: ((car: any) => void) | undefined;
 }
 
 export const CarCard: React.FC<CarCardProps> = ({
