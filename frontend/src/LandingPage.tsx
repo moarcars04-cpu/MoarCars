@@ -735,7 +735,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               <div className="h-0.5 w-10 bg-[#c88d18]" />
             </div>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
+            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif italic font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
               Drive Luxury.
               <br />
               Drive <span className="text-[#d49b29]">MOAR.</span>

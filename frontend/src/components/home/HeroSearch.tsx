@@ -52,7 +52,7 @@ const carTypes = [
 export const TrustBadgesBar: React.FC = () => {
   return (
     <div className="w-full bg-white border-y border-slate-100/90 py-5 sm:py-6 shadow-sm">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           {/* 4 Badges with vertical dividers */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8 flex-1 w-full divide-y md:divide-y-0 md:divide-x divide-slate-100">
@@ -152,8 +152,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   const handleTriggerSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch({
-      pickup,
-      dropoff,
+      pickup: pickup === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : pickup,
+      dropoff: dropoff === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : dropoff,
       startDate,
       startTime: "09:00",
       endDate: returnDate,
@@ -165,13 +165,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="w-full relative z-20">
-      {/* Service Tabs (Nestled with round pill styling and icons) */}
+    <div className="w-full max-w-[1280px] mx-auto relative z-20">
+      {/* Service Tabs (Nestled on top-left of the centered container) */}
       <div className="flex items-center gap-2 pl-2 mb-2 sm:mb-2.5">
         <button
           type="button"
           onClick={() => setServiceType("self")}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
             serviceType === "self"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
@@ -184,7 +184,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("chauffeur")}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
             serviceType === "chauffeur"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
@@ -197,7 +197,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         <button
           type="button"
           onClick={() => setServiceType("airport")}
-          className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
             serviceType === "airport"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
@@ -208,8 +208,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
         </button>
       </div>
 
-      {/* Floating White Search Widget Card */}
-      <div className="rounded-2xl sm:rounded-3xl bg-white p-3.5 sm:p-4 shadow-2xl shadow-slate-900/15 border border-slate-200/90 text-slate-900">
+      {/* Centered White Search Widget Card */}
+      <div className="rounded-2xl sm:rounded-3xl bg-white p-3 sm:p-4 shadow-2xl shadow-slate-900/15 border border-slate-200/90 text-slate-900">
         {locationNotice && (
           <div className="mb-2.5 flex items-center justify-between rounded-xl bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 border border-amber-200">
             <span className="flex items-center gap-2">
@@ -221,10 +221,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
 
         <form
           onSubmit={handleTriggerSearch}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 lg:gap-0 items-center"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 sm:gap-2.5 items-center"
         >
-          {/* 1. Pickup Location */}
-          <div className="lg:col-span-3 p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
+          {/* 1. Pickup Location Box */}
+          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors relative group">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Pickup Location
@@ -255,8 +255,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* 2. Drop-off Location */}
-          <div className="lg:col-span-3 p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100 relative group">
+          {/* 2. Drop-off Location Box */}
+          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors relative group">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Drop-off Location
             </span>
@@ -276,8 +276,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* 3. Pickup Date */}
-          <div className="lg:col-span-2 p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+          {/* 3. Pickup Date Box */}
+          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Pickup Date
             </span>
@@ -293,8 +293,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* 4. Return Date */}
-          <div className="lg:col-span-2 p-2 sm:p-2.5 rounded-xl hover:bg-slate-50 transition-colors lg:border-r border-slate-100">
+          {/* 4. Return Date Box */}
+          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
               Return Date
             </span>
@@ -310,31 +310,32 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* 5. Car Type & Button */}
-          <div className="lg:col-span-2 flex flex-col sm:flex-row items-center gap-2 lg:pl-2">
-            <div className="w-full p-2 rounded-xl hover:bg-slate-50 transition-colors hidden sm:block">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Car Type
-              </span>
-              <div className="mt-1 flex items-center gap-1.5">
-                <Car className="h-3.5 w-3.5 text-[#c88d18] shrink-0" />
-                <select
-                  value={carType}
-                  onChange={(e) => setCarType(e.target.value)}
-                  className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
-                >
-                  {carTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* 5. Car Type Box */}
+          <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+              Car Type
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <Car className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <select
+                value={carType}
+                onChange={(e) => setCarType(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
+              >
+                {carTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
 
+          {/* 6. Action Button */}
+          <div className="p-0.5">
             <Button
               type="submit"
-              className="h-12 w-full lg:w-auto lg:px-6 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] shrink-0"
+              className="h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
             >
               <span>SEARCH CARS</span>
               <ArrowRight className="h-4 w-4" />
