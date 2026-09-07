@@ -697,6 +697,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             alt="MOAR CARS Luxury Showroom"
             className="w-full h-full object-cover object-right sm:object-center opacity-100"
           />
+          {/* Soft white gradient on left side to highlight text readability while keeping cars 100% clear */}
+          <div className="absolute inset-y-0 left-0 w-full sm:w-3/5 lg:w-[48%] bg-gradient-to-r from-white via-white/85 to-transparent pointer-events-none" />
         </div>
 
         {/* Floating Typography Watermarks */}
