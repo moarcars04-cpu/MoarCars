@@ -122,7 +122,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
   const fuels = ["All", "Petrol", "Diesel", "Electric"];
 
   return (
-    <section id="search-results" className="scroll-mt-16 py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="search-results" className="scroll-mt-16 py-6 sm:py-8 px-4 sm:px-8 lg:px-12 xl:px-16 max-w-[1600px] mx-auto">
       {/* Search Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>

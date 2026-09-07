@@ -270,7 +270,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     <main className="min-h-screen bg-brand-cream text-brand-ink pb-20">
       {/* Checkout Top Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/95 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -316,7 +316,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       </header>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 space-y-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 pt-20 pb-8 space-y-6">
         {/* Stepper Progress Bar */}
         {currentStep !== "confirmed" && (
           <div className="flex items-center justify-center gap-3 sm:gap-6 text-xs font-bold text-muted-foreground pt-4">

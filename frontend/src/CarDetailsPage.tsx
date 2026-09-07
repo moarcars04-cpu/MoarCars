@@ -330,7 +330,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
     <main className="min-h-screen bg-brand-cream text-brand-ink">
       {/* Top Luxury Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/95 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 py-3.5 flex items-center justify-between">
           {/* Logo & Back button */}
           <div className="flex items-center gap-4">
             <Button
@@ -451,8 +451,8 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
       </header>
 
       {/* Breadcrumb & Vehicle Title Header */}
-      <div className="pt-24 pb-6 bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
+      <div className="pt-20 pb-4 bg-card border-b border-border">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-3">
           {/* Breadcrumb row */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -539,7 +539,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
       </div>
 
       {/* Main 2-Column Details & Booking Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* Left Column (8 cols): HD Gallery, Specs, Pricing Tiers, Ghat Advice */}
           <div className="lg:col-span-8 space-y-12">
@@ -603,8 +603,8 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
       <AppDownloadSection />
 
       {/* Luxury Footer */}
-      <footer className="bg-brand-ink py-14 text-primary-foreground border-t border-white/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-primary-foreground/60">
+      <footer className="bg-brand-ink py-10 text-primary-foreground border-t border-white/10">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-primary-foreground/60">
           <p>© 2026 Moar Cars. All rights reserved. Self-Drive Car Rental Tirupati.</p>
           <div className="flex items-center gap-4">
             <span>Zero Deposit Delay Guarantee</span>

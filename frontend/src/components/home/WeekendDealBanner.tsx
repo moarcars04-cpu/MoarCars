@@ -17,8 +17,8 @@ export const WeekendDealBanner: React.FC<WeekendDealBannerProps> = ({ onGrabDeal
   };
 
   return (
-    <section className="py-12 sm:py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-5 sm:py-6 bg-white">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#070b14] via-[#0d1527] to-[#0a101f] text-white shadow-2xl border border-slate-800">
           {/* Background Image with overlay */}
           <img

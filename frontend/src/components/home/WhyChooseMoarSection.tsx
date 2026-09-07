@@ -26,8 +26,8 @@ export const WhyChooseMoarSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 sm:py-20 bg-slate-50/60 border-y border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <section className="py-6 sm:py-8 bg-slate-50/60 border-y border-slate-100">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-5">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>

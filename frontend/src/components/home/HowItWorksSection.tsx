@@ -39,8 +39,8 @@ const STEPS = [
 
 export const HowItWorksSection: React.FC<HowItWorksSectionProps> = ({ onStartBooking }) => {
   return (
-    <section className="py-24 bg-card border-b border-border relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <section className="py-6 sm:py-8 bg-card border-b border-border relative overflow-hidden">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-6">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-bold uppercase tracking-widest text-brand-teal inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal/10">

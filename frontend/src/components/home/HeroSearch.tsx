@@ -51,8 +51,8 @@ const carTypes = [
 
 export const TrustBadgesBar: React.FC = () => {
   return (
-    <div className="w-full bg-white border-y border-slate-100/90 py-5 sm:py-6 shadow-sm">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-white border-y border-slate-100/90 py-3.5 sm:py-4 shadow-sm">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
           {/* 4 Badges with vertical dividers */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8 flex-1 w-full divide-y md:divide-y-0 md:divide-x divide-slate-100">
@@ -165,7 +165,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto relative z-20">
+    <div className="w-full max-w-[1600px] mx-auto relative z-20">
       {/* Service Tabs (Nestled on top-left of the centered container) */}
       <div className="flex items-center gap-2 pl-2 mb-2 sm:mb-2.5">
         <button

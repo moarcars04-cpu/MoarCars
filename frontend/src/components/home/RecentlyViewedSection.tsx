@@ -31,8 +31,8 @@ export const RecentlyViewedSection: React.FC<RecentlyViewedSectionProps> = ({
   }
 
   return (
-    <section className="py-16 bg-card border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <section className="py-5 sm:py-6 bg-card border-b border-border">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-xl bg-brand-teal/10 text-brand-teal flex items-center justify-center">

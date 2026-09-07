@@ -688,7 +688,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {/* 2. Hero Section */}
       <section
         id="top"
-        className="relative pt-18 sm:pt-20 pb-8 sm:pb-12 bg-white overflow-hidden"
+        className="relative pt-16 sm:pt-18 pb-4 sm:pb-6 bg-white overflow-hidden"
       >
         {/* Crisp Luxury Showroom Background Image (100% full clarity, cars on right) */}
         <div className="absolute inset-0 z-0 pointer-events-none">
@@ -864,8 +864,8 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       <AppDownloadSection />
 
       {/* 13. Luxury Dark Footer */}
-      <footer id="contact" className="bg-[#070e1c] text-white pt-16 pb-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <footer id="contact" className="bg-[#070e1c] text-white pt-10 pb-8 border-t border-slate-800">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-8">
           {/* Main Footer 4 Columns Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
             {/* Col 1: Logo & Company Description */}

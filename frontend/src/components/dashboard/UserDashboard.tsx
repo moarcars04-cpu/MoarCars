@@ -166,7 +166,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
     <div className="min-h-screen bg-[#070b14] text-white flex flex-col">
       {/* Top Luxury Navigation Header */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1120]/90 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <button
               onClick={() => onNavigate("/")}
@@ -233,7 +233,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
       </header>
 
       {/* Main Dashboard Layout */}
-      <div className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 mx-auto w-full max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 py-6">
         {/* Welcome & Overview Stats Bar */}
         <div className="mb-8 rounded-3xl border border-white/10 bg-gradient-to-r from-slate-900 via-[#0f172a] to-slate-900 p-6 sm:p-8 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-brand-gold/10 blur-3xl pointer-events-none" />

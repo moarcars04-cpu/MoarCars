@@ -79,8 +79,8 @@ export const FaqSection: React.FC = () => {
   const filteredFaqs = activeCategory === "all" ? FAQS : FAQS.filter((f) => f.category === activeCategory);
 
   return (
-    <section className="py-24 bg-card border-b border-border">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section className="py-6 sm:py-8 bg-card border-b border-border">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-6">
         {/* Header */}
         <div className="text-center space-y-3">
           <span className="text-xs font-bold uppercase tracking-widest text-brand-teal inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-teal/10">
@@ -118,7 +118,7 @@ export const FaqSection: React.FC = () => {
         </div>
 
         {/* Accordion List */}
-        <div className="space-y-4">
+        <div className="max-w-4xl mx-auto space-y-3 w-full">
           {filteredFaqs.map((faq) => {
             const isExpanded = expandedId === faq.id;
             return (
