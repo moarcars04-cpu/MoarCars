@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";
-import heroLuxuryImg from "@/assets/moar-hero-luxury.jpg";
+import heroLuxuryImg from "@/assets/hero.png";
 import { MoarLogo } from "@/components/common/MoarLogo";
 
 // Home Subcomponents
