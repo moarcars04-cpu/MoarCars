@@ -53,6 +53,19 @@ function safeJsonDecode($val, $default = []) {
     return ($decoded !== null) ? $decoded : $default;
 }
 
+function getTableColumns($pdo, $table) {
+    static $cache = [];
+    if (!isset($cache[$table])) {
+        try {
+            $cols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
+            $cache[$table] = array_map('strtolower', $cols);
+        } catch (Exception $e) {
+            $cache[$table] = [];
+        }
+    }
+    return $cache[$table];
+}
+
 // Standard Real Fleet Models
 function getDefaultCars() {
     return [
@@ -89,6 +102,8 @@ function getDefaultCars() {
             "pollutionExpiry" => "2026-11-20",
             "fitnessExpiry" => "2028-08-10",
             "permitExpiry" => "2027-12-31",
+            "rcDocUrl" => "https://moarcars.com/docs/rc_1024.pdf",
+            "insuranceDocUrl" => "https://moarcars.com/docs/ins_1024.pdf",
             "image" => "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80",
             "galleryImages" => [
                 "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80",
@@ -310,63 +325,18 @@ function getDefaultCars() {
     ];
 }
 
-// Auto-create & Migrate Schema in MySQL
+// Complete Schema Auto-Migration for MySQL on Hostinger
 function ensureTablesExist($pdo) {
     static $checked = false;
     if ($checked || !$pdo) return;
     $checked = true;
 
     try {
-        // Table definitions
+        // 1. Create Base Tables
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS Cars (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                brand VARCHAR(100) DEFAULT 'Maruti Suzuki',
-                model VARCHAR(100) DEFAULT 'Swift',
-                variant VARCHAR(100) DEFAULT 'ZXi Plus',
-                year INT DEFAULT 2024,
-                registrationNumber VARCHAR(50) DEFAULT 'AP 03 TX 1024',
-                vinNumber VARCHAR(100) DEFAULT 'MA3EYD21S00192844',
-                detail TEXT NULL,
-                price VARCHAR(100) NULL DEFAULT '₹1,699/day',
-                pricePerHour INT DEFAULT 199,
-                pricePerDay INT DEFAULT 1699,
-                pricePerWeek INT DEFAULT 9999,
-                pricePerMonth INT DEFAULT 34999,
-                securityDeposit INT DEFAULT 3000,
-                lateFeePerHour INT DEFAULT 150,
-                tag VARCHAR(100) DEFAULT 'Everyday',
-                category VARCHAR(100) DEFAULT 'Hatchback',
-                fuelType VARCHAR(50) DEFAULT 'Petrol',
-                transmission VARCHAR(50) DEFAULT 'Manual',
-                seats INT DEFAULT 5,
-                mileage VARCHAR(50) DEFAULT '22 km/l',
-                color VARCHAR(50) DEFAULT 'Pearl White',
-                status VARCHAR(50) DEFAULT 'Available',
-                location VARCHAR(100) DEFAULT 'Tirupati',
-                branch VARCHAR(100) DEFAULT 'Tirupati Central Hub',
-                gpsEnabled TINYINT DEFAULT 1,
-                fastagNumber VARCHAR(100) DEFAULT 'FTG-889021-39',
-                insuranceExpiry VARCHAR(50) DEFAULT '2027-04-15',
-                pollutionExpiry VARCHAR(50) DEFAULT '2026-11-20',
-                fitnessExpiry VARCHAR(50) DEFAULT '2028-08-10',
-                permitExpiry VARCHAR(50) DEFAULT '2027-12-31',
-                rcDocUrl VARCHAR(255) DEFAULT NULL,
-                insuranceDocUrl VARCHAR(255) DEFAULT NULL,
-                image VARCHAR(500) DEFAULT NULL,
-                galleryImages LONGTEXT DEFAULT NULL,
-                angle360Images LONGTEXT DEFAULT NULL,
-                videoUrl VARCHAR(255) DEFAULT NULL,
-                isArchived TINYINT DEFAULT 0,
-                totalTrips INT DEFAULT 0,
-                totalRevenue INT DEFAULT 0,
-                maintenanceCost INT DEFAULT 0,
-                lastServiceKm INT DEFAULT 0,
-                nextServiceKm INT DEFAULT 10000,
-                oilChangeStatus VARCHAR(50) DEFAULT 'Good',
-                tyreHealth VARCHAR(50) DEFAULT 'Good',
-                batteryHealth VARCHAR(50) DEFAULT 'Good',
+                name VARCHAR(255) NOT NULL DEFAULT 'Fleet Vehicle',
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
@@ -374,136 +344,35 @@ function ensureTablesExist($pdo) {
             CREATE TABLE IF NOT EXISTS Bookings (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 bookingType VARCHAR(100) DEFAULT 'Self Drive',
-                pickup VARCHAR(255) DEFAULT 'Tirupati Central Hub',
-                startDate VARCHAR(100) DEFAULT '2026-09-10',
-                endDate VARCHAR(100) DEFAULT '2026-09-12',
-                carName VARCHAR(255) DEFAULT 'General Search Inquiry',
-                status VARCHAR(50) DEFAULT 'Confirmed',
-                customerName VARCHAR(255) DEFAULT 'Valued Customer',
-                customerPhone VARCHAR(50) DEFAULT '+91 98765 43210',
-                customerEmail VARCHAR(255) DEFAULT 'customer@example.com',
-                driverName VARCHAR(255) DEFAULT NULL,
-                driverPhone VARCHAR(50) DEFAULT NULL,
-                deliveryStaff VARCHAR(255) DEFAULT NULL,
-                pickupAddress TEXT DEFAULT NULL,
-                dropAddress TEXT DEFAULT NULL,
-                duration VARCHAR(50) DEFAULT '2 Days',
-                extras LONGTEXT DEFAULT NULL,
-                insurancePlan VARCHAR(100) DEFAULT 'Comprehensive Zero-Dep',
-                couponCode VARCHAR(50) DEFAULT NULL,
-                discountAmount INT DEFAULT 0,
-                taxAmount INT DEFAULT 360,
-                securityDeposit INT DEFAULT 3000,
-                amount INT DEFAULT 2000,
-                branch VARCHAR(100) DEFAULT 'Tirupati Central Hub',
-                paymentMethod VARCHAR(50) DEFAULT 'UPI',
-                paymentStatus VARCHAR(50) DEFAULT 'Paid',
-                bookingSource VARCHAR(100) DEFAULT 'Web Portal',
-                notes TEXT DEFAULT NULL,
-                startOdometer INT DEFAULT 18450,
-                returnOdometer INT DEFAULT 18690,
-                startFuel INT DEFAULT 100,
-                returnFuel INT DEFAULT 100,
-                penalties INT DEFAULT 0,
-                timelineStep INT DEFAULT 5,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS Customers (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                phone VARCHAR(50) DEFAULT '+91 90000 00000',
-                email VARCHAR(255) DEFAULT 'customer@example.com',
-                avatar VARCHAR(500) DEFAULT NULL,
-                kycStatus VARCHAR(50) DEFAULT 'Verified',
-                dlNumber VARCHAR(100) DEFAULT NULL,
-                aadhaarNumber VARCHAR(100) DEFAULT NULL,
-                passportNumber VARCHAR(100) DEFAULT NULL,
-                dlExpiry VARCHAR(50) DEFAULT NULL,
-                dlFrontDocUrl TEXT DEFAULT NULL,
-                dlBackDocUrl TEXT DEFAULT NULL,
-                aadhaarFrontDocUrl TEXT DEFAULT NULL,
-                aadhaarBackDocUrl TEXT DEFAULT NULL,
-                address TEXT DEFAULT NULL,
-                city VARCHAR(100) DEFAULT 'Tirupati',
-                savedAddresses LONGTEXT DEFAULT NULL,
-                favoriteCars LONGTEXT DEFAULT NULL,
-                walletBalance INT DEFAULT 0,
-                loyaltyPoints INT DEFAULT 0,
-                loyaltyTier VARCHAR(50) DEFAULT 'Bronze',
-                referredCount INT DEFAULT 0,
-                referralEarnings INT DEFAULT 0,
-                isBlacklisted TINYINT DEFAULT 0,
-                totalBookings INT DEFAULT 0,
-                notes TEXT DEFAULT NULL,
+                name VARCHAR(255) NOT NULL DEFAULT 'Valued Customer',
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS Drivers (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                phone VARCHAR(50) DEFAULT '+91 90000 00000',
-                email VARCHAR(255) DEFAULT 'driver@moarcars.com',
-                avatar VARCHAR(500) DEFAULT NULL,
-                branch VARCHAR(100) DEFAULT 'Tirupati Central Hub',
-                licenseNumber VARCHAR(100) DEFAULT 'DL-03-2019-9944',
-                licenseExpiry VARCHAR(50) DEFAULT '2029-08-15',
-                licenseDocUrl TEXT DEFAULT NULL,
-                bgDocUrl TEXT DEFAULT NULL,
-                bgVerification VARCHAR(50) DEFAULT 'Passed',
-                liveLocation VARCHAR(255) DEFAULT 'Tirupati Station Hub',
-                totalTrips INT DEFAULT 0,
-                todayTrips INT DEFAULT 0,
-                monthlyEarnings INT DEFAULT 0,
-                rating DECIMAL(3,2) DEFAULT 4.90,
-                hillDrivingCertified TINYINT DEFAULT 1,
-                isAvailable TINYINT DEFAULT 1,
+                name VARCHAR(255) NOT NULL DEFAULT 'Driver',
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS Branches (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                city VARCHAR(100) DEFAULT 'Tirupati',
-                state VARCHAR(100) DEFAULT 'Andhra Pradesh',
-                address TEXT NULL,
-                phone VARCHAR(50) DEFAULT '+91 877 223344',
-                managerName VARCHAR(255) DEFAULT 'Nagaraju V',
-                managerPhone VARCHAR(50) DEFAULT '+91 98765 11122',
-                managerEmail VARCHAR(255) DEFAULT NULL,
-                operatingHours VARCHAR(100) DEFAULT '24/7',
-                fleetCount INT DEFAULT 0,
-                activeTrips INT DEFAULT 0,
-                monthlyRevenue INT DEFAULT 0,
-                status VARCHAR(50) DEFAULT 'Active',
+                name VARCHAR(255) NOT NULL DEFAULT 'Branch Hub',
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
 
             CREATE TABLE IF NOT EXISTS Payments (
                 id VARCHAR(100) PRIMARY KEY,
-                bookingId INT DEFAULT 1001,
                 customerName VARCHAR(255) DEFAULT 'Valued Customer',
                 amount INT DEFAULT 0,
-                depositAmount INT DEFAULT 3000,
-                gstAmount INT DEFAULT 360,
-                advancePaid INT DEFAULT 0,
-                partialPaid INT DEFAULT 0,
-                balanceDue INT DEFAULT 0,
-                cgstAmount INT DEFAULT 0,
-                sgstAmount INT DEFAULT 0,
-                tdsAmount INT DEFAULT 0,
-                gateway VARCHAR(50) DEFAULT 'UPI',
-                status VARCHAR(50) DEFAULT 'Captured',
-                refundStatus VARCHAR(50) DEFAULT 'None',
-                refundAmount INT DEFAULT 0,
-                date VARCHAR(50) DEFAULT NULL,
-                transactionId VARCHAR(100) DEFAULT NULL,
-                invoiceNumber VARCHAR(100) DEFAULT NULL,
-                notes TEXT DEFAULT NULL,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
@@ -511,17 +380,6 @@ function ensureTablesExist($pdo) {
             CREATE TABLE IF NOT EXISTS Coupons (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 code VARCHAR(50) NOT NULL UNIQUE,
-                type VARCHAR(50) DEFAULT 'Flat Discount',
-                discountValue INT DEFAULT 500,
-                isPercent TINYINT DEFAULT 0,
-                minBookingValue INT DEFAULT 2000,
-                maxDiscount INT DEFAULT NULL,
-                maxDiscountCap INT DEFAULT NULL,
-                usageLimit INT DEFAULT 500,
-                usageCount INT DEFAULT 0,
-                expiryDate VARCHAR(50) DEFAULT NULL,
-                isActive TINYINT DEFAULT 1,
-                description TEXT DEFAULT NULL,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
@@ -529,14 +387,7 @@ function ensureTablesExist($pdo) {
             CREATE TABLE IF NOT EXISTS Reviews (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 customerName VARCHAR(255) NOT NULL,
-                customerPhone VARCHAR(50) DEFAULT NULL,
-                carName VARCHAR(255) NOT NULL,
-                rating INT DEFAULT 5,
                 comment TEXT NULL,
-                date VARCHAR(50) DEFAULT NULL,
-                status VARCHAR(50) DEFAULT 'Approved',
-                isFeatured TINYINT DEFAULT 0,
-                adminReply TEXT DEFAULT NULL,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
@@ -544,16 +395,7 @@ function ensureTablesExist($pdo) {
             CREATE TABLE IF NOT EXISTS SupportTickets (
                 id VARCHAR(100) PRIMARY KEY,
                 customerName VARCHAR(255) DEFAULT 'Valued Customer',
-                customerPhone VARCHAR(50) DEFAULT '+91 90000 00000',
-                subject VARCHAR(255) DEFAULT 'Customer Support Inquiry',
-                category VARCHAR(100) DEFAULT 'General',
-                priority VARCHAR(50) DEFAULT 'Medium',
-                status VARCHAR(50) DEFAULT 'Open',
-                assignedTo VARCHAR(255) DEFAULT 'Unassigned',
-                assignedAgent VARCHAR(255) DEFAULT 'Customer Support Desk',
-                bookingId INT DEFAULT NULL,
-                messages LONGTEXT DEFAULT NULL,
-                lastUpdated VARCHAR(50) DEFAULT NULL,
+                subject VARCHAR(255) DEFAULT 'Support Inquiry',
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
@@ -561,16 +403,7 @@ function ensureTablesExist($pdo) {
             CREATE TABLE IF NOT EXISTS ActivityLogs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 adminName VARCHAR(255) DEFAULT 'Executive Super Admin',
-                adminUser VARCHAR(255) DEFAULT 'Super Admin',
-                module VARCHAR(100) DEFAULT 'Fleet',
                 action VARCHAR(255) DEFAULT 'UPDATE',
-                actionType VARCHAR(255) DEFAULT 'UPDATE',
-                details TEXT DEFAULT NULL,
-                description TEXT DEFAULT NULL,
-                target VARCHAR(255) DEFAULT NULL,
-                targetId VARCHAR(255) DEFAULT NULL,
-                ipAddress VARCHAR(50) DEFAULT '122.179.88.14',
-                timestamp VARCHAR(50) DEFAULT NULL,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
@@ -593,94 +426,229 @@ function ensureTablesExist($pdo) {
             );
         ");
 
-        // Dynamic Column Auto-Migration (Adds missing columns dynamically)
-        $expectedColumns = [
+        // 2. Comprehensive Column Auto-Migration for Every Table
+        $allTableColumns = [
             'Cars' => [
-                'galleryImages' => 'LONGTEXT DEFAULT NULL',
-                'angle360Images' => 'LONGTEXT DEFAULT NULL',
-                'rcDocUrl' => 'VARCHAR(255) DEFAULT NULL',
-                'insuranceDocUrl' => 'VARCHAR(255) DEFAULT NULL',
-                'lastServiceKm' => 'INT DEFAULT 0',
-                'nextServiceKm' => 'INT DEFAULT 10000',
-                'oilChangeStatus' => 'VARCHAR(50) DEFAULT "Good"',
-                'tyreHealth' => 'VARCHAR(50) DEFAULT "Good"',
-                'batteryHealth' => 'VARCHAR(50) DEFAULT "Good"',
-                'detail' => 'TEXT NULL',
-                'price' => 'VARCHAR(100) NULL DEFAULT "₹1,699/day"',
+                'name' => "VARCHAR(255) NOT NULL DEFAULT 'Fleet Vehicle'",
+                'brand' => "VARCHAR(100) DEFAULT 'Maruti Suzuki'",
+                'model' => "VARCHAR(100) DEFAULT 'Swift'",
+                'variant' => "VARCHAR(100) DEFAULT 'ZXi Plus'",
+                'year' => "INT DEFAULT 2024",
+                'registrationNumber' => "VARCHAR(50) DEFAULT 'AP 03 TX 1024'",
+                'vinNumber' => "VARCHAR(100) DEFAULT 'MA3EYD21S00192844'",
+                'detail' => "TEXT NULL",
+                'price' => "VARCHAR(100) NULL DEFAULT '₹1,699/day'",
+                'pricePerHour' => "INT DEFAULT 199",
+                'pricePerDay' => "INT DEFAULT 1699",
+                'pricePerWeek' => "INT DEFAULT 9999",
+                'pricePerMonth' => "INT DEFAULT 34999",
+                'securityDeposit' => "INT DEFAULT 3000",
+                'lateFeePerHour' => "INT DEFAULT 150",
+                'tag' => "VARCHAR(100) DEFAULT 'Everyday'",
+                'category' => "VARCHAR(100) DEFAULT 'Hatchback'",
+                'fuelType' => "VARCHAR(50) DEFAULT 'Petrol'",
+                'transmission' => "VARCHAR(50) DEFAULT 'Manual'",
+                'seats' => "INT DEFAULT 5",
+                'mileage' => "VARCHAR(50) DEFAULT '22 km/l'",
+                'color' => "VARCHAR(50) DEFAULT 'Pearl White'",
+                'status' => "VARCHAR(50) DEFAULT 'Available'",
+                'location' => "VARCHAR(100) DEFAULT 'Tirupati'",
+                'branch' => "VARCHAR(100) DEFAULT 'Tirupati Central Hub'",
+                'gpsEnabled' => "TINYINT DEFAULT 1",
+                'fastagNumber' => "VARCHAR(100) DEFAULT 'FTG-889021-39'",
+                'insuranceExpiry' => "VARCHAR(50) DEFAULT '2027-04-15'",
+                'pollutionExpiry' => "VARCHAR(50) DEFAULT '2026-11-20'",
+                'fitnessExpiry' => "VARCHAR(50) DEFAULT '2028-08-10'",
+                'permitExpiry' => "VARCHAR(50) DEFAULT '2027-12-31'",
+                'rcDocUrl' => "VARCHAR(500) DEFAULT NULL",
+                'insuranceDocUrl' => "VARCHAR(500) DEFAULT NULL",
+                'image' => "VARCHAR(500) DEFAULT NULL",
+                'galleryImages' => "LONGTEXT DEFAULT NULL",
+                'angle360Images' => "LONGTEXT DEFAULT NULL",
+                'videoUrl' => "VARCHAR(500) DEFAULT NULL",
+                'isArchived' => "TINYINT DEFAULT 0",
+                'totalTrips' => "INT DEFAULT 0",
+                'totalRevenue' => "INT DEFAULT 0",
+                'maintenanceCost' => "INT DEFAULT 0",
+                'lastServiceKm' => "INT DEFAULT 0",
+                'nextServiceKm' => "INT DEFAULT 10000",
+                'oilChangeStatus' => "VARCHAR(50) DEFAULT 'Good'",
+                'tyreHealth' => "VARCHAR(50) DEFAULT 'Good'",
+                'batteryHealth' => "VARCHAR(50) DEFAULT 'Good'",
             ],
             'Bookings' => [
-                'extras' => 'LONGTEXT DEFAULT NULL',
-                'deliveryStaff' => 'VARCHAR(255) DEFAULT NULL',
-                'bookingSource' => 'VARCHAR(100) DEFAULT "Web Portal"',
+                'bookingType' => "VARCHAR(100) DEFAULT 'Self Drive'",
+                'pickup' => "VARCHAR(255) DEFAULT 'Tirupati Central Hub'",
+                'startDate' => "VARCHAR(100) DEFAULT '2026-09-10'",
+                'endDate' => "VARCHAR(100) DEFAULT '2026-09-12'",
+                'carName' => "VARCHAR(255) DEFAULT 'General Search Inquiry'",
+                'status' => "VARCHAR(50) DEFAULT 'Confirmed'",
+                'customerName' => "VARCHAR(255) DEFAULT 'Valued Customer'",
+                'customerPhone' => "VARCHAR(50) DEFAULT '+91 98765 43210'",
+                'customerEmail' => "VARCHAR(255) DEFAULT 'customer@example.com'",
+                'driverName' => "VARCHAR(255) DEFAULT NULL",
+                'driverPhone' => "VARCHAR(50) DEFAULT NULL",
+                'deliveryStaff' => "VARCHAR(255) DEFAULT NULL",
+                'pickupAddress' => "TEXT DEFAULT NULL",
+                'dropAddress' => "TEXT DEFAULT NULL",
+                'duration' => "VARCHAR(50) DEFAULT '2 Days'",
+                'extras' => "LONGTEXT DEFAULT NULL",
+                'insurancePlan' => "VARCHAR(100) DEFAULT 'Comprehensive Zero-Dep'",
+                'couponCode' => "VARCHAR(50) DEFAULT NULL",
+                'discountAmount' => "INT DEFAULT 0",
+                'taxAmount' => "INT DEFAULT 360",
+                'securityDeposit' => "INT DEFAULT 3000",
+                'amount' => "INT DEFAULT 2000",
+                'branch' => "VARCHAR(100) DEFAULT 'Tirupati Central Hub'",
+                'paymentMethod' => "VARCHAR(50) DEFAULT 'UPI'",
+                'paymentStatus' => "VARCHAR(50) DEFAULT 'Paid'",
+                'bookingSource' => "VARCHAR(100) DEFAULT 'Web Portal'",
+                'notes' => "TEXT DEFAULT NULL",
+                'startOdometer' => "INT DEFAULT 18450",
+                'returnOdometer' => "INT DEFAULT 18690",
+                'startFuel' => "INT DEFAULT 100",
+                'returnFuel' => "INT DEFAULT 100",
+                'penalties' => "INT DEFAULT 0",
+                'timelineStep' => "INT DEFAULT 5",
             ],
             'Customers' => [
-                'avatar' => 'VARCHAR(500) DEFAULT NULL',
-                'dlNumber' => 'VARCHAR(100) DEFAULT NULL',
-                'aadhaarNumber' => 'VARCHAR(100) DEFAULT NULL',
-                'passportNumber' => 'VARCHAR(100) DEFAULT NULL',
-                'dlExpiry' => 'VARCHAR(50) DEFAULT NULL',
-                'dlFrontDocUrl' => 'TEXT DEFAULT NULL',
-                'dlBackDocUrl' => 'TEXT DEFAULT NULL',
-                'aadhaarFrontDocUrl' => 'TEXT DEFAULT NULL',
-                'aadhaarBackDocUrl' => 'TEXT DEFAULT NULL',
-                'savedAddresses' => 'LONGTEXT DEFAULT NULL',
-                'favoriteCars' => 'LONGTEXT DEFAULT NULL',
-                'loyaltyTier' => 'VARCHAR(50) DEFAULT "Bronze"',
-                'referredCount' => 'INT DEFAULT 0',
-                'referralEarnings' => 'INT DEFAULT 0',
+                'name' => "VARCHAR(255) NOT NULL DEFAULT 'Valued Customer'",
+                'phone' => "VARCHAR(50) DEFAULT '+91 90000 00000'",
+                'email' => "VARCHAR(255) DEFAULT 'customer@example.com'",
+                'avatar' => "VARCHAR(500) DEFAULT NULL",
+                'kycStatus' => "VARCHAR(50) DEFAULT 'Verified'",
+                'dlNumber' => "VARCHAR(100) DEFAULT NULL",
+                'aadhaarNumber' => "VARCHAR(100) DEFAULT NULL",
+                'passportNumber' => "VARCHAR(100) DEFAULT NULL",
+                'dlExpiry' => "VARCHAR(50) DEFAULT NULL",
+                'dlFrontDocUrl' => "TEXT DEFAULT NULL",
+                'dlBackDocUrl' => "TEXT DEFAULT NULL",
+                'aadhaarFrontDocUrl' => "TEXT DEFAULT NULL",
+                'aadhaarBackDocUrl' => "TEXT DEFAULT NULL",
+                'address' => "TEXT DEFAULT NULL",
+                'city' => "VARCHAR(100) DEFAULT 'Tirupati'",
+                'savedAddresses' => "LONGTEXT DEFAULT NULL",
+                'favoriteCars' => "LONGTEXT DEFAULT NULL",
+                'walletBalance' => "INT DEFAULT 0",
+                'loyaltyPoints' => "INT DEFAULT 0",
+                'loyaltyTier' => "VARCHAR(50) DEFAULT 'Bronze'",
+                'referredCount' => "INT DEFAULT 0",
+                'referralEarnings' => "INT DEFAULT 0",
+                'isBlacklisted' => "TINYINT DEFAULT 0",
+                'totalBookings' => "INT DEFAULT 0",
+                'notes' => "TEXT DEFAULT NULL",
             ],
             'Drivers' => [
-                'avatar' => 'VARCHAR(500) DEFAULT NULL',
-                'licenseDocUrl' => 'TEXT DEFAULT NULL',
-                'bgDocUrl' => 'TEXT DEFAULT NULL',
-                'todayTrips' => 'INT DEFAULT 0',
-                'hillDrivingCertified' => 'TINYINT DEFAULT 1',
+                'name' => "VARCHAR(255) NOT NULL DEFAULT 'Driver'",
+                'phone' => "VARCHAR(50) DEFAULT '+91 90000 00000'",
+                'email' => "VARCHAR(255) DEFAULT 'driver@moarcars.com'",
+                'avatar' => "VARCHAR(500) DEFAULT NULL",
+                'branch' => "VARCHAR(100) DEFAULT 'Tirupati Central Hub'",
+                'licenseNumber' => "VARCHAR(100) DEFAULT 'DL-03-2019-9944'",
+                'licenseExpiry' => "VARCHAR(50) DEFAULT '2029-08-15'",
+                'licenseDocUrl' => "TEXT DEFAULT NULL",
+                'bgDocUrl' => "TEXT DEFAULT NULL",
+                'bgVerification' => "VARCHAR(50) DEFAULT 'Passed'",
+                'liveLocation' => "VARCHAR(255) DEFAULT 'Tirupati Station Hub'",
+                'totalTrips' => "INT DEFAULT 0",
+                'todayTrips' => "INT DEFAULT 0",
+                'monthlyEarnings' => "INT DEFAULT 0",
+                'rating' => "DECIMAL(3,2) DEFAULT 4.90",
+                'hillDrivingCertified' => "TINYINT DEFAULT 1",
+                'isAvailable' => "TINYINT DEFAULT 1",
             ],
             'Branches' => [
-                'managerEmail' => 'VARCHAR(255) DEFAULT NULL',
-                'status' => 'VARCHAR(50) DEFAULT "Active"',
+                'name' => "VARCHAR(255) NOT NULL DEFAULT 'Branch Hub'",
+                'city' => "VARCHAR(100) DEFAULT 'Tirupati'",
+                'state' => "VARCHAR(100) DEFAULT 'Andhra Pradesh'",
+                'address' => "TEXT NULL",
+                'phone' => "VARCHAR(50) DEFAULT '+91 877 223344'",
+                'managerName' => "VARCHAR(255) DEFAULT 'Nagaraju V'",
+                'managerPhone' => "VARCHAR(50) DEFAULT '+91 98765 11122'",
+                'managerEmail' => "VARCHAR(255) DEFAULT NULL",
+                'operatingHours' => "VARCHAR(100) DEFAULT '24/7'",
+                'fleetCount' => "INT DEFAULT 0",
+                'activeTrips' => "INT DEFAULT 0",
+                'monthlyRevenue' => "INT DEFAULT 0",
+                'status' => "VARCHAR(50) DEFAULT 'Active'",
             ],
             'Payments' => [
-                'depositAmount' => 'INT DEFAULT 3000',
-                'gstAmount' => 'INT DEFAULT 360',
-                'advancePaid' => 'INT DEFAULT 0',
-                'partialPaid' => 'INT DEFAULT 0',
-                'balanceDue' => 'INT DEFAULT 0',
-                'cgstAmount' => 'INT DEFAULT 0',
-                'sgstAmount' => 'INT DEFAULT 0',
-                'tdsAmount' => 'INT DEFAULT 0',
-                'refundStatus' => 'VARCHAR(50) DEFAULT "None"',
-                'refundAmount' => 'INT DEFAULT 0',
-                'transactionId' => 'VARCHAR(100) DEFAULT NULL',
-                'invoiceNumber' => 'VARCHAR(100) DEFAULT NULL',
+                'id' => "VARCHAR(100) PRIMARY KEY",
+                'bookingId' => "INT DEFAULT 1001",
+                'customerName' => "VARCHAR(255) DEFAULT 'Valued Customer'",
+                'amount' => "INT DEFAULT 0",
+                'depositAmount' => "INT DEFAULT 3000",
+                'gstAmount' => "INT DEFAULT 360",
+                'advancePaid' => "INT DEFAULT 0",
+                'partialPaid' => "INT DEFAULT 0",
+                'balanceDue' => "INT DEFAULT 0",
+                'cgstAmount' => "INT DEFAULT 0",
+                'sgstAmount' => "INT DEFAULT 0",
+                'tdsAmount' => "INT DEFAULT 0",
+                'gateway' => "VARCHAR(50) DEFAULT 'UPI'",
+                'status' => "VARCHAR(50) DEFAULT 'Captured'",
+                'refundStatus' => "VARCHAR(50) DEFAULT 'None'",
+                'refundAmount' => "INT DEFAULT 0",
+                'date' => "VARCHAR(50) DEFAULT NULL",
+                'transactionId' => "VARCHAR(100) DEFAULT NULL",
+                'invoiceNumber' => "VARCHAR(100) DEFAULT NULL",
+                'notes' => "TEXT DEFAULT NULL",
             ],
             'Coupons' => [
-                'discountValue' => 'INT DEFAULT 500',
-                'isPercent' => 'TINYINT DEFAULT 0',
-                'minBookingValue' => 'INT DEFAULT 2000',
-                'maxDiscount' => 'INT DEFAULT NULL',
-                'maxDiscountCap' => 'INT DEFAULT NULL',
+                'code' => "VARCHAR(50) NOT NULL UNIQUE",
+                'type' => "VARCHAR(50) DEFAULT 'Flat Discount'",
+                'discountValue' => "INT DEFAULT 500",
+                'isPercent' => "TINYINT DEFAULT 0",
+                'minBookingValue' => "INT DEFAULT 2000",
+                'maxDiscount' => "INT DEFAULT NULL",
+                'maxDiscountCap' => "INT DEFAULT NULL",
+                'usageLimit' => "INT DEFAULT 500",
+                'usageCount' => "INT DEFAULT 0",
+                'expiryDate' => "VARCHAR(50) DEFAULT NULL",
+                'isActive' => "TINYINT DEFAULT 1",
+                'description' => "TEXT DEFAULT NULL",
             ],
             'Reviews' => [
-                'customerPhone' => 'VARCHAR(50) DEFAULT NULL',
-                'adminReply' => 'TEXT DEFAULT NULL',
+                'customerName' => "VARCHAR(255) NOT NULL DEFAULT 'Customer'",
+                'customerPhone' => "VARCHAR(50) DEFAULT NULL",
+                'carName' => "VARCHAR(255) NOT NULL DEFAULT 'Self Drive Vehicle'",
+                'rating' => "INT DEFAULT 5",
+                'comment' => "TEXT NULL",
+                'date' => "VARCHAR(50) DEFAULT NULL",
+                'status' => "VARCHAR(50) DEFAULT 'Approved'",
+                'isFeatured' => "TINYINT DEFAULT 0",
+                'adminReply' => "TEXT DEFAULT NULL",
             ],
             'SupportTickets' => [
-                'assignedAgent' => 'VARCHAR(255) DEFAULT "Customer Support Desk"',
-                'bookingId' => 'INT DEFAULT NULL',
-                'messages' => 'LONGTEXT DEFAULT NULL',
-                'lastUpdated' => 'VARCHAR(50) DEFAULT NULL',
+                'id' => "VARCHAR(100) PRIMARY KEY",
+                'customerName' => "VARCHAR(255) DEFAULT 'Valued Customer'",
+                'customerPhone' => "VARCHAR(50) DEFAULT '+91 90000 00000'",
+                'subject' => "VARCHAR(255) DEFAULT 'Customer Support Inquiry'",
+                'category' => "VARCHAR(100) DEFAULT 'General'",
+                'priority' => "VARCHAR(50) DEFAULT 'Medium'",
+                'status' => "VARCHAR(50) DEFAULT 'Open'",
+                'assignedTo' => "VARCHAR(255) DEFAULT 'Unassigned'",
+                'assignedAgent' => "VARCHAR(255) DEFAULT 'Customer Support Desk'",
+                'bookingId' => "INT DEFAULT NULL",
+                'messages' => "LONGTEXT DEFAULT NULL",
+                'lastUpdated' => "VARCHAR(50) DEFAULT NULL",
             ],
             'ActivityLogs' => [
-                'adminName' => 'VARCHAR(255) DEFAULT "Executive Super Admin"',
-                'adminUser' => 'VARCHAR(255) DEFAULT "Super Admin"',
-                'actionType' => 'VARCHAR(255) DEFAULT "UPDATE"',
-                'description' => 'TEXT DEFAULT NULL',
-                'targetId' => 'VARCHAR(255) DEFAULT NULL',
+                'adminName' => "VARCHAR(255) DEFAULT 'Executive Super Admin'",
+                'adminUser' => "VARCHAR(255) DEFAULT 'Super Admin'",
+                'module' => "VARCHAR(100) DEFAULT 'Fleet'",
+                'action' => "VARCHAR(255) DEFAULT 'UPDATE'",
+                'actionType' => "VARCHAR(255) DEFAULT 'UPDATE'",
+                'details' => "TEXT DEFAULT NULL",
+                'description' => "TEXT DEFAULT NULL",
+                'target' => "VARCHAR(255) DEFAULT NULL",
+                'targetId' => "VARCHAR(255) DEFAULT NULL",
+                'ipAddress' => "VARCHAR(50) DEFAULT '122.179.88.14'",
+                'timestamp' => "VARCHAR(50) DEFAULT NULL",
             ],
         ];
 
-        foreach ($expectedColumns as $tableName => $cols) {
+        foreach ($allTableColumns as $tableName => $cols) {
             try {
                 $existingColsRaw = $pdo->query("SHOW COLUMNS FROM `$tableName`")->fetchAll(PDO::FETCH_COLUMN);
                 $existingCols = array_map('strtolower', $existingColsRaw);
@@ -696,25 +664,34 @@ function ensureTablesExist($pdo) {
         // Clean up legacy placeholders
         $pdo->exec("DELETE FROM Cars WHERE name IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs')");
 
-        // Seed default 5 cars if empty
+        // 3. Seed Default 5 Real Cars into MySQL if table has 0 rows
         $carCount = (int)$pdo->query("SELECT COUNT(*) FROM Cars")->fetchColumn();
         if ($carCount === 0) {
             $defaultCars = getDefaultCars();
+            $validCarCols = getTableColumns($pdo, 'Cars');
+
             foreach ($defaultCars as $c) {
-                $stmt = $pdo->prepare("INSERT INTO Cars (name, brand, model, variant, year, registrationNumber, vinNumber, detail, price, pricePerHour, pricePerDay, pricePerWeek, pricePerMonth, securityDeposit, lateFeePerHour, tag, category, fuelType, transmission, seats, mileage, color, status, branch, location, gpsEnabled, fastagNumber, insuranceExpiry, pollutionExpiry, fitnessExpiry, permitExpiry, image, galleryImages, angle360Images, totalTrips, totalRevenue, maintenanceCost, lastServiceKm, nextServiceKm, isArchived) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([
-                    $c['name'], $c['brand'], $c['model'], $c['variant'], $c['year'],
-                    $c['registrationNumber'], $c['vinNumber'], $c['detail'], $c['price'],
-                    $c['pricePerHour'], $c['pricePerDay'], $c['pricePerWeek'], $c['pricePerMonth'],
-                    $c['securityDeposit'], $c['lateFeePerHour'], $c['tag'], $c['category'],
-                    $c['fuelType'], $c['transmission'], $c['seats'], $c['mileage'],
-                    $c['color'], $c['status'], $c['branch'], $c['location'],
-                    $c['gpsEnabled'], $c['fastagNumber'], $c['insuranceExpiry'], $c['pollutionExpiry'],
-                    $c['fitnessExpiry'], $c['permitExpiry'], $c['image'],
-                    safeJsonEncode($c['galleryImages']), safeJsonEncode($c['angle360Images']),
-                    $c['totalTrips'], $c['totalRevenue'], $c['maintenanceCost'],
-                    $c['lastServiceKm'], $c['nextServiceKm'], $c['isArchived']
-                ]);
+                $fields = [];
+                $placeholders = [];
+                $values = [];
+
+                foreach ($c as $k => $v) {
+                    if ($k !== 'id' && in_array(strtolower($k), $validCarCols)) {
+                        $fields[] = "`$k`";
+                        $placeholders[] = '?';
+                        if ($k === 'galleryImages' || $k === 'angle360Images') {
+                            $values[] = safeJsonEncode($v);
+                        } else {
+                            $values[] = is_array($v) ? json_encode($v) : $v;
+                        }
+                    }
+                }
+
+                if (!empty($fields)) {
+                    $sql = "INSERT INTO Cars (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($values);
+                }
             }
         }
     } catch (Exception $e) {}
@@ -779,8 +756,8 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
             if (!empty($cars)) {
                 foreach ($cars as &$c) {
                     $c['id'] = (int)$c['id'];
-                    $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, [$c['image']]);
-                    $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, [$c['image']]);
+                    $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, [$c['image'] ?? '']);
+                    $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, [$c['image'] ?? '']);
                 }
                 echo json_encode(["success" => true, "data" => $cars]);
                 exit();
@@ -801,8 +778,8 @@ if (preg_match('#^(cars|admin/cars)/([0-9]+)$#', $route, $matches) && $method ==
             $car = $stmt->fetch();
             if ($car) {
                 $car['id'] = (int)$car['id'];
-                $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, [$car['image']]);
-                $car['angle360Images'] = safeJsonDecode($car['angle360Images'] ?? null, [$car['image']]);
+                $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, [$car['image'] ?? '']);
+                $car['angle360Images'] = safeJsonDecode($car['angle360Images'] ?? null, [$car['image'] ?? '']);
                 echo json_encode(["success" => true, "data" => $car]);
                 exit();
             }
@@ -815,17 +792,6 @@ if (preg_match('#^(cars|admin/cars)/([0-9]+)$#', $route, $matches) && $method ==
 
 // POST /api/cars or /api/admin/cars
 if (($route === 'cars' || $route === 'admin/cars') && $method === 'POST') {
-    $cols = [
-        'name', 'brand', 'model', 'variant', 'year', 'registrationNumber', 'vinNumber',
-        'detail', 'price', 'pricePerHour', 'pricePerDay', 'pricePerWeek', 'pricePerMonth',
-        'securityDeposit', 'lateFeePerHour', 'tag', 'category', 'fuelType', 'transmission',
-        'seats', 'mileage', 'color', 'status', 'branch', 'location', 'gpsEnabled',
-        'fastagNumber', 'insuranceExpiry', 'pollutionExpiry', 'fitnessExpiry', 'permitExpiry',
-        'rcDocUrl', 'insuranceDocUrl', 'image', 'galleryImages', 'angle360Images', 'videoUrl',
-        'isArchived', 'totalTrips', 'totalRevenue', 'maintenanceCost', 'lastServiceKm',
-        'nextServiceKm', 'oilChangeStatus', 'tyreHealth', 'batteryHealth'
-    ];
-
     if (!isset($input['detail']) || empty($input['detail'])) {
         $input['detail'] = "Comfortable self-drive rental vehicle.";
     }
@@ -833,32 +799,34 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'POST') {
         $input['price'] = "₹" . ($input['pricePerDay'] ?? 1999) . "/day";
     }
 
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $val = $input[$col];
-            if ($col === 'galleryImages' || $col === 'angle360Images') {
-                $values[] = safeJsonEncode($val);
-            } else {
-                $values[] = is_array($val) ? json_encode($val) : $val;
-            }
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Cars (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $id = (int)$pdo->lastInsertId();
-            $input['id'] = $id;
-            echo json_encode(["success" => true, "message" => "Vehicle added to fleet!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Cars');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    if ($k === 'galleryImages' || $k === 'angle360Images') {
+                        $values[] = safeJsonEncode($v);
+                    } else {
+                        $values[] = is_array($v) ? json_encode($v) : $v;
+                    }
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Cars (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $id = (int)$pdo->lastInsertId();
+                $input['id'] = $id;
+                echo json_encode(["success" => true, "message" => "Vehicle added to fleet!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => "Error saving vehicle: " . $e->getMessage()]);
@@ -867,36 +835,25 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'POST') {
     }
 
     http_response_code(500);
-    echo json_encode(["success" => false, "message" => "Database not available"]);
+    echo json_encode(["success" => false, "message" => "Database not connected: " . ($dbError ?? 'Unknown error')]);
     exit();
 }
 
 // PUT /api/admin/cars/{id}
 if (preg_match('#^admin/cars/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $carId = (int)$matches[1];
-    $cols = [
-        'name', 'brand', 'model', 'variant', 'year', 'registrationNumber', 'vinNumber',
-        'detail', 'price', 'pricePerHour', 'pricePerDay', 'pricePerWeek', 'pricePerMonth',
-        'securityDeposit', 'lateFeePerHour', 'tag', 'category', 'fuelType', 'transmission',
-        'seats', 'mileage', 'color', 'status', 'branch', 'location', 'gpsEnabled',
-        'fastagNumber', 'insuranceExpiry', 'pollutionExpiry', 'fitnessExpiry', 'permitExpiry',
-        'rcDocUrl', 'insuranceDocUrl', 'image', 'galleryImages', 'angle360Images', 'videoUrl',
-        'isArchived', 'totalTrips', 'totalRevenue', 'maintenanceCost', 'lastServiceKm',
-        'nextServiceKm', 'oilChangeStatus', 'tyreHealth', 'batteryHealth'
-    ];
-
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Cars');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $val = $input[$col];
-                    if ($col === 'galleryImages' || $col === 'angle360Images') {
-                        $params[] = safeJsonEncode($val);
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    if ($k === 'galleryImages' || $k === 'angle360Images') {
+                        $params[] = safeJsonEncode($v);
                     } else {
-                        $params[] = is_array($val) ? json_encode($val) : $val;
+                        $params[] = is_array($v) ? json_encode($v) : $v;
                     }
                 }
             }
@@ -952,37 +909,30 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'GET')
 
 // POST /api/bookings or /api/admin/bookings
 if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST') {
-    $cols = [
-        'bookingType', 'pickup', 'startDate', 'endDate', 'carName', 'status',
-        'customerName', 'customerPhone', 'customerEmail', 'driverName', 'driverPhone',
-        'deliveryStaff', 'pickupAddress', 'dropAddress', 'duration', 'extras',
-        'insurancePlan', 'couponCode', 'discountAmount', 'taxAmount', 'securityDeposit',
-        'amount', 'branch', 'paymentMethod', 'paymentStatus', 'bookingSource', 'notes',
-        'startOdometer', 'returnOdometer', 'startFuel', 'returnFuel', 'penalties', 'timelineStep'
-    ];
-
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $val = $input[$col];
-            $values[] = ($col === 'extras') ? safeJsonEncode($val) : (is_array($val) ? json_encode($val) : $val);
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Bookings (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $id = (int)$pdo->lastInsertId();
-            $input['id'] = $id;
-            echo json_encode(["success" => true, "message" => "Booking saved successfully!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Bookings');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = ($k === 'extras') ? safeJsonEncode($v) : (is_array($v) ? json_encode($v) : $v);
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Bookings (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $id = (int)$pdo->lastInsertId();
+                $input['id'] = $id;
+                echo json_encode(["success" => true, "message" => "Booking saved successfully!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => "Error creating booking: " . $e->getMessage()]);
@@ -997,24 +947,15 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
 // PUT /api/admin/bookings/{id}
 if (preg_match('#^admin/bookings/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $bookingId = (int)$matches[1];
-    $cols = [
-        'bookingType', 'pickup', 'startDate', 'endDate', 'carName', 'status',
-        'customerName', 'customerPhone', 'customerEmail', 'driverName', 'driverPhone',
-        'deliveryStaff', 'pickupAddress', 'dropAddress', 'duration', 'extras',
-        'insurancePlan', 'couponCode', 'discountAmount', 'taxAmount', 'securityDeposit',
-        'amount', 'branch', 'paymentMethod', 'paymentStatus', 'bookingSource', 'notes',
-        'startOdometer', 'returnOdometer', 'startFuel', 'returnFuel', 'penalties', 'timelineStep'
-    ];
-
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Bookings');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $val = $input[$col];
-                    $params[] = ($col === 'extras') ? safeJsonEncode($val) : (is_array($val) ? json_encode($val) : $val);
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = ($k === 'extras') ? safeJsonEncode($v) : (is_array($v) ? json_encode($v) : $v);
                 }
             }
             if (!empty($fields)) {
@@ -1068,35 +1009,29 @@ if ($route === 'admin/customers' && $method === 'GET') {
 }
 
 if ($route === 'admin/customers' && $method === 'POST') {
-    $cols = [
-        'name', 'phone', 'email', 'avatar', 'kycStatus', 'dlNumber', 'aadhaarNumber',
-        'passportNumber', 'dlExpiry', 'dlFrontDocUrl', 'dlBackDocUrl', 'aadhaarFrontDocUrl',
-        'aadhaarBackDocUrl', 'address', 'city', 'savedAddresses', 'favoriteCars',
-        'walletBalance', 'loyaltyPoints', 'loyaltyTier', 'referredCount', 'referralEarnings',
-        'isBlacklisted', 'totalBookings', 'notes'
-    ];
-
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $val = $input[$col];
-            $values[] = ($col === 'savedAddresses' || $col === 'favoriteCars') ? safeJsonEncode($val) : (is_array($val) ? json_encode($val) : $val);
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Customers (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $input['id'] = (int)$pdo->lastInsertId();
-            echo json_encode(["success" => true, "message" => "Customer registered!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Customers');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = ($k === 'savedAddresses' || $k === 'favoriteCars') ? safeJsonEncode($v) : (is_array($v) ? json_encode($v) : $v);
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Customers (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $input['id'] = (int)$pdo->lastInsertId();
+                echo json_encode(["success" => true, "message" => "Customer registered!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1109,23 +1044,15 @@ if ($route === 'admin/customers' && $method === 'POST') {
 
 if (preg_match('#^admin/customers/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $cid = (int)$matches[1];
-    $cols = [
-        'name', 'phone', 'email', 'avatar', 'kycStatus', 'dlNumber', 'aadhaarNumber',
-        'passportNumber', 'dlExpiry', 'dlFrontDocUrl', 'dlBackDocUrl', 'aadhaarFrontDocUrl',
-        'aadhaarBackDocUrl', 'address', 'city', 'savedAddresses', 'favoriteCars',
-        'walletBalance', 'loyaltyPoints', 'loyaltyTier', 'referredCount', 'referralEarnings',
-        'isBlacklisted', 'totalBookings', 'notes'
-    ];
-
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Customers');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $val = $input[$col];
-                    $params[] = ($col === 'savedAddresses' || $col === 'favoriteCars') ? safeJsonEncode($val) : (is_array($val) ? json_encode($val) : $val);
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = ($k === 'savedAddresses' || $k === 'favoriteCars') ? safeJsonEncode($v) : (is_array($v) ? json_encode($v) : $v);
                 }
             }
             if (!empty($fields)) {
@@ -1172,32 +1099,29 @@ if ($route === 'admin/drivers' && $method === 'GET') {
 }
 
 if ($route === 'admin/drivers' && $method === 'POST') {
-    $cols = [
-        'name', 'phone', 'email', 'avatar', 'branch', 'licenseNumber', 'licenseExpiry',
-        'licenseDocUrl', 'bgDocUrl', 'bgVerification', 'liveLocation', 'totalTrips',
-        'todayTrips', 'monthlyEarnings', 'rating', 'hillDrivingCertified', 'isAvailable'
-    ];
-
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $values[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Drivers (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $input['id'] = (int)$pdo->lastInsertId();
-            echo json_encode(["success" => true, "message" => "Driver onboarded!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Drivers');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = is_array($v) ? json_encode($v) : $v;
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Drivers (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $input['id'] = (int)$pdo->lastInsertId();
+                echo json_encode(["success" => true, "message" => "Driver onboarded!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1210,20 +1134,15 @@ if ($route === 'admin/drivers' && $method === 'POST') {
 
 if (preg_match('#^admin/drivers/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $did = (int)$matches[1];
-    $cols = [
-        'name', 'phone', 'email', 'avatar', 'branch', 'licenseNumber', 'licenseExpiry',
-        'licenseDocUrl', 'bgDocUrl', 'bgVerification', 'liveLocation', 'totalTrips',
-        'todayTrips', 'monthlyEarnings', 'rating', 'hillDrivingCertified', 'isAvailable'
-    ];
-
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Drivers');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $params[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = is_array($v) ? json_encode($v) : $v;
                 }
             }
             if (!empty($fields)) {
@@ -1270,27 +1189,29 @@ if ($route === 'admin/branches' && $method === 'GET') {
 }
 
 if ($route === 'admin/branches' && $method === 'POST') {
-    $cols = ['name', 'city', 'state', 'address', 'phone', 'managerName', 'managerPhone', 'managerEmail', 'operatingHours', 'fleetCount', 'activeTrips', 'monthlyRevenue', 'status'];
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $values[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Branches (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $input['id'] = (int)$pdo->lastInsertId();
-            echo json_encode(["success" => true, "message" => "Branch added!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Branches');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = is_array($v) ? json_encode($v) : $v;
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Branches (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $input['id'] = (int)$pdo->lastInsertId();
+                echo json_encode(["success" => true, "message" => "Branch added!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1303,15 +1224,15 @@ if ($route === 'admin/branches' && $method === 'POST') {
 
 if (preg_match('#^admin/branches/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $bid = (int)$matches[1];
-    $cols = ['name', 'city', 'state', 'address', 'phone', 'managerName', 'managerPhone', 'managerEmail', 'operatingHours', 'fleetCount', 'activeTrips', 'monthlyRevenue', 'status'];
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Branches');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $params[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = is_array($v) ? json_encode($v) : $v;
                 }
             }
             if (!empty($fields)) {
@@ -1355,29 +1276,31 @@ if ($route === 'admin/payments' && $method === 'GET') {
 }
 
 if ($route === 'admin/payments' && $method === 'POST') {
-    $cols = ['id', 'bookingId', 'customerName', 'amount', 'depositAmount', 'gstAmount', 'advancePaid', 'partialPaid', 'balanceDue', 'cgstAmount', 'sgstAmount', 'tdsAmount', 'gateway', 'status', 'refundStatus', 'refundAmount', 'date', 'transactionId', 'invoiceNumber', 'notes'];
     if (!isset($input['id']) || empty($input['id'])) {
         $input['id'] = 'PAY-' . rand(1000, 9999);
     }
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $values[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Payments (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            echo json_encode(["success" => true, "message" => "Payment recorded!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Payments');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if (in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = is_array($v) ? json_encode($v) : $v;
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Payments (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                echo json_encode(["success" => true, "message" => "Payment recorded!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1437,27 +1360,29 @@ if ($route === 'admin/coupons' && $method === 'GET') {
 }
 
 if ($route === 'admin/coupons' && $method === 'POST') {
-    $cols = ['code', 'type', 'discountValue', 'isPercent', 'minBookingValue', 'maxDiscount', 'maxDiscountCap', 'usageLimit', 'usageCount', 'expiryDate', 'isActive', 'description'];
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $values[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Coupons (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $input['id'] = (int)$pdo->lastInsertId();
-            echo json_encode(["success" => true, "message" => "Coupon created!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Coupons');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = is_array($v) ? json_encode($v) : $v;
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Coupons (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $input['id'] = (int)$pdo->lastInsertId();
+                echo json_encode(["success" => true, "message" => "Coupon created!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1470,15 +1395,15 @@ if ($route === 'admin/coupons' && $method === 'POST') {
 
 if (preg_match('#^admin/coupons/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $cpid = (int)$matches[1];
-    $cols = ['code', 'type', 'discountValue', 'isPercent', 'minBookingValue', 'maxDiscount', 'maxDiscountCap', 'usageLimit', 'usageCount', 'expiryDate', 'isActive', 'description'];
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Coupons');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $params[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = is_array($v) ? json_encode($v) : $v;
                 }
             }
             if (!empty($fields)) {
@@ -1525,27 +1450,29 @@ if (($route === 'reviews' || $route === 'admin/reviews') && $method === 'GET') {
 }
 
 if (($route === 'reviews' || $route === 'admin/reviews') && $method === 'POST') {
-    $cols = ['customerName', 'customerPhone', 'carName', 'rating', 'comment', 'date', 'status', 'isFeatured', 'adminReply'];
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $values[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO Reviews (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $input['id'] = (int)$pdo->lastInsertId();
-            echo json_encode(["success" => true, "message" => "Review submitted successfully!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'Reviews');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = is_array($v) ? json_encode($v) : $v;
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO Reviews (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $input['id'] = (int)$pdo->lastInsertId();
+                echo json_encode(["success" => true, "message" => "Review submitted successfully!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1571,15 +1498,15 @@ if (preg_match('#^admin/reviews/([0-9]+)/reply$#', $route, $matches) && $method 
 
 if (preg_match('#^admin/reviews/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $rid = (int)$matches[1];
-    $cols = ['customerName', 'customerPhone', 'carName', 'rating', 'comment', 'date', 'status', 'isFeatured', 'adminReply'];
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'Reviews');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $params[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = is_array($v) ? json_encode($v) : $v;
                 }
             }
             if (!empty($fields)) {
@@ -1626,30 +1553,31 @@ if (($route === 'support/tickets' || $route === 'admin/support/tickets' || $rout
 }
 
 if (($route === 'support/tickets' || $route === 'admin/support/tickets' || $route === 'admin/support-tickets') && $method === 'POST') {
-    $cols = ['id', 'customerName', 'customerPhone', 'subject', 'category', 'priority', 'status', 'assignedTo', 'assignedAgent', 'bookingId', 'messages', 'lastUpdated'];
     if (!isset($input['id']) || empty($input['id'])) {
         $input['id'] = 'TCK-' . rand(1000, 9999);
     }
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $val = $input[$col];
-            $values[] = ($col === 'messages') ? safeJsonEncode($val) : (is_array($val) ? json_encode($val) : $val);
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO SupportTickets (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            echo json_encode(["success" => true, "message" => "Support ticket opened!", "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'SupportTickets');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if (in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = ($k === 'messages') ? safeJsonEncode($v) : (is_array($v) ? json_encode($v) : $v);
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO SupportTickets (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                echo json_encode(["success" => true, "message" => "Support ticket opened!", "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(["success" => false, "message" => $e->getMessage()]);
@@ -1662,16 +1590,15 @@ if (($route === 'support/tickets' || $route === 'admin/support/tickets' || $rout
 
 if (preg_match('#^(support/tickets|admin/support/tickets|admin/support-tickets)/([^/]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
     $tid = $matches[2];
-    $cols = ['customerName', 'customerPhone', 'subject', 'category', 'priority', 'status', 'assignedTo', 'assignedAgent', 'bookingId', 'messages', 'lastUpdated'];
     if (isset($pdo)) {
         try {
+            $validCols = getTableColumns($pdo, 'SupportTickets');
             $fields = [];
             $params = [];
-            foreach ($cols as $col) {
-                if (isset($input[$col])) {
-                    $fields[] = "`$col` = ?";
-                    $val = $input[$col];
-                    $params[] = ($col === 'messages') ? safeJsonEncode($val) : (is_array($val) ? json_encode($val) : $val);
+            foreach ($input as $k => $v) {
+                if (in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k` = ?";
+                    $params[] = ($k === 'messages') ? safeJsonEncode($v) : (is_array($v) ? json_encode($v) : $v);
                 }
             }
             if (!empty($fields)) {
@@ -1718,27 +1645,29 @@ if (($route === 'admin/logs' || $route === 'admin/activity-logs') && $method ===
 }
 
 if (($route === 'admin/logs' || $route === 'admin/activity-logs') && $method === 'POST') {
-    $cols = ['adminName', 'adminUser', 'module', 'action', 'actionType', 'details', 'description', 'target', 'targetId', 'ipAddress', 'timestamp'];
-    $fields = [];
-    $placeholders = [];
-    $values = [];
-
-    foreach ($cols as $col) {
-        if (isset($input[$col])) {
-            $fields[] = "`$col`";
-            $placeholders[] = '?';
-            $values[] = is_array($input[$col]) ? json_encode($input[$col]) : $input[$col];
-        }
-    }
-
-    if (isset($pdo) && !empty($fields)) {
+    if (isset($pdo)) {
         try {
-            $sql = "INSERT INTO ActivityLogs (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($values);
-            $input['id'] = (int)$pdo->lastInsertId();
-            echo json_encode(["success" => true, "data" => $input]);
-            exit();
+            $validCols = getTableColumns($pdo, 'ActivityLogs');
+            $fields = [];
+            $placeholders = [];
+            $values = [];
+
+            foreach ($input as $k => $v) {
+                if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
+                    $fields[] = "`$k`";
+                    $placeholders[] = '?';
+                    $values[] = is_array($v) ? json_encode($v) : $v;
+                }
+            }
+
+            if (!empty($fields)) {
+                $sql = "INSERT INTO ActivityLogs (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($values);
+                $input['id'] = (int)$pdo->lastInsertId();
+                echo json_encode(["success" => true, "data" => $input]);
+                exit();
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(["success" => true, "data" => $input]);
