@@ -481,42 +481,42 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           </a>
 
           {/* Center Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-[12px] xl:text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-700">
+          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.15em] text-slate-700">
             <a
               href="#top"
-              className="text-[#c88d18] font-bold border-b-2 border-[#c88d18] pb-0.5 transition-colors"
+              className="text-[#c88d18] font-black border-b-2 border-[#c88d18] pb-0.5 transition-colors"
             >
-              Home
+              HOME
             </a>
             <a
               href="#search-results"
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
-              Cars
+              CARS
             </a>
             <a
               href="#collections"
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
-              Luxury Fleet
+              LUXURY FLEET
             </a>
             <a
               href="#weekend-deals"
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
-              Deals
+              DEALS
             </a>
             <a
               href="#why-choose-moar"
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
-              About
+              ABOUT
             </a>
             <a
               href="#contact"
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
-              Contact
+              CONTACT
             </a>
           </nav>
 
@@ -614,14 +614,14 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               </button>
             )}
 
-            {/* Golden "Book Now →" Button */}
+            {/* Golden "BOOK NOW →" Button */}
             <Button
               onClick={() => {
                 document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="h-10 px-5 rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center gap-1.5 transition-transform hover:scale-[1.02]"
+              className="h-10 px-5 rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center gap-1.5 transition-transform hover:scale-[1.02]"
             >
-              <span>Book Now</span>
+              <span>BOOK NOW</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -640,25 +640,25 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         {menuOpen && (
           <nav className="mx-auto max-w-[1600px] px-6 py-4 bg-white border-t border-slate-100 grid gap-3 text-sm font-semibold text-slate-800 lg:hidden shadow-xl">
             <a href="#top" onClick={() => setMenuOpen(false)} className="text-[#c88d18] font-bold">
-              Home
+              HOME
             </a>
             <a href="#search-results" onClick={() => setMenuOpen(false)}>
-              Cars & Fleet
+              CARS
             </a>
             <a href="#collections" onClick={() => setMenuOpen(false)}>
-              Luxury Fleet
+              LUXURY FLEET
             </a>
             <a href="#weekend-deals" onClick={() => setMenuOpen(false)}>
-              Weekend Deals
+              DEALS
             </a>
             <a href="#why-choose-moar" onClick={() => setMenuOpen(false)}>
-              Why Choose MOAR?
+              ABOUT
             </a>
             <a href="#reviews" onClick={() => setMenuOpen(false)}>
-              Customer Reviews
+              REVIEWS
             </a>
             <a href="#contact" onClick={() => setMenuOpen(false)}>
-              Contact Us
+              CONTACT
             </a>
             {user ? (
               <button
@@ -697,7 +697,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             alt="MOAR CARS Luxury Showroom"
             className="w-full h-full object-cover object-right sm:object-center opacity-100"
           />
-          {/* Soft white gradient on left side to highlight text readability while keeping cars 100% clear */}
+          {/* Soft white gradient on left side to highlight text readability */}
           <div className="absolute inset-y-0 left-0 w-full sm:w-3/5 lg:w-[48%] bg-gradient-to-r from-white via-white/85 to-transparent pointer-events-none" />
         </div>
 
@@ -706,9 +706,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           <div className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.3em] text-slate-700/80 leading-relaxed drop-shadow-sm">
             LUXURY
             <br />
-            FREEDOM
+            FREEDOM.
             <br />
-            ANY DESTINATION
+            ANY DESTINATION.
           </div>
         </div>
 
@@ -728,9 +728,12 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
           {/* Left Title & CTA Hero Header */}
           <div className="order-2 lg:order-1 max-w-xl pt-2 sm:pt-4 space-y-2.5">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 block mb-1">
-              PREMIUM CAR RENTALS
-            </span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500">
+                PREMIUM CAR RENTALS
+              </span>
+              <div className="h-0.5 w-10 bg-[#c88d18]" />
+            </div>
 
             <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-serif font-black text-slate-900 tracking-tight leading-[1.06] drop-shadow-sm">
               Drive Luxury.
