@@ -157,6 +157,7 @@ import ReviewsModeration from "./admin/ReviewsModeration";
 import SupportDesk from "./admin/SupportDesk";
 import SecurityCenter from "./admin/SecurityCenter";
 import ActivityLogsTimeline from "./admin/ActivityLogsTimeline";
+import { AdminOtpLogin } from "./admin/AdminOtpLogin";
 import { adminApi } from "./admin/adminApi";
 
 interface AdminDashboardProps {
@@ -169,17 +170,31 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const isDark = theme === "dark";
 
   // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem("moar_admin_authenticated") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [currentUser, setCurrentUser] = useState<{
     username: string;
     email: string;
     role: UserRole;
     branch: string;
-  }>({
-    username: "Executive Super Admin",
-    email: "moarcars04@gmail.com",
-    role: "Super Admin",
-    branch: "All Branches",
+  }>(() => {
+    try {
+      const saved = sessionStorage.getItem("moar_admin_user");
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // ignore
+    }
+    return {
+      username: "Executive Super Admin",
+      email: "moarcars04@gmail.com",
+      role: "Super Admin",
+      branch: "All Branches",
+    };
   });
 
   // Active Main Navigation Tab
@@ -1551,35 +1566,24 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   // AUTH LOGIN (OPTIONAL LOGOUT)
   // ----------------------------------------------------------------------
   const handleLogout = () => {
+    try {
+      sessionStorage.removeItem("moar_admin_authenticated");
+      sessionStorage.removeItem("moar_admin_user");
+    } catch (e) {
+      console.error(e);
+    }
     setIsAuthenticated(false);
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#13091B] flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-[#2E1439]/80 backdrop-blur-2xl border border-purple-500/25 rounded-3xl p-8 shadow-2xl text-white">
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xl flex items-center justify-center mx-auto mb-3">
-              M
-            </div>
-            <h1 className="text-2xl font-black">Moar Cars Enterprise Suite</h1>
-            <p className="text-xs text-purple-300 mt-1">Car Booking & Fleet Management Suite</p>
-          </div>
-
-          <button
-            onClick={() => setIsAuthenticated(true)}
-            className="w-full bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black py-3.5 rounded-2xl text-xs shadow-lg shadow-amber-500/25 hover:opacity-95"
-          >
-            Launch Admin Console (Instant Login)
-          </button>
-
-          <div className="text-center mt-6">
-            <button onClick={() => onNavigate("/")} className="text-xs text-purple-300 underline">
-              Return to Public Portal
-            </button>
-          </div>
-        </div>
-      </div>
+      <AdminOtpLogin
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        }}
+        onNavigateHome={() => onNavigate("/")}
+      />
     );
   }
 
