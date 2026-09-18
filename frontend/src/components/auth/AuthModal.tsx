@@ -270,7 +270,7 @@ export const AuthModal: React.FC = () => {
 
     if (res.success) {
       setOtpTarget(cleanEmail);
-      setDemoOtpCode(res.demoOtp || "123456");
+      setDemoOtpCode(res.demoOtp || "");
       setOtpDigits(["", "", "", "", "", ""]);
       setOtpTimer(60);
       setCanResendOtp(false);
@@ -319,7 +319,7 @@ export const AuthModal: React.FC = () => {
       phone: phone.trim(),
     });
     if (res.success) {
-      setDemoOtpCode(res.demoOtp || "123456");
+      setDemoOtpCode(res.demoOtp || "");
       setOtpDigits(["", "", "", "", "", ""]);
       setOtpTimer(60);
       setCanResendOtp(false);
@@ -381,7 +381,7 @@ export const AuthModal: React.FC = () => {
     const res = await forgotPassword(target);
     if (res.success) {
       setOtpTarget(target);
-      setDemoOtpCode(res.demoOtp || "123456");
+      setDemoOtpCode(res.demoOtp || "");
       setOtpDigits(["", "", "", "", "", ""]);
       setMainMode("reset");
       setOtpTimer(60);

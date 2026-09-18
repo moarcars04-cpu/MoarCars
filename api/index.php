@@ -1498,18 +1498,28 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
         } catch (Exception $e) {}
     }
 
-    // Try sending email if mail function or SMTP configured
-    @mail(
-        $email,
-        "🚗 Your Moar Cars Registration Verification Code: $otp",
-        "Hello $name,\n\nYour Moar Cars verification code is: $otp\n\nValid for 10 minutes. Enter this code to verify your email and activate your ₹250 welcome bonus.\n\nMoar Cars Tirupati",
-        "From: Moar Cars <no-reply@moarcars.com>\r\nReply-To: support@moarcars.com\r\nX-Mailer: PHP/" . phpversion()
-    );
+    $subject = "🚗 $otp is your Moar Cars Registration Verification Code";
+    $msgBody = "
+        <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+          <div style='text-align: center; margin-bottom: 20px;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;'>MOAR <span style='color: #c88d18;'>CARS</span></h1>
+            <p style='color: #c88d18; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; font-weight: bold;'>Self-Drive Car Rentals</p>
+          </div>
+          <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
+            <h2 style='font-size: 18px; color: #ffffff; margin-top: 0;'>Confirm Your Email Address</h2>
+            <p style='color: #cbd5e1; font-size: 14px; margin-top: 0;'>Hello $name, enter the 6-digit confirmation code below to activate your account and ₹250 welcome credit:</p>
+            <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 34px; font-weight: 900; letter-spacing: 8px; padding: 16px 24px; text-align: center; border-radius: 10px; margin: 15px auto; display: inline-block; font-family: monospace;'>$otp</div>
+            <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+          </div>
+          <p style='font-size: 11px; color: #475569; text-align: center; margin-top: 20px;'>&copy; " . date('Y') . " Moar Cars Rental. Tirupati & AP.</p>
+        </div>
+    ";
+    $debugLogs = [];
+    sendRealSmtpEmail($email, $subject, $msgBody, '', $debugLogs);
 
     echo json_encode([
         "success" => true,
-        "message" => "Verification code sent to $email",
-        "demoOtp" => $otp,
+        "message" => "Verification code sent to $email. Please check your inbox.",
         "expiresInSeconds" => 600
     ]);
     exit();
@@ -1530,9 +1540,7 @@ if ($route === 'auth/verify-registration-otp' && $method === 'POST') {
     }
 
     $isValid = false;
-    if ($otp === '123456') {
-        $isValid = true;
-    } elseif (isset($pdo)) {
+    if (isset($pdo)) {
         try {
             $now = time() * 1000;
             $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND expiresAt >= ? ORDER BY id DESC LIMIT 1");
@@ -1547,7 +1555,7 @@ if ($route === 'auth/verify-registration-otp' && $method === 'POST') {
 
     if (!$isValid) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid or expired verification code. Please check or click Resend."]);
+        echo json_encode(["success" => false, "message" => "Invalid or expired verification code. Please check your email."]);
         exit();
     }
 
@@ -1618,12 +1626,23 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
     }
 
     if (strpos($identifier, '@') !== false) {
-        @mail(
-            $identifier,
-            "🚗 Your Moar Cars Sign-In Code: $otp",
-            "Hello,\n\nYour Moar Cars sign-in verification code is: $otp\n\nValid for 10 minutes. Do not share this code with anyone.\n\nMoar Cars Tirupati",
-            "From: Moar Cars <no-reply@moarcars.com>\r\nReply-To: support@moarcars.com\r\nX-Mailer: PHP/" . phpversion()
-        );
+        $subject = "🚗 $otp is your Moar Cars Sign-In Verification Code";
+        $msgBody = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+              <div style='text-align: center; margin-bottom: 20px;'>
+                <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;'>MOAR <span style='color: #c88d18;'>CARS</span></h1>
+                <p style='color: #c88d18; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; font-weight: bold;'>Customer Authentication</p>
+              </div>
+              <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
+                <p style='color: #cbd5e1; font-size: 14px; margin-top: 0;'>Your one-time sign-in verification code is:</p>
+                <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 34px; font-weight: 900; letter-spacing: 8px; padding: 16px 24px; text-align: center; border-radius: 10px; margin: 15px auto; display: inline-block; font-family: monospace;'>$otp</div>
+                <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+              </div>
+              <p style='font-size: 11px; color: #475569; text-align: center; margin-top: 20px;'>&copy; " . date('Y') . " Moar Cars Rental. Tirupati & AP.</p>
+            </div>
+        ";
+        $debugLogs = [];
+        sendRealSmtpEmail($identifier, $subject, $msgBody, '', $debugLogs);
     }
 
     echo json_encode([
@@ -1631,7 +1650,6 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
         "message" => strpos($identifier, '@') !== false 
             ? "Verification code sent to $identifier. Please check your inbox." 
             : "6-digit OTP verification code sent to +91 $identifier",
-        "demoOtp" => $otp,
         "expiresInSeconds" => 600
     ]);
     exit();
@@ -1650,9 +1668,7 @@ if ($route === 'auth/verify-otp' && $method === 'POST') {
     }
 
     $isValid = false;
-    if ($otp === '123456') {
-        $isValid = true;
-    } elseif (isset($pdo)) {
+    if (isset($pdo)) {
         try {
             $now = time() * 1000;
             $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND expiresAt >= ? ORDER BY id DESC LIMIT 1");
@@ -1667,7 +1683,7 @@ if ($route === 'auth/verify-otp' && $method === 'POST') {
 
     if (!$isValid) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid or expired OTP code. Please check or click Resend OTP."]);
+        echo json_encode(["success" => false, "message" => "Invalid or expired OTP code. Please check your email or SMS."]);
         exit();
     }
 
@@ -1829,9 +1845,7 @@ if ($route === 'auth/reset-password' && $method === 'POST') {
     }
 
     $isValid = false;
-    if ($otp === '123456') {
-        $isValid = true;
-    } elseif (isset($pdo)) {
+    if (isset($pdo)) {
         try {
             $now = time() * 1000;
             $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND expiresAt >= ? LIMIT 1");
@@ -2935,7 +2949,7 @@ if (($route === 'bookings/pickup-inspection' || $route === 'admin/bookings/picku
     $startFuel = (int)($input['startFuel'] ?? 100);
     $photos = safeJsonEncode($input['pickupPhotos'] ?? []);
     $checklist = safeJsonEncode($input['pickupChecklist'] ?? []);
-    $otp = $input['pickupOtp'] ?? '123456';
+    $otp = $input['pickupOtp'] ?? (string)rand(100000, 999999);
     $signature = $input['pickupSignature'] ?? null;
 
     if ($bookingId > 0 && isset($pdo)) {

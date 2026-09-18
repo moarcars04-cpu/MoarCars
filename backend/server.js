@@ -1136,8 +1136,8 @@ app.post("/api/auth/verify-registration-otp", async (req, res) => {
     const targetEmail = email.trim().toLowerCase();
     const record = customerOtpStore.get(targetEmail);
 
-    // Verify OTP matching
-    const isMatched = record && (record.otp === otp.toString().trim() || otp.toString().trim() === "123456");
+    // Verify OTP matching strictly
+    const isMatched = record && record.otp === otp.toString().trim();
     if (!isMatched && !record) {
       return res.status(400).json({
         success: false,
@@ -1269,7 +1269,7 @@ app.post("/api/auth/verify-otp", async (req, res) => {
     const cleanIdentifier = identifier.trim().toLowerCase();
     const record = customerOtpStore.get(cleanIdentifier);
 
-    const isValid = (record && record.otp === otp.toString().trim()) || otp.toString().trim() === "123456";
+    const isValid = record && record.otp === otp.toString().trim();
     if (!isValid && !record) {
       return res.status(400).json({ success: false, message: "No active OTP found. Request a new one." });
     }
