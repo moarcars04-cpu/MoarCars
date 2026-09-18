@@ -2,20 +2,26 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   ShieldCheck,
   Lock,
-  Smartphone,
   Mail,
   ArrowRight,
+  ArrowLeft,
   KeyRound,
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  ChevronLeft,
-  Shield,
   Eye,
   EyeOff,
   Sparkles,
+  X,
+  Shield,
+  Zap,
+  Check,
+  Building2,
+  Car,
 } from "lucide-react";
 import { UserRole } from "./types";
+import luxuryHeroImg from "@/assets/moar-hero-luxury.jpg";
+import { MoarLogo } from "@/components/common/MoarLogo";
 
 interface AdminOtpLoginProps {
   onLoginSuccess: (user: {
@@ -36,14 +42,11 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
 
   // Form State
   const [adminIdentifier, setAdminIdentifier] = useState("moarcars04@gmail.com");
-  const [adminPhone, setAdminPhone] = useState("+91 98765 43210");
-  const [deliveryMethod, setDeliveryMethod] = useState<"sms" | "email">("email");
   const [passcode, setPasscode] = useState("admin@moar2026");
   const [showPasscode, setShowPasscode] = useState(false);
 
   // OTP State
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
-  const [activeDigitIndex, setActiveDigitIndex] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,10 +60,14 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
     let interval: any = null;
     if (step === "otp" && timerSeconds > 0) {
       interval = setInterval(() => {
-        setTimerSeconds((prev) => prev - 1);
+        setTimerSeconds((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
-    } else if (timerSeconds === 0) {
-      setCanResend(true);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -82,9 +89,9 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
     setErrorMessage("");
     setSuccessMessage("");
 
-    const targetEmail = adminIdentifier.trim();
-    if (!targetEmail) {
-      setErrorMessage("Please enter an authorized admin email address.");
+    const targetEmail = adminIdentifier.trim().toLowerCase();
+    if (!targetEmail || !targetEmail.includes("@")) {
+      setErrorMessage("Please enter a valid authorized admin email address.");
       return;
     }
 
@@ -107,7 +114,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
           data.message || `Verification code sent to ${targetEmail}. Please check your inbox.`
         );
       } else {
-        setErrorMessage(data.message || "Failed to send admin verification code.");
+        setErrorMessage(data.message || "Failed to dispatch admin verification code.");
       }
     } catch (err: any) {
       console.error("Admin OTP request error:", err);
@@ -119,7 +126,6 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
 
   // Handle OTP digit input
   const handleOtpChange = (index: number, value: string) => {
-    // Only accept numeric character
     const cleaned = value.replace(/\D/g, "").slice(-1);
     const newDigits = [...otpDigits];
     newDigits[index] = cleaned;
@@ -128,7 +134,6 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
 
     if (cleaned && index < 5) {
       inputRefs.current[index + 1]?.focus();
-      setActiveDigitIndex(index + 1);
     }
   };
 
@@ -137,14 +142,11 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
     if (e.key === "Backspace") {
       if (!otpDigits[index] && index > 0) {
         inputRefs.current[index - 1]?.focus();
-        setActiveDigitIndex(index - 1);
       }
     } else if (e.key === "ArrowLeft" && index > 0) {
       inputRefs.current[index - 1]?.focus();
-      setActiveDigitIndex(index - 1);
     } else if (e.key === "ArrowRight" && index < 5) {
       inputRefs.current[index + 1]?.focus();
-      setActiveDigitIndex(index + 1);
     }
   };
 
@@ -161,7 +163,6 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
     setOtpDigits(newDigits);
     const nextIdx = Math.min(pasted.length, 5);
     inputRefs.current[nextIdx]?.focus();
-    setActiveDigitIndex(nextIdx);
   };
 
   // Handle Verify OTP via real backend API
@@ -182,7 +183,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: adminIdentifier.trim(),
+          email: adminIdentifier.trim().toLowerCase(),
           otp: enteredOtp,
         }),
       });
@@ -191,7 +192,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
       if (res.ok && data.success) {
         const adminUser = {
           username: data.username || "Executive Super Admin",
-          email: adminIdentifier.trim(),
+          email: adminIdentifier.trim().toLowerCase(),
           role: (data.role || "Super Admin") as UserRole,
           branch: data.branch || "All Branches",
         };
@@ -203,7 +204,9 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
         }
         onLoginSuccess(adminUser);
       } else {
-        setErrorMessage(data.message || "Invalid OTP code. Please enter the real code received in your inbox or spam folder.");
+        setErrorMessage(
+          data.message || "Invalid OTP code. Please enter the real code received in your inbox."
+        );
       }
     } catch (err: any) {
       console.error("OTP verification error:", err);
@@ -225,11 +228,11 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
       const res = await fetch("/api/admin/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: adminIdentifier.trim() }),
+        body: JSON.stringify({ email: adminIdentifier.trim().toLowerCase() }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setSuccessMessage(`New verification code sent to ${adminIdentifier.trim()}`);
+        setSuccessMessage(`New verification code sent to ${adminIdentifier.trim().toLowerCase()}`);
       } else {
         setErrorMessage(data.message || "Failed to resend verification code.");
       }
@@ -241,79 +244,164 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#070e1c] text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans select-none">
-      {/* Background Ambient Glows matching Home Page */}
-      <div className="absolute top-[-15%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#c88d18]/10 blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[650px] h-[650px] rounded-full bg-blue-600/5 blur-[160px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#c88d18_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.03] pointer-events-none" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-fade-in">
+      {/* Background ambient gold/blue glows */}
+      <div className="fixed top-1/4 left-1/4 w-96 h-96 bg-[#c88d18]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Top Bar Header */}
-      <header className="relative z-10 w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#c88d18] to-[#d49b29] flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20">
-            M
-          </div>
-          <div>
-            <span className="text-base font-black tracking-tight text-white">
-              MOAR <span className="text-[#c88d18]">CARS</span>
-            </span>
-            <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              Security Operations Center
-            </span>
-          </div>
-        </div>
-
+      {/* Main Luxury Modal Card (Matching User Auth Modal Style) */}
+      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col md:flex-row rounded-3xl overflow-hidden shadow-2xl shadow-black/80 border border-slate-800 bg-[#070e1c] text-white my-auto">
+        
+        {/* Close / Return to Website Button */}
         <button
+          type="button"
           onClick={onNavigateHome}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 text-xs font-semibold text-slate-300 hover:text-white transition-all shadow-sm"
+          className="absolute top-4 right-4 z-20 h-9 w-9 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-md cursor-pointer"
+          title="Return to Customer Website"
         >
-          <ChevronLeft className="w-3.5 h-3.5" />
-          <span>Customer Website</span>
+          <X className="h-4 w-4" />
         </button>
-      </header>
 
-      {/* Main Authentication Card */}
-      <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-md">
-          {/* Card Container */}
-          <div className="bg-[#0b1426]/95 backdrop-blur-2xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/80 relative">
-            {/* Top Shield Icon Badge */}
-            <div className="flex justify-center mb-5">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#070e1c] to-[#0f1d38] border border-[#c88d18]/40 flex items-center justify-center text-[#c88d18] shadow-xl shadow-amber-500/10">
-                  {step === "credentials" ? (
-                    <ShieldCheck className="w-8 h-8 stroke-[1.8]" />
-                  ) : (
-                    <KeyRound className="w-8 h-8 stroke-[1.8] animate-pulse" />
-                  )}
+        {/* LEFT PANEL: Brand Showcase & Security Highlights (38% on desktop) */}
+        <div className="relative w-full md:w-[40%] bg-[#070e1c] p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-800/80 overflow-hidden shrink-0">
+          {/* Subtle luxury vehicle photo underlay */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={luxuryHeroImg}
+              alt="MOAR CARS"
+              className="w-full h-full object-cover object-center opacity-20"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070e1c] via-[#070e1c]/85 to-[#070e1c]/60" />
+          </div>
+
+          {/* Top Logo & Tag */}
+          <div className="relative z-10 space-y-2">
+            <MoarLogo variant="light" size="sm" showTagline={false} />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#c88d18]/15 border border-[#c88d18]/30 text-[11px] text-[#c88d18] font-bold uppercase tracking-wider">
+              <Shield className="h-3 w-3" /> Security Operations Center
+            </div>
+          </div>
+
+          {/* Key Value Points */}
+          <div className="relative z-10 space-y-4 my-auto py-4">
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-white tracking-tight">
+                Enterprise Fleet <span className="text-[#c88d18]">Control</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Restricted portal for authorized fleet controllers & executives.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <div className="flex items-start gap-3 text-xs text-slate-300">
+                <div className="h-6 w-6 rounded-lg bg-[#c88d18]/15 border border-[#c88d18]/30 text-[#c88d18] flex items-center justify-center shrink-0 mt-0.5">
+                  <Zap className="h-3.5 w-3.5" />
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-[10px] font-black shadow-md">
-                  2FA
+                <div>
+                  <span className="font-semibold text-white">Live Fleet Telematics</span>
+                  <p className="text-[11px] text-slate-400">Real-time GPS, statuses, & turnaround dispatch.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 text-xs text-slate-300">
+                <div className="h-6 w-6 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <span className="font-semibold text-white">Strict 2FA Authentication</span>
+                  <p className="text-[11px] text-slate-400">Encrypted single-use email OTP verification.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 text-xs text-slate-300">
+                <div className="h-6 w-6 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <Building2 className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <span className="font-semibold text-white">Central Hub Governance</span>
+                  <p className="text-[11px] text-slate-400">Tirupati Central, Airport & Renigunta branches.</p>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Title & Subtitle */}
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-white tracking-tight">
-                {step === "credentials" ? "Admin Security Gate" : "Two-Factor Verification"}
-              </h1>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+          {/* Footer Security Badge */}
+          <div className="relative z-10 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              SOC-2 Encrypted
+            </span>
+            <span className="text-slate-500">v2.4 Enterprise</span>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL: Authentication Form & 6-Digit OTP */}
+        <div className="w-full md:w-[60%] flex flex-col justify-between p-6 sm:p-8 bg-[#0b1426] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-700">
+          
+          <div>
+            {/* Step Navigation Pill Indicator */}
+            <div className="flex items-center p-1 rounded-xl bg-slate-900/90 border border-slate-800 mb-6 max-w-xs mx-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("credentials");
+                  setErrorMessage("");
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  step === "credentials"
+                    ? "bg-[#c88d18] text-slate-950 font-bold shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Lock className="w-3 h-3" />
+                <span>1. Credentials</span>
+              </button>
+              <button
+                type="button"
+                disabled={step === "credentials"}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  step === "otp"
+                    ? "bg-[#c88d18] text-slate-950 font-bold shadow-sm"
+                    : "text-slate-500 cursor-not-allowed"
+                }`}
+              >
+                <KeyRound className="w-3 h-3" />
+                <span>2. 2FA OTP</span>
+              </button>
+            </div>
+
+            {/* Header Title & Subtitle */}
+            <div className="mb-5 text-center sm:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center justify-center sm:justify-start gap-2">
+                {step === "credentials" ? (
+                  <>
+                    <ShieldCheck className="w-5 h-5 text-[#c88d18]" />
+                    <span>Admin Portal Sign-In</span>
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="w-5 h-5 text-[#c88d18] animate-pulse" />
+                    <span>Enter 6-Digit OTP Code</span>
+                  </>
+                )}
+              </h2>
+              <p className="mt-1 text-xs text-slate-400">
                 {step === "credentials"
-                  ? "Restricted Enterprise Portal • Authorized Fleet Personnel Only"
-                  : `Enter the 6-digit OTP code sent to your registered ${deliveryMethod === "sms" ? "phone" : "email"}.`}
+                  ? "Enter your verified admin email to receive your one-time 2FA access code."
+                  : `Enter the 6-digit security code sent to ${adminIdentifier.trim().toLowerCase()}`}
               </p>
             </div>
 
             {/* Error Message Alert */}
             {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2.5">
+              <div className="mb-4 p-3 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2.5 animate-shake">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            {/* Success Notification Alert */}
+            {/* Success Message Alert */}
             {successMessage && (
               <div className="mb-4 p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -321,13 +409,13 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
               </div>
             )}
 
-            {/* ----------------- STEP 1: CREDENTIALS & 2FA REQUEST ----------------- */}
+            {/* STEP 1: CREDENTIALS */}
             {step === "credentials" && (
               <form onSubmit={handleRequestOtp} className="space-y-4">
-                {/* Admin Email / ID */}
+                {/* Admin Work Email */}
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                    Admin Work Email / Account
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Admin Work Email <span className="text-rose-400">*</span>
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -335,17 +423,17 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                       type="email"
                       value={adminIdentifier}
                       onChange={(e) => setAdminIdentifier(e.target.value)}
-                      placeholder="admin@moarcars.com"
+                      placeholder="moarcars04@gmail.com"
                       required
-                      className="w-full bg-[#070e1c] border border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/15 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-slate-500 outline-none transition-all shadow-inner"
+                      className="w-full bg-[#070e1c] border border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/20 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-slate-500 outline-none transition-all shadow-inner"
                     />
                   </div>
                 </div>
 
-                {/* Master Security PIN / Password */}
+                {/* Security Passcode */}
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                    Security Passcode
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Administrative Passcode <span className="text-rose-400">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -355,65 +443,40 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                       onChange={(e) => setPasscode(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full bg-[#070e1c] border border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/15 rounded-xl py-3 pl-10 pr-10 text-xs font-semibold text-white placeholder:text-slate-500 outline-none transition-all shadow-inner"
+                      className="w-full bg-[#070e1c] border border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/20 rounded-xl py-3 pl-10 pr-10 text-xs font-semibold text-white placeholder:text-slate-500 outline-none transition-all shadow-inner"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPasscode(!showPasscode)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1 cursor-pointer"
                     >
                       {showPasscode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
-                {/* 2FA Delivery Method Selection */}
-                <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                    Send 2FA OTP Code Via
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryMethod("sms")}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                        deliveryMethod === "sms"
-                          ? "bg-[#c88d18]/15 border-[#c88d18] text-[#c88d18] shadow-sm"
-                          : "bg-[#070e1c] border-slate-800 text-slate-400 hover:bg-slate-900/60"
-                      }`}
-                    >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span>SMS Phone</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryMethod("email")}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
-                        deliveryMethod === "email"
-                          ? "bg-[#c88d18]/15 border-[#c88d18] text-[#c88d18] shadow-sm"
-                          : "bg-[#070e1c] border-slate-800 text-slate-400 hover:bg-slate-900/60"
-                      }`}
-                    >
-                      <Mail className="w-3.5 h-3.5" />
-                      <span>Work Email</span>
-                    </button>
-                  </div>
+                {/* Delivery Channel Notice */}
+                <div className="p-3 rounded-xl bg-[#070e1c]/80 border border-slate-800 text-xs text-slate-400 flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-[#c88d18] shrink-0" />
+                  <span>
+                    A secure 6-digit verification code will be dispatched to your registered Gmail inbox.
+                  </span>
                 </div>
 
-                {/* Send OTP Button */}
+                {/* Submit Request Button */}
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full mt-2 bg-[#c88d18] hover:bg-[#b57d14] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                  className="w-full mt-2 bg-gradient-to-r from-[#c88d18] to-[#e5a93c] hover:from-[#b57d14] hover:to-[#c88d18] text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                 >
                   {isLoading ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Generating 2FA Code...</span>
+                      <span>Sending Verification Code...</span>
                     </>
                   ) : (
                     <>
-                      <span>Send Verification OTP</span>
+                      <span>Request Verification Code</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -421,19 +484,15 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
               </form>
             )}
 
-            {/* ----------------- STEP 2: 6-DIGIT OTP VERIFICATION ----------------- */}
+            {/* STEP 2: 6-DIGIT OTP VERIFICATION */}
             {step === "otp" && (
               <form onSubmit={handleVerifyOtp} className="space-y-5">
-                {/* Target Address Display */}
-                <div className="p-3 rounded-2xl bg-[#070e1c] border border-slate-800 flex items-center justify-between text-xs">
+                {/* Target Address Card with Change Option */}
+                <div className="p-3 rounded-xl bg-[#070e1c] border border-slate-800 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2.5">
-                    {deliveryMethod === "sms" ? (
-                      <Smartphone className="w-4 h-4 text-[#c88d18]" />
-                    ) : (
-                      <Mail className="w-4 h-4 text-[#c88d18]" />
-                    )}
+                    <Mail className="w-4 h-4 text-[#c88d18]" />
                     <span className="font-semibold text-white">
-                      {deliveryMethod === "sms" ? adminPhone : adminIdentifier}
+                      {adminIdentifier.trim().toLowerCase()}
                     </span>
                   </div>
                   <button
@@ -442,114 +501,117 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                       setStep("credentials");
                       setErrorMessage("");
                     }}
-                    className="text-[11px] font-bold text-[#c88d18] hover:underline"
+                    className="text-[11px] font-bold text-[#c88d18] hover:underline cursor-pointer"
                   >
                     Change
                   </button>
                 </div>
 
-                {/* Real Email OTP Security Notice */}
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-200/90 leading-relaxed">
-                  <Mail className="w-4 h-4 text-[#c88d18] shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-[#c88d18] block mb-0.5">Real Email OTP Sent</span>
-                    <span>A 6-digit verification code has been sent directly to <strong className="text-white">{adminIdentifier}</strong>.</span>
-                    <span className="block mt-1 text-[11px] text-amber-200/80">
-                      💡 <strong>Gmail Tip:</strong> In your inbox, look for the email sent from <strong className="text-white">"me"</strong> with subject <strong className="text-[#c88d18]">"🔑 [Code] is your Admin Portal Verification Code"</strong>.
-                    </span>
-                  </div>
-                </div>
-
-                {/* 6-Digit Segmented Input Boxes */}
+                {/* 6-Digit Segmented OTP Input Grid */}
                 <div>
-                  <label className="block text-center text-[11px] font-bold uppercase tracking-widest text-slate-300 mb-3">
-                    Enter 6-Digit Email Code
+                  <label className="block text-center text-xs font-semibold text-slate-300 mb-3 uppercase tracking-wider">
+                    Enter 6-Digit Code
                   </label>
-
-                  <div
-                    className="flex items-center justify-center gap-2 sm:gap-2.5"
-                    onPaste={handlePaste}
-                  >
-                    {otpDigits.map((digit, index) => (
+                  <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+                    {otpDigits.map((digit, idx) => (
                       <input
-                        key={index}
-                        ref={(el) => { inputRefs.current[index] = el; }}
+                        key={idx}
+                        ref={(el) => (inputRefs.current[idx] = el)}
                         type="text"
                         inputMode="numeric"
                         maxLength={1}
                         value={digit}
-                        onChange={(e) => handleOtpChange(index, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(index, e)}
-                        className={`w-11 h-13 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-mono font-bold rounded-xl border transition-all outline-none ${
+                        onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(idx, e)}
+                        className={`w-11 h-13 sm:w-13 sm:h-14 text-center text-xl sm:text-2xl font-mono font-black rounded-xl border outline-none transition-all ${
                           digit
-                            ? "bg-[#070e1c] border-[#c88d18] text-[#c88d18] shadow-md shadow-amber-500/10"
-                            : index === activeDigitIndex
-                            ? "bg-[#070e1c] border-[#c88d18]/60 text-white shadow-sm ring-2 ring-[#c88d18]/15"
-                            : "bg-[#070e1c] border-slate-800 text-white"
+                            ? "bg-[#070e1c] border-[#c88d18] text-[#c88d18] ring-2 ring-[#c88d18]/20 shadow-md"
+                            : "bg-[#070e1c] border-slate-700 text-white focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/20"
                         }`}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* Verify OTP Button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-[#c88d18] hover:bg-[#b57d14] text-white font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
-                >
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Verifying Token...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="w-4 h-4" />
-                      <span>Verify & Access Admin Console</span>
-                    </>
-                  )}
-                </button>
+                {/* Countdown Timer & Resend Button */}
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <RefreshCw className={`w-3.5 h-3.5 ${timerSeconds > 0 ? "animate-spin" : ""}`} />
+                    <span>
+                      {timerSeconds > 0 ? (
+                        <>
+                          Expires in: <strong className="text-white">00:{timerSeconds < 10 ? `0${timerSeconds}` : timerSeconds}</strong>
+                        </>
+                      ) : (
+                        <span className="text-amber-400 font-semibold">Code expired</span>
+                      )}
+                    </span>
+                  </div>
 
-                {/* Resend OTP & Timer */}
-                <div className="flex items-center justify-between text-xs pt-1 text-slate-400">
-                  <span className="text-[11px]">
-                    {timerSeconds > 0 ? (
-                      <>Resend code in <strong className="text-white">{timerSeconds}s</strong></>
-                    ) : (
-                      "Didn't receive code?"
-                    )}
-                  </span>
                   <button
                     type="button"
                     onClick={handleResendOtp}
                     disabled={!canResend}
-                    className={`text-[11px] font-bold flex items-center gap-1 ${
+                    className={`font-semibold transition-all cursor-pointer ${
                       canResend
-                        ? "text-[#c88d18] hover:underline cursor-pointer"
+                        ? "text-[#c88d18] hover:underline"
                         : "text-slate-600 cursor-not-allowed"
                     }`}
                   >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>Resend OTP</span>
+                    Resend Code
+                  </button>
+                </div>
+
+                {/* Verify Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading || otpDigits.join("").length !== 6}
+                  className="w-full bg-gradient-to-r from-[#c88d18] to-[#e5a93c] hover:from-[#b57d14] hover:to-[#c88d18] text-slate-950 font-bold py-3.5 rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                >
+                  {isLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Verifying Session...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                      <span>Verify & Enter Admin Portal</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Back to Step 1 */}
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("credentials");
+                      setErrorMessage("");
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Credentials</span>
                   </button>
                 </div>
               </form>
             )}
-
-            {/* Bottom Security Footer Note */}
-            <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-center gap-2 text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
-              <Lock className="w-3 h-3 text-[#c88d18]" />
-              <span>256-Bit SSL Encrypted Admin Session</span>
-            </div>
           </div>
-        </div>
-      </main>
 
-      {/* Footer copyright */}
-      <footer className="relative z-10 py-4 text-center text-[11px] text-slate-500">
-        MOAR CARS Enterprise Management Platform © {new Date().getFullYear()} • Tirupati Hub
-      </footer>
+          {/* Bottom Security Footer */}
+          <div className="pt-5 mt-4 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Moar Cars Security Gateway</span>
+            <button
+              onClick={onNavigateHome}
+              className="text-slate-400 hover:text-[#c88d18] transition-colors cursor-pointer"
+            >
+              Customer Website →
+            </button>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 };
