@@ -93,6 +93,239 @@ function formatCustomerResponse($c) {
     return $c;
 }
 
+// ----------------------------------------------------------------------
+// DIRECT GMAIL SMTP MAILER (cURL SMTPS 465 + Socket SSL 465 / TLS 587)
+// ----------------------------------------------------------------------
+function sendViaCurlSmtp($toEmail, $subject, $htmlBody, $plainText, &$logs) {
+    if (!function_exists('curl_init')) {
+        $logs[] = "cURL is not available";
+        return false;
+    }
+
+    $smtpUser = getenv('ADMIN_EMAIL') ?: 'moarcars04@gmail.com';
+    $smtpPass = getenv('ADMIN_EMAIL_APP_PASSWORD') ?: 'giykjehrkoeeoqzc';
+    $fromName = 'Moar Cars Admin Security';
+    $boundary = "----=_NextPart_" . md5(uniqid((string)microtime(true), true));
+
+    $headers = [
+        "Date: " . date('r'),
+        "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <$smtpUser>",
+        "To: <$toEmail>",
+        "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=",
+        "MIME-Version: 1.0",
+        "Content-Type: multipart/alternative; boundary=\"$boundary\"",
+        "X-Mailer: MoarCars-cURL-SMTP/2.0"
+    ];
+
+    $rawMessage = implode("\r\n", $headers) . "\r\n\r\n";
+    $rawMessage .= "--$boundary\r\n";
+    $rawMessage .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
+    $rawMessage .= chunk_split(base64_encode($plainText)) . "\r\n";
+    $rawMessage .= "--$boundary\r\n";
+    $rawMessage .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $rawMessage .= "Content-Transfer-Encoding: base64\r\n\r\n";
+    $rawMessage .= chunk_split(base64_encode($htmlBody)) . "\r\n";
+    $rawMessage .= "--$boundary--\r\n";
+
+    $urls = [
+        'smtps://smtp.gmail.com:465',
+        'smtp://smtp.gmail.com:587'
+    ];
+
+    foreach ($urls as $url) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_USERNAME, $smtpUser);
+        curl_setopt($ch, CURLOPT_PASSWORD, $smtpPass);
+        curl_setopt($ch, CURLOPT_MAIL_FROM, "<$smtpUser>");
+        curl_setopt($ch, CURLOPT_MAIL_RCPT, ["<$toEmail>"]);
+
+        $tempStream = fopen('php://temp', 'r+');
+        fwrite($tempStream, $rawMessage);
+        rewind($tempStream);
+
+        curl_setopt($ch, CURLOPT_READDATA, $tempStream);
+        curl_setopt($ch, CURLOPT_UPLOAD, true);
+        curl_setopt($ch, CURLOPT_INFILESIZE, strlen($rawMessage));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+        if (strpos($url, '587') !== false) {
+            curl_setopt($ch, CURLOPT_USE_SSL, CURLUSESSL_ALL);
+        }
+
+        $res = curl_exec($ch);
+        $err = curl_error($ch);
+        $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_close($ch);
+        fclose($tempStream);
+
+        if ($res) {
+            $logs[] = "cURL SMTP success via $url (Code $code)";
+            return true;
+        } else {
+            $logs[] = "cURL SMTP failed via $url: $err";
+        }
+    }
+    return false;
+}
+
+function sendViaSocketSmtp($toEmail, $subject, $htmlBody, $plainText, &$logs) {
+    $smtpHost = 'smtp.gmail.com';
+    $smtpUser = getenv('ADMIN_EMAIL') ?: 'moarcars04@gmail.com';
+    $smtpPass = getenv('ADMIN_EMAIL_APP_PASSWORD') ?: 'giykjehrkoeeoqzc';
+    $fromName = 'Moar Cars Admin Security';
+    $boundary = "----=_NextPart_" . md5(uniqid((string)microtime(true), true));
+
+    $context = stream_context_create([
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        ]
+    ]);
+
+    $conns = [
+        ['uri' => 'ssl://smtp.gmail.com:465', 'tls' => false],
+        ['uri' => 'tcp://smtp.gmail.com:587', 'tls' => true]
+    ];
+
+    foreach ($conns as $c) {
+        $errno = 0;
+        $errstr = '';
+        $socket = @stream_socket_client($c['uri'], $errno, $errstr, 8, STREAM_CLIENT_CONNECT, $context);
+        if (!$socket) {
+            $logs[] = "Socket connect to {$c['uri']} failed: $errstr ($errno)";
+            continue;
+        }
+
+        stream_set_timeout($socket, 8);
+        $read = function() use ($socket) {
+            $data = '';
+            while ($line = fgets($socket, 515)) {
+                $data .= $line;
+                if (substr($line, 3, 1) === ' ') break;
+            }
+            return $data;
+        };
+
+        $write = function($cmd) use ($socket) {
+            fwrite($socket, $cmd . "\r\n");
+        };
+
+        $res = $read();
+        if (substr($res, 0, 3) !== '220') { 
+            $logs[] = "Bad banner on {$c['uri']}: $res";
+            fclose($socket); 
+            continue; 
+        }
+
+        $write("EHLO " . ($_SERVER['SERVER_NAME'] ?? 'moarcars.com'));
+        $res = $read();
+
+        if ($c['tls']) {
+            $write("STARTTLS");
+            $res = $read();
+            if (substr($res, 0, 3) === '220') {
+                $cryptoOk = stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+                if (!$cryptoOk) {
+                    $logs[] = "STARTTLS crypto failed on {$c['uri']}";
+                    fclose($socket);
+                    continue;
+                }
+                $write("EHLO " . ($_SERVER['SERVER_NAME'] ?? 'moarcars.com'));
+                $res = $read();
+            }
+        }
+
+        $write("AUTH LOGIN");
+        $res = $read();
+        if (substr($res, 0, 3) !== '334') { $logs[] = "AUTH LOGIN error: $res"; fclose($socket); continue; }
+
+        $write(base64_encode($smtpUser));
+        $res = $read();
+        if (substr($res, 0, 3) !== '334') { $logs[] = "User error: $res"; fclose($socket); continue; }
+
+        $write(base64_encode($smtpPass));
+        $res = $read();
+        if (substr($res, 0, 3) !== '235') { $logs[] = "Pass error: $res"; fclose($socket); continue; }
+
+        $write("MAIL FROM:<$smtpUser>");
+        $res = $read();
+        if (substr($res, 0, 3) !== '250') { $logs[] = "MAIL FROM error: $res"; fclose($socket); continue; }
+
+        $write("RCPT TO:<$toEmail>");
+        $res = $read();
+        if (substr($res, 0, 3) !== '250') { $logs[] = "RCPT TO error: $res"; fclose($socket); continue; }
+
+        $write("DATA");
+        $res = $read();
+        if (substr($res, 0, 3) !== '354') { $logs[] = "DATA error: $res"; fclose($socket); continue; }
+
+        $encodedSubject = "=?UTF-8?B?" . base64_encode($subject) . "?=";
+        $headers = [
+            "Date: " . date('r'),
+            "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <$smtpUser>",
+            "To: <$toEmail>",
+            "Subject: $encodedSubject",
+            "MIME-Version: 1.0",
+            "Content-Type: multipart/alternative; boundary=\"$boundary\"",
+            "X-Mailer: MoarCars-SocketSMTP/2.0"
+        ];
+
+        $message = implode("\r\n", $headers) . "\r\n\r\n";
+        $message .= "--$boundary\r\n";
+        $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
+        $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
+        $message .= chunk_split(base64_encode($plainText)) . "\r\n";
+        $message .= "--$boundary\r\n";
+        $message .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
+        $message .= chunk_split(base64_encode($htmlBody)) . "\r\n";
+        $message .= "--$boundary--\r\n.";
+
+        $write($message);
+        $res = $read();
+
+        $write("QUIT");
+        fclose($socket);
+
+        if (substr($res, 0, 3) === '250') {
+            $logs[] = "Socket SMTP success via {$c['uri']}";
+            return true;
+        } else {
+            $logs[] = "Socket message send error: $res";
+        }
+    }
+    return false;
+}
+
+function sendRealSmtpEmail($toEmail, $subject, $htmlBody, $plainText = '', &$debugLogs = []) {
+    $debugLogs = [];
+    if (empty($plainText)) {
+        $plainText = strip_tags(str_replace(['<br>', '<br/>', '<br />', '</p>'], "\n", $htmlBody));
+    }
+
+    // 1. Try cURL SMTP (SMTPS 465 / SMTP 587)
+    if (sendViaCurlSmtp($toEmail, $subject, $htmlBody, $plainText, $debugLogs)) {
+        return true;
+    }
+
+    // 2. Try Stream Socket SMTP (SSL 465 / TLS 587)
+    if (sendViaSocketSmtp($toEmail, $subject, $htmlBody, $plainText, $debugLogs)) {
+        return true;
+    }
+
+    // 3. Fallback to mail()
+    $smtpUser = getenv('ADMIN_EMAIL') ?: 'moarcars04@gmail.com';
+    $fromName = 'Moar Cars Admin Security';
+    $fallbackHeaders = "MIME-Version: 1.0\r\nContent-type: text/html; charset=UTF-8\r\nFrom: $fromName <$smtpUser>\r\n";
+    $mailRes = @mail($toEmail, "=?UTF-8?B?" . base64_encode($subject) . "?=", $htmlBody, $fallbackHeaders);
+    $debugLogs[] = "PHP mail() fallback returned: " . ($mailRes ? 'true' : 'false');
+    return $mailRes;
+}
+
 // Standard Real Fleet Models
 function getDefaultCars() {
     return [
@@ -1004,10 +1237,35 @@ if ($route === 'health' || $route === '') {
 // ----------------------------------------------------------------------
 // AUTH ENDPOINTS (ADMIN & USER)
 // ----------------------------------------------------------------------
+// Test SMTP endpoint for verification
+if ($route === 'admin/test-smtp') {
+    $targetEmail = strtolower(trim($input['email'] ?? 'moarcars04@gmail.com'));
+    $testOtp = (string)rand(100000, 999999);
+    $subject = "🔑 $testOtp is your Live Test Admin Code - Moar Cars";
+    $msgBody = "
+        <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+          <h2 style='color: #ffffff; margin: 0 0 10px 0;'>MOAR <span style='color: #c88d18;'>CARS</span></h2>
+          <p style='color: #cbd5e1; font-size: 14px;'>This is a direct SMTP test verification from live Moar Cars server:</p>
+          <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 14px; text-align: center; border-radius: 10px; margin: 15px 0;'>$testOtp</div>
+          <p style='font-size: 12px; color: #94a3b8;'>Live Server Timestamp: " . date('Y-m-d H:i:s T') . "</p>
+        </div>
+    ";
+    $debugLogs = [];
+    $sent = sendRealSmtpEmail($targetEmail, $subject, $msgBody, '', $debugLogs);
+    echo json_encode([
+        "success" => $sent,
+        "emailDelivered" => $sent,
+        "recipient" => $targetEmail,
+        "testOtp" => $testOtp,
+        "debugLogs" => $debugLogs
+    ]);
+    exit();
+}
+
 if ($route === 'admin/send-otp' && $method === 'POST') {
     $email = strtolower(trim($input['email'] ?? 'moarcars04@gmail.com'));
     $otp = (string)rand(100000, 999999);
-    $expiresAt = (time() + 600) * 1000;
+    $expiresAt = (time() + 900) * 1000; // 15 mins
 
     if (isset($pdo)) {
         try {
@@ -1018,19 +1276,31 @@ if ($route === 'admin/send-otp' && $method === 'POST') {
         } catch (Exception $e) {}
     }
 
-    $subject = "=?UTF-8?B?" . base64_encode("🔑 $otp is your Admin Portal Verification Code - Moar Cars") . "?=";
-    $headers = "MIME-Version: 1.0\r\nContent-type: text/html; charset=UTF-8\r\nFrom: Moar Cars Admin <moarcars04@gmail.com>\r\n";
+    $subject = "🔑 $otp is your Admin Portal Verification Code - Moar Cars";
     $msgBody = "
         <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
-          <h2 style='color: #ffffff; margin: 0 0 10px 0;'>MOAR <span style='color: #c88d18;'>CARS</span></h2>
-          <p style='color: #cbd5e1; font-size: 14px;'>Your one-time security verification code for Admin Portal access is:</p>
-          <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 14px; text-align: center; border-radius: 10px; margin: 15px 0;'>$otp</div>
-          <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for 10 minutes. Do not share this code with anyone.</p>
+          <div style='text-align: center; margin-bottom: 20px;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;'>MOAR <span style='color: #c88d18;'>CARS</span></h1>
+            <p style='color: #c88d18; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; font-weight: bold;'>Admin Portal Security</p>
+          </div>
+          <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
+            <p style='color: #cbd5e1; font-size: 14px; margin-top: 0;'>Your one-time security verification code for Admin Portal access is:</p>
+            <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 34px; font-weight: 900; letter-spacing: 8px; padding: 16px 24px; text-align: center; border-radius: 10px; margin: 15px auto; display: inline-block; font-family: monospace;'>$otp</div>
+            <p style='font-size: 12px; color: #94a3b8; margin-top: 15px;'>⏱️ Valid for <strong>15 minutes</strong>. Do not share this code with anyone.</p>
+          </div>
+          <p style='font-size: 11px; color: #475569; text-align: center; margin-top: 20px;'>&copy; " . date('Y') . " Moar Cars Rental. Tirupati Central & Airport Services.</p>
         </div>
     ";
-    @mail($email, $subject, $msgBody, $headers);
+    
+    $debugLogs = [];
+    $delivered = sendRealSmtpEmail($email, $subject, $msgBody, '', $debugLogs);
 
-    echo json_encode(["success" => true, "message" => "Verification code sent to $email"]);
+    echo json_encode([
+        "success" => true,
+        "message" => "Real verification OTP code sent directly to $email. Please check your inbox.",
+        "emailDelivered" => $delivered,
+        "debugLogs" => $debugLogs
+    ]);
     exit();
 }
 
@@ -1251,19 +1521,28 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
         } catch (Exception $e) {}
     }
 
-    // Try sending email if mail function or SMTP configured
-    @mail(
-        $email,
-        "🚗 Your Moar Cars Registration Verification Code: $otp",
-        "Hello $name,\n\nYour Moar Cars verification code is: $otp\n\nValid for 10 minutes. Enter this code to verify your email and activate your ₹250 welcome bonus.\n\nMoar Cars Tirupati",
-        "From: Moar Cars <no-reply@moarcars.com>\r\nReply-To: support@moarcars.com\r\nX-Mailer: PHP/" . phpversion()
-    );
+    // Send real SMTP email via Gmail SSL
+    $regMsg = "
+        <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+          <div style='text-align: center; margin-bottom: 20px;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;'>MOAR <span style='color: #c88d18;'>CARS</span></h1>
+            <p style='color: #c88d18; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; font-weight: bold;'>Self-Drive Freedom in Tirupati</p>
+          </div>
+          <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
+            <h2 style='font-size: 18px; color: #ffffff; margin-top: 0;'>Confirm Your Email Address</h2>
+            <p style='font-size: 13px; color: #94a3b8; line-height: 1.5;'>Hello " . htmlspecialchars($name) . ", thank you for joining Moar Cars! Enter the 6-digit confirmation code below to complete your registration and activate your <strong>₹250 Welcome Bonus</strong>.</p>
+            <div style='background: linear-gradient(135deg, #d49b29, #c88d18); color: #070e1c; font-size: 32px; font-weight: 900; letter-spacing: 8px; padding: 14px 24px; border-radius: 10px; display: inline-block; margin: 15px 0; font-family: monospace;'>$otp</div>
+            <p style='font-size: 12px; color: #64748b; margin-top: 15px;'>⏱️ Valid for <strong>15 minutes</strong>. Do not share this code with anyone.</p>
+          </div>
+          <p style='font-size: 11px; color: #475569; text-align: center; margin-top: 20px;'>&copy; " . date('Y') . " Moar Cars Rental. Tirupati Central & Airport Services.</p>
+        </div>
+    ";
+    sendRealSmtpEmail($email, "🚗 Your Moar Cars Registration Verification Code: $otp", $regMsg);
 
     echo json_encode([
         "success" => true,
         "message" => "Verification code sent to $email",
-        "demoOtp" => $otp,
-        "expiresInSeconds" => 600
+        "expiresInSeconds" => 900
     ]);
     exit();
 }
@@ -1359,7 +1638,7 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
     }
 
     $otp = (string)rand(100000, 999999);
-    $expiresAt = (time() + 600) * 1000;
+    $expiresAt = (time() + 900) * 1000;
 
     if (isset($pdo)) {
         try {
@@ -1371,12 +1650,15 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
     }
 
     if (strpos($identifier, '@') !== false) {
-        @mail(
-            $identifier,
-            "🚗 Your Moar Cars Sign-In Code: $otp",
-            "Hello,\n\nYour Moar Cars sign-in verification code is: $otp\n\nValid for 10 minutes. Do not share this code with anyone.\n\nMoar Cars Tirupati",
-            "From: Moar Cars <no-reply@moarcars.com>\r\nReply-To: support@moarcars.com\r\nX-Mailer: PHP/" . phpversion()
-        );
+        $loginMsg = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+              <h2 style='color: #ffffff; margin: 0 0 10px 0;'>MOAR <span style='color: #c88d18;'>CARS</span></h2>
+              <p style='color: #cbd5e1; font-size: 14px;'>Your Moar Cars sign-in verification code is:</p>
+              <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 14px; text-align: center; border-radius: 10px; margin: 15px 0;'>$otp</div>
+              <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for 15 minutes. Do not share this code with anyone.</p>
+            </div>
+        ";
+        sendRealSmtpEmail($identifier, "🚗 Your Moar Cars Sign-In Code: $otp", $loginMsg);
     }
 
     echo json_encode([
@@ -1384,8 +1666,7 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
         "message" => strpos($identifier, '@') !== false 
             ? "Verification code sent to $identifier. Please check your inbox." 
             : "6-digit OTP verification code sent to +91 $identifier",
-        "demoOtp" => $otp,
-        "expiresInSeconds" => 600
+        "expiresInSeconds" => 900
     ]);
     exit();
 }
