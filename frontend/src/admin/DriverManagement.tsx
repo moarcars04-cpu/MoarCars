@@ -125,25 +125,25 @@ export default function DriverManagement({
   return (
     <main className="flex-1 p-8 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <Award className="w-6 h-6 text-[#D4AF37]" /> Chauffeur & Driver Operations
+            <Award className="w-6 h-6 text-[#c88d18]" /> Chauffeur & Driver Operations
           </h2>
-          <p className="text-xs text-purple-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Manage professional chauffeurs, police verification, live GPS tracking, hill ratings & branch allocations
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative w-72">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-purple-400" />
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
               placeholder="Search driver, phone, license..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#14081E] border border-purple-500/30 rounded-2xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+              className="w-full bg-[#070e1c] border border-slate-800 rounded-2xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-[#c88d18]"
             />
           </div>
 
@@ -152,7 +152,7 @@ export default function DriverManagement({
               setEditingDriver(null);
               setIsAddEditModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95"
           >
             <Plus className="w-4 h-4" /> Add Chauffeur
           </button>
@@ -161,31 +161,31 @@ export default function DriverManagement({
 
       {/* TOP METRIC CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Total Chauffeurs</span>
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Total Chauffeurs</span>
           <h4 className="text-2xl font-black text-white mt-1">{drivers.length} Roster</h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">100% Police Verified</p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Available for Dispatch</span>
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Available for Dispatch</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">
             {drivers.filter((d) => d.status === "Available").length} Ready
           </h4>
-          <p className="text-[10px] text-purple-300 mt-0.5">Instant Station Assignment</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Instant Station Assignment</p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Today's Completed Trips</span>
-          <h4 className="text-2xl font-black text-[#D4AF37] mt-1">
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Today's Completed Trips</span>
+          <h4 className="text-2xl font-black text-[#c88d18] mt-1">
             {drivers.reduce((acc, d) => acc + d.todayTrips, 0)} Trips
           </h4>
-          <p className="text-[10px] text-purple-300 mt-0.5">Pilgrimage & Airport Routes</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Pilgrimage & Airport Routes</p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Gross Chauffeur Payouts</span>
-          <h4 className="text-2xl font-black text-purple-200 mt-1">
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Gross Chauffeur Payouts</span>
+          <h4 className="text-2xl font-black text-slate-300 mt-1">
             ₹{drivers.reduce((acc, d) => acc + d.earnings, 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">Weekly Direct Bank Settlement</p>
@@ -201,8 +201,8 @@ export default function DriverManagement({
               onClick={() => setFilterStatus(st)}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition-all capitalize ${
                 filterStatus === st
-                  ? "bg-[#D4AF37] text-slate-950 font-black shadow-md"
-                  : "bg-[#2A1336]/60 text-purple-300 border border-purple-500/20 hover:text-white"
+                  ? "bg-[#c88d18] text-slate-950 font-black shadow-md"
+                  : "bg-[#0b1426]/60 text-slate-400 border border-slate-800 hover:text-white"
               }`}
             >
               {st}
@@ -213,7 +213,7 @@ export default function DriverManagement({
         <select
           value={filterBranch}
           onChange={(e) => setFilterBranch(e.target.value)}
-          className="px-4 py-2 rounded-xl bg-[#14081E] border border-purple-500/30 text-[#D4AF37] font-bold focus:outline-none"
+          className="px-4 py-2 rounded-xl bg-[#070e1c] border border-slate-800 text-[#c88d18] font-bold focus:outline-none"
         >
           <option value="all">All Station Hubs</option>
           <option value="Tirupati Central Hub">Tirupati Central Hub</option>
@@ -223,9 +223,9 @@ export default function DriverManagement({
       </div>
 
       {/* DRIVERS TABLE */}
-      <div className="rounded-3xl border border-purple-500/20 bg-[#2A1336]/60 backdrop-blur-2xl overflow-hidden shadow-2xl">
+      <div className="rounded-3xl border border-slate-800 bg-[#0b1426]/60 backdrop-blur-2xl overflow-hidden shadow-2xl">
         <table className="w-full text-left text-xs">
-          <thead className="bg-[#190924] text-purple-300 uppercase tracking-wider font-bold border-b border-purple-500/20">
+          <thead className="bg-[#070e1c] text-slate-400 uppercase tracking-wider font-bold border-b border-slate-800">
             <tr>
               <th className="px-5 py-4">Chauffeur Details</th>
               <th className="px-5 py-4">Verification & License</th>
@@ -236,27 +236,27 @@ export default function DriverManagement({
               <th className="px-5 py-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-purple-500/10">
+          <tbody className="divide-y divide-slate-800">
             {filteredDrivers.map((d) => (
-              <tr key={d.id} className="hover:bg-purple-900/20 transition-colors">
+              <tr key={d.id} className="hover:bg-slate-800/60 transition-colors">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <img
                       src={d.avatar}
                       alt={d.name}
-                      className="w-10 h-10 rounded-full object-cover border border-purple-500/30"
+                      className="w-10 h-10 rounded-full object-cover border border-slate-800"
                     />
                     <div>
                       <p className="font-bold text-white flex items-center gap-1">
                         {d.name}
                         {d.hillDrivingCertified && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-[#D4AF37] text-[8px] font-black border border-amber-400/30">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-[#c88d18] text-[8px] font-black border border-amber-400/30">
                             HILL CERTIFIED
                           </span>
                         )}
                       </p>
-                      <p className="text-[10px] text-purple-300">{d.phone}</p>
-                      <p className="text-[10px] text-purple-400/80">{d.email}</p>
+                      <p className="text-[10px] text-slate-400">{d.phone}</p>
+                      <p className="text-[10px] text-slate-400/80">{d.email}</p>
                     </div>
                   </div>
                 </td>
@@ -271,13 +271,13 @@ export default function DriverManagement({
                   >
                     Police Check: {d.bgVerification}
                   </span>
-                  <p className="text-[10px] text-purple-300 mt-1 font-mono">DL: {d.licenseNumber}</p>
-                  <p className="text-[9px] text-purple-400 font-mono">Exp: {d.licenseExpiry}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-mono">DL: {d.licenseNumber}</p>
+                  <p className="text-[9px] text-slate-400 font-mono">Exp: {d.licenseExpiry}</p>
                 </td>
 
                 <td className="px-5 py-4">
                   <p className="font-bold text-white flex items-center gap-1">
-                    <Building2 className="w-3 h-3 text-[#D4AF37]" /> {d.branch}
+                    <Building2 className="w-3 h-3 text-[#c88d18]" /> {d.branch}
                   </p>
                   <p className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
                     <Navigation className="w-2.5 h-2.5 animate-pulse" /> {d.liveLocation}
@@ -290,9 +290,9 @@ export default function DriverManagement({
                 </td>
 
                 <td className="px-5 py-4">
-                  <div className="flex items-center gap-1 font-bold text-[#D4AF37]">
-                    <Star className="w-3.5 h-3.5 fill-[#D4AF37]" /> {d.rating}
-                    <span className="text-[10px] text-purple-400">({d.ratingCount})</span>
+                  <div className="flex items-center gap-1 font-bold text-[#c88d18]">
+                    <Star className="w-3.5 h-3.5 fill-[#c88d18]" /> {d.rating}
+                    <span className="text-[10px] text-slate-400">({d.ratingCount})</span>
                   </div>
                 </td>
 
@@ -305,20 +305,20 @@ export default function DriverManagement({
                         ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
                         : d.status === "On Trip"
                         ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
-                        : "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                        : "bg-[#c88d18]/15 text-slate-400 border-slate-800"
                     }`}
                   >
-                    <option value="Available" className="bg-[#14081E] text-white">Available</option>
-                    <option value="On Trip" className="bg-[#14081E] text-white">On Trip</option>
-                    <option value="Off Duty" className="bg-[#14081E] text-white">Off Duty</option>
-                    <option value="On Leave" className="bg-[#14081E] text-white">On Leave</option>
+                    <option value="Available" className="bg-[#070e1c] text-white">Available</option>
+                    <option value="On Trip" className="bg-[#070e1c] text-white">On Trip</option>
+                    <option value="Off Duty" className="bg-[#070e1c] text-white">Off Duty</option>
+                    <option value="On Leave" className="bg-[#070e1c] text-white">On Leave</option>
                   </select>
                 </td>
 
                 <td className="px-5 py-4 text-right space-x-1.5">
                   <button
                     onClick={() => handlePingLocation(d)}
-                    className="p-1.5 rounded-lg bg-purple-950/60 hover:bg-[#432650] text-[#D4AF37] border border-purple-500/30"
+                    className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-[#c88d18]/20 text-[#c88d18] border border-slate-800"
                     title="Ping Live GPS Location"
                   >
                     <Navigation className="w-3.5 h-3.5" />
@@ -328,7 +328,7 @@ export default function DriverManagement({
                       setEditingDriver(d);
                       setIsAddEditModalOpen(true);
                     }}
-                    className="p-1.5 rounded-lg bg-purple-950/60 hover:bg-[#432650] text-purple-200 border border-purple-500/30"
+                    className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-[#c88d18]/20 text-slate-300 border border-slate-800"
                     title="Edit Driver Profile"
                   >
                     <Edit className="w-3.5 h-3.5" />
@@ -352,12 +352,12 @@ export default function DriverManagement({
           ==================================================================== */}
       {isAddEditModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-[#2E1439] border border-purple-500/30 rounded-3xl w-full max-w-lg p-6 shadow-2xl text-white space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center pb-2 border-b border-purple-500/20">
+          <div className="bg-[#0b1426] border border-slate-800 rounded-3xl w-full max-w-lg p-6 shadow-2xl text-white space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
               <h3 className="text-base font-black flex items-center gap-2">
-                <Award className="w-5 h-5 text-[#D4AF37]" /> {editingDriver ? `Edit Chauffeur: ${editingDriver.name}` : "Add New Professional Chauffeur"}
+                <Award className="w-5 h-5 text-[#c88d18]" /> {editingDriver ? `Edit Chauffeur: ${editingDriver.name}` : "Add New Professional Chauffeur"}
               </h3>
-              <button onClick={() => setIsAddEditModalOpen(false)} className="text-purple-400 hover:text-white">
+              <button onClick={() => setIsAddEditModalOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -382,66 +382,66 @@ export default function DriverManagement({
               className="space-y-3 text-xs"
             >
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Chauffeur Full Name *</label>
+                <label className="block text-slate-400 font-bold mb-1">Chauffeur Full Name *</label>
                 <input
                   name="name"
                   defaultValue={editingDriver?.name || ""}
                   required
                   placeholder="Suresh Kumar"
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Mobile Phone *</label>
+                  <label className="block text-slate-400 font-bold mb-1">Mobile Phone *</label>
                   <input
                     name="phone"
                     defaultValue={editingDriver?.phone || ""}
                     required
                     placeholder="+91 98765 00001"
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Email</label>
+                  <label className="block text-slate-400 font-bold mb-1">Email</label>
                   <input
                     name="email"
                     defaultValue={editingDriver?.email || ""}
                     placeholder="suresh@moarcars.in"
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Commercial License No *</label>
+                  <label className="block text-slate-400 font-bold mb-1">Commercial License No *</label>
                   <input
                     name="licenseNumber"
                     defaultValue={editingDriver?.licenseNumber || "AP03 20180099182"}
                     required
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono uppercase"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono uppercase"
                   />
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">License Expiry Date</label>
+                  <label className="block text-slate-400 font-bold mb-1">License Expiry Date</label>
                   <input
                     name="licenseExpiry"
                     type="date"
                     defaultValue={editingDriver?.licenseExpiry || "2030-01-01"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Assigned Station Branch</label>
+                  <label className="block text-slate-400 font-bold mb-1">Assigned Station Branch</label>
                   <select
                     name="branch"
                     defaultValue={editingDriver?.branch || "Tirupati Central Hub"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   >
                     <option value="Tirupati Central Hub">Tirupati Central Hub</option>
                     <option value="Renigunta Airport Hub">Renigunta Airport Hub</option>
@@ -449,11 +449,11 @@ export default function DriverManagement({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Police Background Verification</label>
+                  <label className="block text-slate-400 font-bold mb-1">Police Background Verification</label>
                   <select
                     name="bgVerification"
                     defaultValue={editingDriver?.bgVerification || "Passed"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   >
                     <option value="Passed">Passed (Police Verified)</option>
                     <option value="Pending">Pending Audit</option>
@@ -464,11 +464,11 @@ export default function DriverManagement({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Initial Status</label>
+                  <label className="block text-slate-400 font-bold mb-1">Initial Status</label>
                   <select
                     name="status"
                     defaultValue={editingDriver?.status || "Available"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   >
                     <option value="Available">Available</option>
                     <option value="On Trip">On Trip</option>
@@ -477,35 +477,35 @@ export default function DriverManagement({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Live Location / Desk</label>
+                  <label className="block text-slate-400 font-bold mb-1">Live Location / Desk</label>
                   <input
                     name="liveLocation"
                     defaultValue={editingDriver?.liveLocation || "Tirupati Central Hub"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Avatar Image URL</label>
+                <label className="block text-slate-400 font-bold mb-1">Avatar Image URL</label>
                 <input
                   name="avatar"
                   defaultValue={editingDriver?.avatar || "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=200&q=80"}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-purple-500/20">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsAddEditModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-purple-950 text-purple-300 text-xs"
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#D4AF37] text-slate-950 font-black text-xs"
+                  className="px-5 py-2 rounded-xl bg-[#c88d18] text-slate-950 font-black text-xs"
                 >
                   {editingDriver ? "Save Changes" : "Create Chauffeur"}
                 </button>

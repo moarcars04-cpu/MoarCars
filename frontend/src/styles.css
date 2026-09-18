@@ -198,3 +198,179 @@
 @media (prefers-reduced-motion: no-preference) {
   .animate-float-in { animation: float-in 700ms ease-out both; }
 }
+
+/* Custom sleek scrollbar for admin dashboard and portals */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #070e1c;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c88d18;
+}
+
+/* ==========================================================================
+   ENTERPRISE ADMIN PORTAL - DARK & WHITE / LIGHT THEME ENGINE
+   ========================================================================== */
+.admin-dark {
+  background-color: #070e1c !important;
+  color: #f8fafc !important;
+}
+
+.admin-light {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.admin-light ::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+}
+.admin-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+}
+.admin-light ::-webkit-scrollbar-thumb:hover {
+  background: #c88d18 !important;
+}
+
+.admin-light header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.admin-light aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.admin-light .bg-\[\#070e1c\] {
+  background-color: #f1f5f9 !important;
+}
+
+.admin-light .bg-\[\#070e1c\]\/80,
+.admin-light .bg-\[\#070e1c\]\/90,
+.admin-light .bg-\[\#070e1c\]\/95 {
+  background-color: rgba(241, 245, 249, 0.95) !important;
+}
+
+.admin-light .bg-\[\#0b1426\],
+.admin-light .bg-\[\#0b1426\]\/60,
+.admin-light .bg-\[\#0b1426\]\/80,
+.admin-light .bg-\[\#0b1426\]\/90 {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+.admin-light .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+.admin-light .bg-slate-900,
+.admin-light .bg-slate-900\/80,
+.admin-light .bg-slate-900\/60 {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+.admin-light .border-slate-800,
+.admin-light .border-slate-700 {
+  border-color: #e2e8f0 !important;
+}
+
+.admin-light .text-white {
+  color: #0f172a !important;
+}
+
+.admin-light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+.admin-light .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.admin-light .text-slate-300 {
+  color: #334155 !important;
+}
+
+.admin-light .text-slate-400 {
+  color: #64748b !important;
+}
+
+.admin-light .text-slate-400\/70,
+.admin-light .text-slate-400\/80 {
+  color: #64748b !important;
+}
+
+.admin-light input:not([type="checkbox"]):not([type="radio"]),
+.admin-light select,
+.admin-light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.admin-light input::placeholder,
+.admin-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.admin-light input:focus,
+.admin-light select:focus,
+.admin-light textarea:focus {
+  border-color: #c88d18 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 1px #c88d18 !important;
+}
+
+.admin-light .hover\:bg-slate-800\/60:hover,
+.admin-light .hover\:bg-slate-800:hover,
+.admin-light .hover\:bg-slate-900:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.admin-light .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+.admin-light table thead tr {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+.admin-light table tbody tr {
+  border-color: #f1f5f9 !important;
+}
+
+.admin-light table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Modals & Dialogs in Light Mode */
+.admin-light .fixed.inset-0.bg-black\/85,
+.admin-light .fixed.inset-0.bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+.admin-light .fixed .bg-\[\#0b1426\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  color: #0f172a !important;
+}
+
+.admin-light .fixed .bg-\[\#070e1c\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+

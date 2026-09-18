@@ -35,18 +35,29 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      onSuccess({
-        ...booking,
-        pickup,
-        startDate: `${startDate} 09:00`,
-        endDate: `${endDate} 21:00`,
+    const updatedData = {
+      ...booking,
+      pickup,
+      pickupLocation: pickup,
+      startDate: `${startDate} 09:00`,
+      endDate: `${endDate} 21:00`,
+    };
+
+    try {
+      await fetch(`/api/bookings/${booking.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
       });
+    } catch (e) {
+      console.warn("Update booking error:", e);
+    } finally {
+      setIsSaving(false);
+      onSuccess(updatedData);
       onClose();
-    }, 800);
+    }
   };
 
   return (
@@ -133,17 +144,28 @@ export const ExtendBookingModal: React.FC<ModalProps> = ({
 
   const currentPlan = extensionPlans.find((p) => p.id === selectedExtension)!;
 
-  const handleConfirmExtension = () => {
+  const handleConfirmExtension = async () => {
     setIsExtending(true);
-    setTimeout(() => {
-      setIsExtending(false);
-      onSuccess({
-        ...booking,
-        grandTotal: (booking.grandTotal || 2499) + currentPlan.price,
-        notes: `${booking.notes || ""} [Extended by ${currentPlan.title}]`,
+    const updatedData = {
+      ...booking,
+      amount: (booking.amount || booking.grandTotal || 2499) + currentPlan.price,
+      grandTotal: (booking.grandTotal || booking.amount || 2499) + currentPlan.price,
+      notes: `${booking.notes || ""} [Extended by ${currentPlan.title}]`,
+    };
+
+    try {
+      await fetch(`/api/bookings/${booking.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
       });
+    } catch (e) {
+      console.warn("Extend booking error:", e);
+    } finally {
+      setIsExtending(false);
+      onSuccess(updatedData);
       onClose();
-    }, 800);
+    }
   };
 
   return (
@@ -212,19 +234,30 @@ export const CancelBookingModal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  const refundAmount = booking.grandTotal || 2499;
+  const refundAmount = booking.grandTotal || booking.amount || 2499;
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     setIsCancelling(true);
-    setTimeout(() => {
-      setIsCancelling(false);
-      onSuccess({
-        ...booking,
-        status: "Cancelled",
-        notes: `Cancelled by customer: ${reason}`,
+    const updatedData = {
+      ...booking,
+      status: "Cancelled",
+      paymentStatus: "Refunded",
+      notes: `Cancelled by customer: ${reason}`,
+    };
+
+    try {
+      await fetch(`/api/bookings/${booking.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
       });
+    } catch (e) {
+      console.warn("Cancel booking error:", e);
+    } finally {
+      setIsCancelling(false);
+      onSuccess(updatedData);
       onClose();
-    }, 800);
+    }
   };
 
   return (
@@ -296,41 +329,52 @@ export const UpgradeCarModal: React.FC<ModalProps> = ({
   const upgradeOptions = [
     {
       id: "Creta",
-      name: "Hyundai Creta SX(O) Sunroof",
+      name: "Hyundai Creta SX(O) Turbo",
       category: "SUV 5-Seater",
       diffPrice: 600,
-      image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-      id: "Innova",
-      name: "Toyota Innova Crysta ZX Captain Seats",
-      category: "Luxury 7-Seater",
-      diffPrice: 1500,
       image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
     },
     {
-      id: "BMW",
-      name: "BMW 3 Series Gran Limousine",
-      category: "VIP Executive",
-      diffPrice: 4200,
+      id: "Innova",
+      name: "Toyota Innova Crysta 2.4 ZX",
+      category: "Luxury 7-Seater",
+      diffPrice: 1500,
+      image: "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80",
+    },
+    {
+      id: "Fortuner",
+      name: "Toyota Fortuner Legender 4x4",
+      category: "VIP Flagship",
+      diffPrice: 3500,
       image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=600&q=80",
     },
   ];
 
   const chosen = upgradeOptions.find((u) => u.id === selectedUpgrade)!;
 
-  const handleConfirmUpgrade = () => {
+  const handleConfirmUpgrade = async () => {
     setIsUpgrading(true);
-    setTimeout(() => {
-      setIsUpgrading(false);
-      onSuccess({
-        ...booking,
-        carName: chosen.name,
-        grandTotal: (booking.grandTotal || 2499) + chosen.diffPrice,
-        notes: `${booking.notes || ""} [Upgraded to ${chosen.name}]`,
+    const updatedData = {
+      ...booking,
+      carName: chosen.name,
+      amount: (booking.amount || booking.grandTotal || 2499) + chosen.diffPrice,
+      grandTotal: (booking.grandTotal || booking.amount || 2499) + chosen.diffPrice,
+      notes: `${booking.notes || ""} [Upgraded to ${chosen.name}]`,
+    };
+
+    try {
+      await fetch(`/api/bookings/${booking.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
       });
+    } catch (e) {
+      console.warn("Upgrade booking error:", e);
+    } finally {
+      setIsUpgrading(false);
+      onSuccess(updatedData);
       onClose();
-    }, 800);
+    }
   };
 
   return (

@@ -41,24 +41,24 @@ export default function ActivityLogsTimeline({
   return (
     <main className="flex-1 p-8 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <History className="w-6 h-6 text-[#D4AF37]" /> Activity Logs & Enterprise Audit Trail
+            <History className="w-6 h-6 text-[#c88d18]" /> Activity Logs & Enterprise Audit Trail
           </h2>
-          <p className="text-xs text-purple-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Searchable live timeline of every administrative action, fleet update, booking transition, and payment event
           </p>
         </div>
 
         <div className="relative w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-purple-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
           <input
             type="text"
             placeholder="Search action, admin, IP address..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#14081E] border border-purple-500/30 rounded-2xl py-2 pl-10 pr-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+            className="w-full bg-[#070e1c] border border-slate-800 rounded-2xl py-2 pl-10 pr-3 text-xs text-white focus:outline-none focus:border-[#c88d18]"
           />
         </div>
       </div>
@@ -71,8 +71,8 @@ export default function ActivityLogsTimeline({
             onClick={() => setFilterModule(mod)}
             className={`px-3.5 py-1.5 rounded-xl font-bold transition-all capitalize ${
               filterModule === mod
-                ? "bg-[#D4AF37] text-slate-950 font-black shadow-md"
-                : "bg-[#2A1336]/60 text-purple-300 border border-purple-500/20 hover:text-white"
+                ? "bg-[#c88d18] text-slate-950 font-black shadow-md"
+                : "bg-[#0b1426]/60 text-slate-400 border border-slate-800 hover:text-white"
             }`}
           >
             {mod === "all" ? "All Modules" : mod}
@@ -81,11 +81,11 @@ export default function ActivityLogsTimeline({
       </div>
 
       {/* TIMELINE LIST */}
-      <div className="rounded-3xl border border-purple-500/20 bg-[#2A1336]/60 backdrop-blur-2xl overflow-hidden shadow-2xl p-6 space-y-4">
-        <div className="divide-y divide-purple-500/10">
+      <div className="rounded-3xl border border-slate-800 bg-[#0b1426]/60 backdrop-blur-2xl overflow-hidden shadow-2xl p-6 space-y-4">
+        <div className="divide-y divide-slate-800">
           {filteredLogs.map((l) => (
-            <div key={l.id} className="py-4 flex items-start gap-4 hover:bg-purple-900/10 transition-colors rounded-2xl px-3">
-              <div className="w-9 h-9 rounded-2xl bg-purple-950 border border-purple-500/30 flex items-center justify-center text-[#D4AF37] shrink-0 font-bold text-xs mt-0.5">
+            <div key={l.id} className="py-4 flex items-start gap-4 hover:bg-slate-800/60 transition-colors rounded-2xl px-3">
+              <div className="w-9 h-9 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#c88d18] shrink-0 font-bold text-xs mt-0.5">
                 {l.module === "Fleet" && <Car className="w-4 h-4" />}
                 {l.module === "Bookings" && <Calendar className="w-4 h-4" />}
                 {l.module === "Payments" && <CreditCard className="w-4 h-4" />}
@@ -101,19 +101,19 @@ export default function ActivityLogsTimeline({
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-white text-xs">{l.action}</span>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-950 text-purple-300 border border-purple-500/30">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900 text-slate-400 border border-slate-800">
                       {l.module}
                     </span>
                   </div>
-                  <span className="text-[10px] text-purple-400 font-mono">{l.timestamp}</span>
+                  <span className="text-[10px] text-slate-400 font-mono">{l.timestamp}</span>
                 </div>
 
-                <p className="text-xs text-purple-200/90 leading-relaxed font-mono bg-[#14081E] p-2.5 rounded-xl border border-purple-500/20">
+                <p className="text-xs text-slate-300/90 leading-relaxed font-mono bg-[#070e1c] p-2.5 rounded-xl border border-slate-800">
                   {l.details}
                 </p>
 
-                <div className="flex justify-between items-center text-[10px] text-purple-400 pt-1">
-                  <span>Authorized By: <strong className="text-purple-200">{l.adminName}</strong></span>
+                <div className="flex justify-between items-center text-[10px] text-slate-400 pt-1">
+                  <span>Authorized By: <strong className="text-slate-300">{l.adminName}</strong></span>
                   <span className="font-mono">{l.ipAddress}</span>
                 </div>
               </div>

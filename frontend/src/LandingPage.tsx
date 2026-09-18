@@ -76,10 +76,6 @@ export interface CarFleetItem {
   rating?: number;
 }
 
-import { DEFAULT_DATABASE_CARS } from "@/data/defaultCars";
-
-const fallbackFleet: CarFleetItem[] = DEFAULT_DATABASE_CARS;
-
 interface LandingPageProps {
   onNavigate?: (path: string, state?: any) => void;
   preselectedCar?: string;
@@ -89,7 +85,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [fleet, setFleet] = useState<CarFleetItem[]>(fallbackFleet);
+  const [fleet, setFleet] = useState<CarFleetItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -143,24 +139,22 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       })
       .then((res) => {
         if (!isMounted) return;
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.success && Array.isArray(res.data)) {
           const mapped = res.data.map((car: any) => ({
             ...car,
-            pricePerDay: car.pricePerDay || parseInt(String(car.price || "1699").replace(/[^0-9]/g, ""), 10) || 1699,
-            hasSunroof: car.hasSunroof ?? (car.name.includes("ZX") || car.name.includes("Scorpio") || car.name.includes("Creta") || car.name.includes("BMW") || car.name.includes("Mercedes")),
+            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0,
+            hasSunroof: car.hasSunroof ?? false,
             hasGPS: car.hasGPS ?? true,
             hasAC: car.hasAC ?? true,
             instantBooking: car.instantBooking ?? true,
             freeCancellation: car.freeCancellation ?? true,
             doorstepDelivery: car.doorstepDelivery ?? true,
-            rating: car.rating || 4.9,
+            rating: car.rating || 5.0,
           }));
           setFleet(mapped);
         }
       })
-      .catch((err) => {
-        console.warn("[Fleet API] Fallback fleet loaded:", err);
-      })
+      .catch((err) => console.warn("[LandingPage] Fetch cars:", err))
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });

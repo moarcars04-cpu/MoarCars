@@ -1,0 +1,27 @@
+{
+  "short_name": "Moar Cars",
+  "name": "Moar Cars - Premium Self-Drive Car Rentals",
+  "description": "Premium Self-Drive Car Rental Service in Tirupati and Andhra Pradesh.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/moarcars-logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0b132b",
+  "theme_color": "#0b132b",
+  "display": "standalone",
+  "orientation": "portrait"
+}

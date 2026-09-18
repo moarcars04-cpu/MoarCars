@@ -32,69 +32,6 @@ interface WalletSectionProps {
   onRefundWallet?: (amount: number, upiId: string) => Promise<{ success: boolean; message: string; newBalance?: number }>;
 }
 
-const DEMO_TRANSACTIONS: TransactionItem[] = [
-  {
-    id: "TXN_WAL_992144",
-    title: "Instant UPI Wallet Recharge",
-    amount: 2500,
-    type: "credit",
-    category: "topup",
-    status: "Captured",
-    date: "2026-09-07 10:30 AM",
-    invoiceNumber: "INV-WAL-8812",
-    gateway: "Google Pay UPI",
-    notes: "+₹150 Festive Recharge Bonus Credited",
-  },
-  {
-    id: "TXN_BK_1042",
-    title: "Self Drive Rental: Innova Crysta ZX",
-    amount: 5499,
-    type: "debit",
-    category: "booking_paid",
-    status: "Settled",
-    date: "2026-09-06 04:15 PM",
-    invoiceNumber: "INV-MC-1042",
-    gateway: "Moar Wallet Balance",
-    notes: "Booking #BK-1042 (Tirupati Hub)",
-  },
-  {
-    id: "TXN_DEP_99012",
-    title: "Security Deposit Refund Released",
-    amount: 3000,
-    type: "credit",
-    category: "deposit_refund",
-    status: "Captured",
-    date: "2026-08-22 09:40 PM",
-    invoiceNumber: "REF-DEP-1018",
-    gateway: "Instant Settlement",
-    notes: "Vehicle Check-out inspection passed with zero deductions",
-  },
-  {
-    id: "TXN_CBK_77123",
-    title: "5% Pilgrimage Trip Cashback",
-    amount: 230,
-    type: "credit",
-    category: "cashback",
-    status: "Captured",
-    date: "2026-08-22 09:45 PM",
-    invoiceNumber: "CBK-8819",
-    gateway: "Moar Rewards Auto-Credit",
-    notes: "Rewarded on completed trip #BK-1018",
-  },
-  {
-    id: "TXN_REF_55102",
-    title: "Referral Bonus: Friend Joined & Booked",
-    amount: 500,
-    type: "credit",
-    category: "referral_bonus",
-    status: "Captured",
-    date: "2026-08-15 11:20 AM",
-    invoiceNumber: "REF-BONUS-90",
-    gateway: "Referral Program",
-    notes: "Invited friend: Suresh Kumar completed his first trip",
-  },
-];
-
 export const WalletSection: React.FC<WalletSectionProps> = ({
   user,
   onAddFunds,
@@ -110,7 +47,7 @@ export const WalletSection: React.FC<WalletSectionProps> = ({
   const [feedbackMsg, setFeedbackMsg] = useState("");
 
   // Transactions State & Filters
-  const [transactions, setTransactions] = useState<TransactionItem[]>(DEMO_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 

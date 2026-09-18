@@ -32,28 +32,6 @@ interface CheckoutPageProps {
   onNavigate?: (path: string) => void;
 }
 
-const defaultCar = {
-  id: 4,
-  name: "Toyota Innova Crysta ZX",
-  brand: "Toyota",
-  model: "Innova Crysta",
-  variant: "2.4 ZX Captain Seats",
-  detail: "Unmatched pilgrimage luxury, captain seats with climate control & ample luggage space",
-  price: "₹3,499",
-  pricePerDay: 3499,
-  tag: "Luxury",
-  category: "Luxury",
-  fuelType: "Diesel",
-  transmission: "Automatic",
-  seats: 7,
-  mileage: "14 km/l",
-  color: "Super White",
-  status: "Available",
-  branch: "Chandragiri Heritage Point",
-  location: "Tirupati Central Station Hub",
-  image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80",
-};
-
 export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   initialCar,
   initialParams,
@@ -61,8 +39,22 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 }) => {
   const { user, openAuthModal } = useAuth();
 
-  const [car, setCar] = useState<any>(initialCar || defaultCar);
+  const [car, setCar] = useState<any | null>(initialCar || null);
   const [currentStep, setCurrentStep] = useState<"details" | "payment" | "confirmed">("details");
+
+  // Load car from API if not provided in props
+  useEffect(() => {
+    if (!initialCar) {
+      fetch("/api/cars")
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            setCar(res.data[0]);
+          }
+        })
+        .catch((err) => console.warn(err));
+    }
+  }, [initialCar]);
 
   // Renter Details
   const [customerName, setCustomerName] = useState(user?.name || "");
@@ -137,8 +129,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Calculations
   const dailyRate =
-    car.pricePerDay ||
-    parseInt(String(car.price || "2499").replace(/[^0-9]/g, ""), 10) ||
+    car?.pricePerDay ||
+    parseInt(String(car?.price || "2499").replace(/[^0-9]/g, ""), 10) ||
     2499;
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
@@ -147,12 +139,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const subtotalBeforeDiscounts = baseFare + deliveryFee + driverFee + extrasTotal;
 
-  // Wallet and Points values
-  const userWalletBalance = 1500; // Simulated available wallet balance
-  const userRewardPoints = 500; // Simulated reward points (500 pts = ₹100)
+  // Real User Wallet and Loyalty Points values
+  const userWalletBalance = user?.walletBalance !== undefined ? Number(user.walletBalance) : 0;
+  const userRewardPoints = user?.loyaltyPoints !== undefined ? Number(user.loyaltyPoints) : Number(user?.rewardPoints || 0);
 
   const walletDeduction = useWallet ? Math.min(userWalletBalance, Math.round(subtotalBeforeDiscounts * 0.5)) : 0;
-  const rewardDeduction = useRewards ? 100 : 0;
+  const rewardDeduction = useRewards ? Math.min(userRewardPoints, 100) : 0;
   const couponDiscount = appliedCoupon ? Math.round((subtotalBeforeDiscounts * appliedCoupon.percent) / 100) : 0;
 
   const totalDiscounts = walletDeduction + rewardDeduction + couponDiscount + referralDiscount;
@@ -168,13 +160,28 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const grandTotal = subtotalAfterDiscounts + gstAmount + securityDeposit;
 
   // Apply Coupon Handler
-  const handleApplyCoupon = (code: string) => {
-    if (code === "PILGRIM10") {
-      setAppliedCoupon({ code, percent: 10, discount: Math.round(subtotalBeforeDiscounts * 0.1) });
-    } else if (code === "WEEKEND20") {
-      setAppliedCoupon({ code, percent: 20, discount: Math.round(subtotalBeforeDiscounts * 0.2) });
-    } else if (code === "CORP2026") {
-      setAppliedCoupon({ code, percent: 15, discount: Math.round(subtotalBeforeDiscounts * 0.15) });
+  const handleApplyCoupon = async (code: string) => {
+    const cleanCode = code.trim().toUpperCase();
+    if (cleanCode === "PILGRIM10") {
+      setAppliedCoupon({ code: cleanCode, percent: 10, discount: Math.round(subtotalBeforeDiscounts * 0.1) });
+    } else if (cleanCode === "WEEKEND20") {
+      setAppliedCoupon({ code: cleanCode, percent: 20, discount: Math.round(subtotalBeforeDiscounts * 0.2) });
+    } else if (cleanCode === "CORP2026") {
+      setAppliedCoupon({ code: cleanCode, percent: 15, discount: Math.round(subtotalBeforeDiscounts * 0.15) });
+    } else {
+      try {
+        const res = await fetch("/api/admin/coupons");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          const found = json.data.find((c: any) => c.code === cleanCode && c.status === "Active");
+          if (found) {
+            const pct = Number(found.value) || 10;
+            setAppliedCoupon({ code: cleanCode, percent: pct, discount: Math.round((subtotalBeforeDiscounts * pct) / 100) });
+            return;
+          }
+        }
+      } catch (e) {}
+      alert("Invalid or expired coupon code. Try PILGRIM10 or WEEKEND20.");
     }
   };
 
@@ -217,16 +224,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       carName: car.name,
       car,
       bookingType: withDriver ? "Chauffeur Driven" : "Self Drive",
-      customerName: customerName || "Valued Customer",
-      customerPhone: customerPhone || "+91 98765 43210",
-      customerEmail: customerEmail || "customer@moarcars.com",
-      drivingLicense: drivingLicense || "DL-AP03-2024-XXXX",
+      customerName: customerName || user?.name || "Valued Customer",
+      customerPhone: customerPhone || user?.phone || "+91 98765 43210",
+      customerEmail: customerEmail || user?.email || "customer@moarcars.com",
+      drivingLicense: drivingLicense || user?.dlNumber || "DL-AP03-2024-XXXX",
       emergencyContact,
       status: "Confirmed",
       paymentStatus: selectedPaymentMethod === "cash" ? "Pending_At_Pickup" : "Paid",
       paymentMethod: selectedPaymentMethod,
       bookingSource: "Web Checkout Gateway",
       totalDays: rentalDays,
+      amount: grandTotal,
       baseFare,
       deliveryFee,
       driverFee,
@@ -369,7 +377,28 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         )}
 
         {/* STEP 1 & 2: CHECKOUT FORM & SUMMARY */}
-        {currentStep !== "confirmed" && (
+        {currentStep !== "confirmed" && !car && (
+          <div className="rounded-3xl border border-border bg-card p-12 text-center space-y-4 shadow-sm">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-brand-gold">
+              <Car className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-black text-brand-navy">No Vehicle Selected</h3>
+            <p className="text-xs text-muted-foreground max-w-md mx-auto">
+              Please choose a car from our live fleet to begin the reservation checkout.
+            </p>
+            <Button
+              onClick={() => {
+                if (onNavigate) onNavigate("/cars");
+                else window.history.back();
+              }}
+              className="h-10 px-6 rounded-xl bg-brand-gold text-brand-navy font-bold text-xs"
+            >
+              Select a Vehicle
+            </Button>
+          </div>
+        )}
+
+        {currentStep !== "confirmed" && car && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column (7 cols): Input Forms */}
             <div className="lg:col-span-7 space-y-6">

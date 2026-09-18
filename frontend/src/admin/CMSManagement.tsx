@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   LayoutTemplate,
   Plus,
@@ -22,6 +22,7 @@ import {
   CMSFaqItem,
   CMSBlogItem,
 } from "./types";
+import { adminApi } from "./adminApi";
 
 interface CMSManagementProps {
   banners: CMSBannerItem[];
@@ -65,29 +66,47 @@ export default function CMSManagement({
     about: "Moar Cars is Tirupati's premier self-drive and chauffeur rental platform, dedicated to delivering pristine, sanitized SUVs and sedans for pilgrimage travelers, corporate delegates, and weekend road-trippers across Andhra Pradesh.",
   });
 
+  useEffect(() => {
+    adminApi.getSettings().then((settings) => {
+      if (settings) {
+        if (settings.cms_policies) setPolicies(settings.cms_policies);
+        if (Array.isArray(settings.cms_banners) && settings.cms_banners.length > 0) setBanners(settings.cms_banners);
+        if (Array.isArray(settings.cms_offers) && settings.cms_offers.length > 0) setOffers(settings.cms_offers);
+        if (Array.isArray(settings.cms_testimonials) && settings.cms_testimonials.length > 0) setTestimonials(settings.cms_testimonials);
+        if (Array.isArray(settings.cms_faqs) && settings.cms_faqs.length > 0) setFaqs(settings.cms_faqs);
+        if (Array.isArray(settings.cms_blogs) && settings.cms_blogs.length > 0) setBlogs(settings.cms_blogs);
+      }
+    });
+  }, []);
+
   const handleToggleBanner = (id: number) => {
-    setBanners((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b))
-    );
+    const updated = banners.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b));
+    setBanners(updated);
+    adminApi.saveSettings({ cms_banners: updated });
     setNotice({ type: "info", text: "Banner visibility updated." });
   };
 
   const handleToggleOffer = (id: number) => {
-    setOffers((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, isActive: !o.isActive } : o))
-    );
+    const updated = offers.map((o) => (o.id === id ? { ...o, isActive: !o.isActive } : o));
+    setOffers(updated);
+    adminApi.saveSettings({ cms_offers: updated });
     setNotice({ type: "info", text: "Offer campaign status toggled." });
+  };
+
+  const handleSavePolicies = () => {
+    adminApi.saveSettings({ cms_policies: policies });
+    setNotice({ type: "success", text: "Legal policies & website copy saved to database!" });
   };
 
   return (
     <main className="flex-1 p-8 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <LayoutTemplate className="w-6 h-6 text-[#D4AF37]" /> Content Management System (CMS)
+            <LayoutTemplate className="w-6 h-6 text-[#c88d18]" /> Content Management System (CMS)
           </h2>
-          <p className="text-xs text-purple-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Manage website banners, hero sliders, offers, testimonials, FAQs, blogs, SEO pages & legal policies
           </p>
         </div>
@@ -108,8 +127,8 @@ export default function CMSManagement({
             onClick={() => setActiveSection(sec.id as any)}
             className={`px-4 py-2 rounded-2xl font-bold transition-all ${
               activeSection === sec.id
-                ? "bg-[#D4AF37] text-slate-950 font-black shadow-md"
-                : "bg-[#2A1336]/60 text-purple-300 border border-purple-500/20 hover:text-white"
+                ? "bg-[#c88d18] text-slate-950 font-black shadow-md"
+                : "bg-[#0b1426]/60 text-slate-400 border border-slate-800 hover:text-white"
             }`}
           >
             {sec.label}
@@ -141,7 +160,7 @@ export default function CMSManagement({
                   setNotice({ type: "success", text: "New banner slide added!" });
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Add Banner
             </button>
@@ -151,18 +170,18 @@ export default function CMSManagement({
             {banners.map((b) => (
               <div
                 key={b.id}
-                className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 space-y-3"
+                className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 space-y-3"
               >
-                <div className="relative rounded-2xl overflow-hidden h-40 border border-purple-500/30">
+                <div className="relative rounded-2xl overflow-hidden h-40 border border-slate-800">
                   <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4 flex flex-col justify-end">
                     <h4 className="font-black text-white text-base">{b.title}</h4>
-                    <p className="text-xs text-purple-200 line-clamp-1">{b.subtitle}</p>
+                    <p className="text-xs text-slate-300 line-clamp-1">{b.subtitle}</p>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-purple-300 font-mono">CTA: {b.ctaText} ({b.ctaLink})</span>
+                  <span className="text-slate-400 font-mono">CTA: {b.ctaText} ({b.ctaLink})</span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleToggleBanner(b.id)}
@@ -212,7 +231,7 @@ export default function CMSManagement({
                   setNotice({ type: "success", text: "New offer created!" });
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Add Offer Card
             </button>
@@ -220,10 +239,10 @@ export default function CMSManagement({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {offers.map((o) => (
-              <div key={o.id} className="p-5 rounded-3xl bg-[#2A1336]/60 border border-purple-500/20 space-y-3">
+              <div key={o.id} className="p-5 rounded-3xl bg-[#0b1426]/60 border border-slate-800 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#D4AF37] text-slate-950">{o.badge}</span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#c88d18] text-slate-950">{o.badge}</span>
                     <h4 className="font-bold text-base text-white mt-1">{o.title}</h4>
                     <p className="text-emerald-400 font-bold text-sm">{o.discountText}</p>
                   </div>
@@ -236,8 +255,8 @@ export default function CMSManagement({
                     {o.isActive ? "Active" : "Disabled"}
                   </button>
                 </div>
-                <p className="text-xs text-purple-300">{o.description}</p>
-                <div className="pt-2 border-t border-purple-500/20 flex justify-between items-center text-[10px] text-purple-400">
+                <p className="text-xs text-slate-400">{o.description}</p>
+                <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
                   <span>Valid Till: {o.validTill}</span>
                   <button
                     onClick={() => setOffers(offers.filter((item) => item.id !== o.id))}
@@ -278,7 +297,7 @@ export default function CMSManagement({
                   setNotice({ type: "success", text: "Testimonial published!" });
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Add Testimonial
             </button>
@@ -286,19 +305,19 @@ export default function CMSManagement({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {testimonials.map((t) => (
-              <div key={t.id} className="p-5 rounded-3xl bg-[#2A1336]/60 border border-purple-500/20 space-y-3">
+              <div key={t.id} className="p-5 rounded-3xl bg-[#0b1426]/60 border border-slate-800 space-y-3">
                 <div className="flex items-center gap-3">
-                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover border border-[#D4AF37]" />
+                  <img src={t.avatar} alt={t.name} className="w-10 h-10 rounded-full object-cover border border-[#c88d18]" />
                   <div>
                     <h4 className="font-bold text-white text-xs">{t.name}</h4>
-                    <p className="text-[10px] text-purple-300">{t.role} &bull; {t.city}</p>
+                    <p className="text-[10px] text-slate-400">{t.role} &bull; {t.city}</p>
                   </div>
                 </div>
-                <p className="text-xs text-purple-200/90 italic">"{t.comment}"</p>
-                <div className="flex justify-between items-center text-[10px] text-purple-400 pt-2 border-t border-purple-500/20">
-                  <span className="text-[#D4AF37] font-bold">Rented: {t.carRented}</span>
-                  <div className="flex items-center gap-1 text-[#D4AF37]">
-                    <Star className="w-3 h-3 fill-[#D4AF37]" /> {t.rating}.0
+                <p className="text-xs text-slate-300/90 italic">"{t.comment}"</p>
+                <div className="flex justify-between items-center text-[10px] text-slate-400 pt-2 border-t border-slate-800">
+                  <span className="text-[#c88d18] font-bold">Rented: {t.carRented}</span>
+                  <div className="flex items-center gap-1 text-[#c88d18]">
+                    <Star className="w-3 h-3 fill-[#c88d18]" /> {t.rating}.0
                   </div>
                 </div>
               </div>
@@ -321,7 +340,7 @@ export default function CMSManagement({
                   setNotice({ type: "success", text: "FAQ added!" });
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Add FAQ
             </button>
@@ -329,10 +348,10 @@ export default function CMSManagement({
 
           <div className="space-y-3">
             {faqs.map((f) => (
-              <div key={f.id} className="p-4 rounded-2xl bg-[#2A1336]/60 border border-purple-500/20 space-y-1">
-                <span className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider">{f.category}</span>
+              <div key={f.id} className="p-4 rounded-2xl bg-[#0b1426]/60 border border-slate-800 space-y-1">
+                <span className="text-[9px] font-bold text-[#c88d18] uppercase tracking-wider">{f.category}</span>
                 <h4 className="font-bold text-white text-xs">{f.question}</h4>
-                <p className="text-purple-300 text-xs mt-1">{f.answer}</p>
+                <p className="text-slate-400 text-xs mt-1">{f.answer}</p>
               </div>
             ))}
           </div>
@@ -366,7 +385,7 @@ export default function CMSManagement({
                   setNotice({ type: "success", text: "Blog article published!" });
                 }
               }}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs"
             >
               <Plus className="w-3.5 h-3.5" /> Create Blog Post
             </button>
@@ -374,16 +393,16 @@ export default function CMSManagement({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {blogs.map((b) => (
-              <div key={b.id} className="p-5 rounded-3xl bg-[#2A1336]/60 border border-purple-500/20 space-y-3">
-                <div className="h-32 rounded-2xl overflow-hidden border border-purple-500/20">
+              <div key={b.id} className="p-5 rounded-3xl bg-[#0b1426]/60 border border-slate-800 space-y-3">
+                <div className="h-32 rounded-2xl overflow-hidden border border-slate-800">
                   <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#D4AF37] font-bold uppercase">{b.category}</span>
+                  <span className="text-[10px] text-[#c88d18] font-bold uppercase">{b.category}</span>
                   <h4 className="font-bold text-white text-sm mt-0.5">{b.title}</h4>
-                  <p className="text-xs text-purple-300 mt-1 line-clamp-2">{b.summary}</p>
+                  <p className="text-xs text-slate-400 mt-1 line-clamp-2">{b.summary}</p>
                 </div>
-                <div className="pt-2 border-t border-purple-500/20 flex justify-between items-center text-[10px] text-purple-400">
+                <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
                   <span>By {b.author} &bull; {b.date}</span>
                   <span className="text-emerald-400 font-bold">{b.readTime}</span>
                 </div>
@@ -396,56 +415,56 @@ export default function CMSManagement({
       {/* SECTION 6: LEGAL POLICIES */}
       {activeSection === "policies" && (
         <div className="space-y-6">
-          <div className="p-6 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 space-y-4">
+          <div className="p-6 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 space-y-4">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#D4AF37]" /> Legal Terms, Privacy Policy & Brand Story
+              <Shield className="w-4 h-4 text-[#c88d18]" /> Legal Terms, Privacy Policy & Brand Story
             </h3>
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">About Moar Cars Brand Story</label>
+                <label className="block text-slate-400 font-bold mb-1">About Moar Cars Brand Story</label>
                 <textarea
                   rows={3}
                   value={policies.about}
                   onChange={(e) => setPolicies({ ...policies, about: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-3 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-3 text-white"
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Terms & Conditions</label>
+                <label className="block text-slate-400 font-bold mb-1">Terms & Conditions</label>
                 <textarea
                   rows={3}
                   value={policies.terms}
                   onChange={(e) => setPolicies({ ...policies, terms: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-3 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-3 text-white"
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Privacy Policy</label>
+                <label className="block text-slate-400 font-bold mb-1">Privacy Policy</label>
                 <textarea
                   rows={3}
                   value={policies.privacy}
                   onChange={(e) => setPolicies({ ...policies, privacy: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-3 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-3 text-white"
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Cancellation & Refund Policy</label>
+                <label className="block text-slate-400 font-bold mb-1">Cancellation & Refund Policy</label>
                 <textarea
                   rows={3}
                   value={policies.cancellation}
                   onChange={(e) => setPolicies({ ...policies, cancellation: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-3 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-3 text-white"
                 ></textarea>
               </div>
 
               <div className="flex justify-end pt-2">
                 <button
-                  onClick={() => setNotice({ type: "success", text: "Legal policies & website copy updated!" })}
-                  className="px-5 py-2 rounded-xl bg-[#D4AF37] text-slate-950 font-black text-xs"
+                  onClick={handleSavePolicies}
+                  className="px-5 py-2 rounded-xl bg-[#c88d18] text-slate-950 font-black text-xs hover:opacity-95"
                 >
                   Save Policy Changes
                 </button>

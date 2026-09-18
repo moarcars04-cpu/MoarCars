@@ -22,41 +22,6 @@ interface ReferralSectionProps {
   onBrowseFleet: () => void;
 }
 
-const DEMO_REFERRALS: ReferralFriend[] = [
-  {
-    id: 1,
-    name: "Suresh Kumar V",
-    phone: "+91 98480 •••••",
-    joinedDate: "2026-08-15",
-    status: "Trip Completed",
-    rewardEarned: 500,
-  },
-  {
-    id: 2,
-    name: "Pravallika Reddy",
-    phone: "+91 85000 •••••",
-    joinedDate: "2026-08-28",
-    status: "Trip Completed",
-    rewardEarned: 500,
-  },
-  {
-    id: 3,
-    name: "M. Venkatesh",
-    phone: "+91 94400 •••••",
-    joinedDate: "2026-09-02",
-    status: "First Trip Booked",
-    rewardEarned: 500,
-  },
-  {
-    id: 4,
-    name: "Anand Sharma",
-    phone: "+91 99890 •••••",
-    joinedDate: "2026-09-05",
-    status: "Signed Up",
-    rewardEarned: 0,
-  },
-];
-
 export const ReferralSection: React.FC<ReferralSectionProps> = ({
   user,
   onBrowseFleet,
@@ -209,52 +174,60 @@ export const ReferralSection: React.FC<ReferralSectionProps> = ({
           </p>
         </div>
 
-        <div className="space-y-3">
-          {DEMO_REFERRALS.map((friend) => (
-            <div
-              key={friend.id}
-              className="p-4 rounded-2xl border border-white/5 bg-slate-950/70 hover:border-brand-gold/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="h-10 w-10 rounded-full bg-brand-gold/20 text-brand-gold border border-brand-gold/40 flex items-center justify-center font-bold text-sm shrink-0">
-                  {friend.name.charAt(0)}
+        {(!user.referrals || user.referrals.length === 0) ? (
+          <div className="p-8 text-center text-xs text-white/50 border border-white/10 rounded-2xl bg-slate-950/60 space-y-2">
+            <Users className="h-8 w-8 text-white/20 mx-auto" />
+            <p className="font-bold text-white/80">No Friends Invited Yet</p>
+            <p className="text-white/40">Share your referral link with friends. When they register and take their first trip, you'll earn ₹500 directly in your wallet!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {user.referrals.map((friend: any) => (
+              <div
+                key={friend.id}
+                className="p-4 rounded-2xl border border-white/5 bg-slate-950/70 hover:border-brand-gold/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="h-10 w-10 rounded-full bg-brand-gold/20 text-brand-gold border border-brand-gold/40 flex items-center justify-center font-bold text-sm shrink-0">
+                    {friend.name?.charAt(0) || "F"}
+                  </div>
+
+                  <div>
+                    <h5 className="font-bold text-white text-sm">{friend.name}</h5>
+                    <p className="text-[11px] text-white/60">
+                      {friend.phone} • Joined {friend.joinedDate}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <h5 className="font-bold text-white text-sm">{friend.name}</h5>
-                  <p className="text-[11px] text-white/60">
-                    {friend.phone} • Joined {friend.joinedDate}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-white/5 pt-2 sm:pt-0">
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    friend.status === "Trip Completed"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                      : friend.status === "First Trip Booked"
-                      ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                      : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                  }`}
-                >
-                  {friend.status}
-                </span>
-
-                <div className="text-right">
-                  <span className="text-[10px] text-white/50 block">Earned</span>
+                <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-white/5 pt-2 sm:pt-0">
                   <span
-                    className={`font-black text-sm ${
-                      friend.rewardEarned > 0 ? "text-emerald-400" : "text-white/40"
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      friend.status === "Trip Completed"
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : friend.status === "First Trip Booked"
+                        ? "bg-sky-500/20 text-sky-400 border border-sky-500/30"
+                        : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                     }`}
                   >
-                    {friend.rewardEarned > 0 ? `+₹${friend.rewardEarned}` : "Pending Trip"}
+                    {friend.status}
                   </span>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-white/50 block">Earned</span>
+                    <span
+                      className={`font-black text-sm ${
+                        friend.rewardEarned > 0 ? "text-emerald-400" : "text-white/40"
+                      }`}
+                    >
+                      {friend.rewardEarned > 0 ? `+₹${friend.rewardEarned}` : "Pending Trip"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

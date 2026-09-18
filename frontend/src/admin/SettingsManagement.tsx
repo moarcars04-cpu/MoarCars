@@ -69,19 +69,19 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
   return (
     <main className="flex-1 p-8 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <Settings className="w-6 h-6 text-[#D4AF37]" /> Global System Settings & API Integrations
+            <Settings className="w-6 h-6 text-[#c88d18]" /> Global System Settings & API Integrations
           </h2>
-          <p className="text-xs text-purple-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Configure statutory company details, Email SMTP, WhatsApp Cloud API, Google Maps, Cloudinary, and Payment Keys
           </p>
         </div>
 
         <button
           onClick={handleSave}
-          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95"
+          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95"
         >
           Save All Settings
         </button>
@@ -101,8 +101,8 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
             onClick={() => setActiveTab(tb.id as any)}
             className={`px-4 py-2 rounded-2xl font-bold transition-all ${
               activeTab === tb.id
-                ? "bg-[#D4AF37] text-slate-950 font-black shadow-md"
-                : "bg-[#2A1336]/60 text-purple-300 border border-purple-500/20 hover:text-white"
+                ? "bg-[#c88d18] text-slate-950 font-black shadow-md"
+                : "bg-[#0b1426]/60 text-slate-400 border border-slate-800 hover:text-white"
             }`}
           >
             {tb.label}
@@ -111,65 +111,65 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
       </div>
 
       {/* CONTENT PANELS */}
-      <div className="p-6 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-2xl space-y-4">
+      <div className="p-6 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-2xl space-y-4">
         {activeTab === "company" && (
           <div className="space-y-4 text-xs">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#D4AF37]" /> Company Identity & GST Details
+              <Shield className="w-4 h-4 text-[#c88d18]" /> Company Identity & GST Details
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Company Legal Name</label>
+                <label className="block text-slate-400 font-bold mb-1">Company Legal Name</label>
                 <input
                   value={settings.companyName}
                   onChange={(e) => setSettings({ ...settings, companyName: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-bold"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-bold"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">GSTIN Number (18% Tax)</label>
+                <label className="block text-slate-400 font-bold mb-1">GSTIN Number (18% Tax)</label>
                 <input
                   value={settings.gstin}
                   onChange={(e) => setSettings({ ...settings, gstin: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-[#D4AF37] font-mono font-bold"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-mono font-bold"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Corporate CIN Number</label>
+                <label className="block text-slate-400 font-bold mb-1">Corporate CIN Number</label>
                 <input
                   value={settings.cin}
                   onChange={(e) => setSettings({ ...settings, cin: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Support Phone</label>
+                <label className="block text-slate-400 font-bold mb-1">Support Phone</label>
                 <input
                   value={settings.supportPhone}
                   onChange={(e) => setSettings({ ...settings, supportPhone: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Support Email</label>
+                <label className="block text-slate-400 font-bold mb-1">Support Email</label>
                 <input
                   value={settings.supportEmail}
                   onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-purple-300 font-bold mb-1">Corporate HQ Address</label>
+              <label className="block text-slate-400 font-bold mb-1">Corporate HQ Address</label>
               <input
                 value={settings.address}
                 onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
               />
             </div>
           </div>
@@ -178,49 +178,49 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
         {activeTab === "smtp" && (
           <div className="space-y-4 text-xs">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Mail className="w-4 h-4 text-[#D4AF37]" /> SMTP Email Server (Gmail Port 465 SSL)
+              <Mail className="w-4 h-4 text-[#c88d18]" /> SMTP Email Server (Gmail Port 465 SSL)
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">SMTP Host</label>
+                <label className="block text-slate-400 font-bold mb-1">SMTP Host</label>
                 <input
                   value={settings.smtpHost}
                   onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">SMTP Port (SSL)</label>
+                <label className="block text-slate-400 font-bold mb-1">SMTP Port (SSL)</label>
                 <input
                   value={settings.smtpPort}
                   onChange={(e) => setSettings({ ...settings, smtpPort: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">SMTP Username / Email</label>
+                <label className="block text-slate-400 font-bold mb-1">SMTP Username / Email</label>
                 <input
                   value={settings.smtpUser}
                   onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">SMTP App Password</label>
+                <label className="block text-slate-400 font-bold mb-1">SMTP App Password</label>
                 <input
                   type="password"
                   value={settings.smtpPass}
                   onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#14081E] border border-emerald-500/30 flex items-center gap-2 text-emerald-300">
+            <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-emerald-500/30 flex items-center gap-2 text-emerald-300">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>Direct SSL Socket active &bull; Tested successfully for OTP & Reservation emails!</span>
             </div>
@@ -230,53 +230,53 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
         {activeTab === "apis" && (
           <div className="space-y-4 text-xs">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#D4AF37]" /> WhatsApp Cloud API, SMS & Google Maps
+              <Globe className="w-4 h-4 text-[#c88d18]" /> WhatsApp Cloud API, SMS & Google Maps
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Fast2SMS / Twilio API Key</label>
+                <label className="block text-slate-400 font-bold mb-1">Fast2SMS / Twilio API Key</label>
                 <input
                   value={settings.smsApiKey}
                   onChange={(e) => setSettings({ ...settings, smsApiKey: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Google Maps API Key</label>
+                <label className="block text-slate-400 font-bold mb-1">Google Maps API Key</label>
                 <input
                   value={settings.googleMapsKey}
                   onChange={(e) => setSettings({ ...settings, googleMapsKey: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">WhatsApp Cloud API Permanent Token</label>
+                <label className="block text-slate-400 font-bold mb-1">WhatsApp Cloud API Permanent Token</label>
                 <input
                   value={settings.whatsappToken}
                   onChange={(e) => setSettings({ ...settings, whatsappToken: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">WhatsApp Phone Number ID</label>
+                <label className="block text-slate-400 font-bold mb-1">WhatsApp Phone Number ID</label>
                 <input
                   value={settings.whatsappPhoneId}
                   onChange={(e) => setSettings({ ...settings, whatsappPhoneId: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-purple-300 font-bold mb-1">Cloudinary Storage Cloud Name</label>
+              <label className="block text-slate-400 font-bold mb-1">Cloudinary Storage Cloud Name</label>
               <input
                 value={settings.cloudinaryCloudName}
                 onChange={(e) => setSettings({ ...settings, cloudinaryCloudName: e.target.value })}
-                className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
               />
             </div>
           </div>
@@ -285,35 +285,35 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
         {activeTab === "payments" && (
           <div className="space-y-4 text-xs">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-[#D4AF37]" /> Razorpay & Stripe Production Keys
+              <CreditCard className="w-4 h-4 text-[#c88d18]" /> Razorpay & Stripe Production Keys
             </h3>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Razorpay Key ID</label>
+                <label className="block text-slate-400 font-bold mb-1">Razorpay Key ID</label>
                 <input
                   value={settings.razorpayKeyId}
                   onChange={(e) => setSettings({ ...settings, razorpayKeyId: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                 />
               </div>
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Razorpay Key Secret</label>
+                <label className="block text-slate-400 font-bold mb-1">Razorpay Key Secret</label>
                 <input
                   type="password"
                   value={settings.razorpayKeySecret}
                   onChange={(e) => setSettings({ ...settings, razorpayKeySecret: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-purple-300 font-bold mb-1">Stripe Publishable Key</label>
+              <label className="block text-slate-400 font-bold mb-1">Stripe Publishable Key</label>
               <input
                 value={settings.stripeKey}
                 onChange={(e) => setSettings({ ...settings, stripeKey: e.target.value })}
-                className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-mono"
+                className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
               />
             </div>
           </div>
@@ -322,16 +322,16 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
         {activeTab === "locale" && (
           <div className="space-y-4 text-xs">
             <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#D4AF37]" /> Currency, Timezone & Regional Localization
+              <Globe className="w-4 h-4 text-[#c88d18]" /> Currency, Timezone & Regional Localization
             </h3>
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Base Currency</label>
+                <label className="block text-slate-400 font-bold mb-1">Base Currency</label>
                 <select
                   value={settings.currency}
                   onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-bold"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-bold"
                 >
                   <option value="INR (₹)">INR (₹ - Indian Rupee)</option>
                   <option value="USD ($)">USD ($ - US Dollar)</option>
@@ -341,11 +341,11 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
               </div>
 
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Timezone</label>
+                <label className="block text-slate-400 font-bold mb-1">Timezone</label>
                 <select
                   value={settings.timezone}
                   onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-bold"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-bold"
                 >
                   <option value="Asia/Kolkata (IST +5:30)">Asia/Kolkata (IST +5:30)</option>
                   <option value="UTC">UTC (GMT +0:00)</option>
@@ -354,11 +354,11 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
               </div>
 
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Regional Language</label>
+                <label className="block text-slate-400 font-bold mb-1">Regional Language</label>
                 <select
                   value={settings.language}
                   onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white font-bold"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-bold"
                 >
                   <option value="English / Telugu">English / Telugu (తెలుగు)</option>
                   <option value="English / Hindi">English / Hindi (हिंदी)</option>

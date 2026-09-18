@@ -12,6 +12,8 @@ interface AuthContextType {
   closeAuthModal: () => void;
   login: (credentials: { identifier: string; password?: string; rememberMe?: boolean }) => Promise<{ success: boolean; message: string }>;
   register: (data: { name: string; email: string; phone: string; password?: string; referralCode?: string }) => Promise<{ success: boolean; message: string }>;
+  sendRegistrationOtp: (data: { name: string; email: string; phone: string }) => Promise<{ success: boolean; message: string; demoOtp?: string }>;
+  verifyRegistrationOtp: (data: { name: string; email: string; phone: string; password?: string; referralCode?: string; otp: string }) => Promise<{ success: boolean; message: string }>;
   sendOtp: (identifier: string, type?: string) => Promise<{ success: boolean; message: string; demoOtp?: string }>;
   verifyOtp: (identifier: string, otp: string, name?: string, referralCode?: string) => Promise<{ success: boolean; message: string }>;
   socialLogin: (provider: "google" | "apple", profile: { name: string; email: string; avatar?: string }) => Promise<{ success: boolean; message: string }>;
@@ -126,6 +128,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: true, message: json.message || "Registered successfully!" };
       }
       return { success: false, message: json.message || "Registration failed" };
+    } catch (err: any) {
+      return { success: false, message: err?.message || "Network error." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendRegistrationOtp = async (data: { name: string; email: string; phone: string }) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/send-registration-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      return {
+        success: json.success,
+        message: json.message || "Verification code sent to your email.",
+        demoOtp: json.demoOtp,
+      };
+    } catch (err: any) {
+      return { success: false, message: err?.message || "Failed to send email verification code." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyRegistrationOtp = async (data: {
+    name: string;
+    email: string;
+    phone: string;
+    password?: string;
+    referralCode?: string;
+    otp: string;
+  }) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/verify-registration-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        saveSession(json.data, json.token || "usr_session");
+        setAuthModalOpen(false);
+        return { success: true, message: json.message || "Registration verified successfully!" };
+      }
+      return { success: false, message: json.message || "Verification failed." };
     } catch (err: any) {
       return { success: false, message: err?.message || "Network error." };
     } finally {
@@ -395,6 +447,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         closeAuthModal,
         login,
         register,
+        sendRegistrationOtp,
+        verifyRegistrationOtp,
         sendOtp,
         verifyOtp,
         socialLogin,

@@ -37,15 +37,11 @@ interface CarDetailsPageProps {
   onNavigate?: (path: string) => void;
 }
 
-import { DEFAULT_DATABASE_CARS } from "@/data/defaultCars";
-
-const defaultCars = DEFAULT_DATABASE_CARS;
-
 export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onNavigate }) => {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
-  const [fleet, setFleet] = useState<any[]>(defaultCars);
-  const [currentCar, setCurrentCar] = useState<any>(defaultCars[3]); // Default Toyota Innova
+  const [fleet, setFleet] = useState<any[]>([]);
+  const [currentCar, setCurrentCar] = useState<any | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [copiedShareNotice, setCopiedShareNotice] = useState(false);
 
@@ -61,18 +57,28 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
       .then((res) => {
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setFleet(res.data);
+          if (carIdOrName) {
+            const found = res.data.find(
+              (c: any) =>
+                String(c.id) === String(carIdOrName) ||
+                (c.name && c.name.toLowerCase().includes(String(carIdOrName).toLowerCase()))
+            );
+            setCurrentCar(found || res.data[0]);
+          } else {
+            setCurrentCar(res.data[0]);
+          }
         }
       })
       .catch((err) => console.warn(err));
-  }, []);
+  }, [carIdOrName]);
 
   // Sync current car when ID / Name prop changes
   useEffect(() => {
-    if (!carIdOrName) return;
+    if (!carIdOrName || fleet.length === 0) return;
     const found = fleet.find(
       (c) =>
         String(c.id) === String(carIdOrName) ||
-        c.name.toLowerCase().includes(String(carIdOrName).toLowerCase())
+        (c.name && c.name.toLowerCase().includes(String(carIdOrName).toLowerCase()))
     );
     if (found) setCurrentCar(found);
   }, [carIdOrName, fleet]);
@@ -239,154 +245,178 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
         </div>
       </header>
 
-      {/* Breadcrumb & Vehicle Title Header */}
-      <div className="pt-20 pb-4 bg-card border-b border-border">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-3">
-          {/* Breadcrumb row */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <a
-                href="/"
-                onClick={(e) => {
-                  if (onNavigate) {
-                    e.preventDefault();
-                    onNavigate("/");
-                  }
-                }}
-                className="hover:text-brand-navy"
-              >
-                Home
-              </a>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-              <span>Fleet</span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-              <span className="font-bold text-brand-navy">{currentCar.name}</span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Share button */}
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-mist hover:bg-brand-mist/80 text-brand-navy text-xs font-bold transition-colors"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                <span>{copiedShareNotice ? "Link Copied!" : "Share"}</span>
-              </button>
-
-              {/* Wishlist button */}
-              <button
-                onClick={() => handleToggleWishlist(currentCar.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  isSaved
-                    ? "bg-rose-500 text-white shadow"
-                    : "bg-brand-mist hover:bg-brand-mist/80 text-brand-navy"
-                }`}
-              >
-                <Heart className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
-                <span>{isSaved ? "Saved" : "Save Car"}</span>
-              </button>
-            </div>
+      {/* Main Vehicle Content or Empty State */}
+      {!currentCar ? (
+        <div className="pt-32 pb-24 max-w-[1600px] mx-auto px-4 sm:px-8 text-center space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-brand-gold">
+            <Car className="h-8 w-8" />
           </div>
-
-          {/* Title & Ratings row */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-0.5 rounded-full bg-brand-gold text-brand-navy text-[10px] font-black uppercase tracking-wider">
-                  {currentCar.tag || currentCar.category || "Luxury"}
-                </span>
-                <span className="text-xs text-muted-foreground font-semibold">
-                  {currentCar.branch || "Tirupati Central Station Hub"}
-                </span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-black text-brand-navy tracking-tight mt-1">
-                {currentCar.name}
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
-                {currentCar.detail}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
-              <div className="flex items-center gap-1.5">
-                <div className="h-8 w-8 rounded-xl bg-brand-gold text-brand-navy flex items-center justify-center font-black text-sm">
-                  ★
-                </div>
-                <div>
-                  <span className="text-sm font-black text-brand-navy">{currentCar.rating || "4.9"}</span>
-                  <span className="text-[10px] text-muted-foreground block">140+ Trips</span>
-                </div>
-              </div>
-              <div className="h-8 w-px bg-border" />
-              <div className="text-right">
-                <span className="text-[10px] text-emerald-600 font-black uppercase tracking-wider block">Ghat Ready</span>
-                <span className="text-xs font-bold text-brand-navy">TTD Certified</span>
-              </div>
-            </div>
-          </div>
+          <h2 className="text-2xl font-black text-brand-navy">Vehicle Details Unavailable</h2>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            This vehicle is currently not in the active database or has been updated by the administrator.
+          </p>
+          <Button
+            onClick={() => {
+              if (onNavigate) onNavigate("/cars");
+              else window.history.back();
+            }}
+            className="h-10 px-6 rounded-xl bg-brand-gold text-brand-navy font-bold text-xs"
+          >
+            Explore Available Cars
+          </Button>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Breadcrumb & Vehicle Title Header */}
+          <div className="pt-20 pb-4 bg-card border-b border-border">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-3">
+              {/* Breadcrumb row */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <a
+                    href="/"
+                    onClick={(e) => {
+                      if (onNavigate) {
+                        e.preventDefault();
+                        onNavigate("/");
+                      }
+                    }}
+                    className="hover:text-brand-navy"
+                  >
+                    Home
+                  </a>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
+                  <span>Fleet</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
+                  <span className="font-bold text-brand-navy">{currentCar.name}</span>
+                </div>
 
-      {/* Main 2-Column Details & Booking Grid */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Left Column (8 cols): HD Gallery, Specs, Pricing Tiers, Ghat Advice */}
-          <div className="lg:col-span-8 space-y-12">
-            {/* 1. HD Gallery */}
-            <CarGallerySection car={currentCar} />
+                <div className="flex items-center gap-3">
+                  {/* Share button */}
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-mist hover:bg-brand-mist/80 text-brand-navy text-xs font-bold transition-colors"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    <span>{copiedShareNotice ? "Link Copied!" : "Share"}</span>
+                  </button>
 
-            {/* 2. Comprehensive Specs & Safety Matrix */}
-            <CarInfoSpecsSection car={currentCar} />
+                  {/* Wishlist button */}
+                  <button
+                    onClick={() => handleToggleWishlist(currentCar.id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                      isSaved
+                        ? "bg-rose-500 text-white shadow"
+                        : "bg-brand-mist hover:bg-brand-mist/80 text-brand-navy"
+                    }`}
+                  >
+                    <Heart className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
+                    <span>{isSaved ? "Saved" : "Save Car"}</span>
+                  </button>
+                </div>
+              </div>
 
-            {/* 3. Multi-Duration Pricing Tiers Card */}
-            <PricingTiersCard car={currentCar} />
+              {/* Title & Ratings row */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-0.5 rounded-full bg-brand-gold text-brand-navy text-[10px] font-black uppercase tracking-wider">
+                      {currentCar.tag || currentCar.category || "Luxury"}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-semibold">
+                      {currentCar.branch || "Tirupati Central Station Hub"}
+                    </span>
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-black text-brand-navy tracking-tight mt-1">
+                    {currentCar.name}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
+                    {currentCar.detail}
+                  </p>
+                </div>
 
-            {/* 4. Ghat Road Guidelines for this Model */}
-            <div className="p-6 rounded-3xl bg-brand-mist/40 border border-border space-y-3">
-              <span className="text-xs font-bold uppercase tracking-widest text-brand-teal flex items-center gap-1.5">
-                <Compass className="h-4 w-4" /> Tirumala Ghat Road Guidelines
-              </span>
-              <h4 className="text-lg font-bold text-brand-navy">
-                Driving the {currentCar.name} to Tirumala Hills
-              </h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                This vehicle is equipped with Hill-Hold Assist and automated braking sensors. Please observe TTD's minimum travel duration rule (28 mins Up-Ghat, 40 mins Down-Ghat). All required toll passes & FASTag are pre-calibrated.
-              </p>
+                <div className="flex items-center gap-4 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-8 w-8 rounded-xl bg-brand-gold text-brand-navy flex items-center justify-center font-black text-sm">
+                      ★
+                    </div>
+                    <div>
+                      <span className="text-sm font-black text-brand-navy">{currentCar.rating || "4.9"}</span>
+                      <span className="text-[10px] text-muted-foreground block">140+ Trips</span>
+                    </div>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="text-right">
+                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-wider block">Ghat Ready</span>
+                    <span className="text-xs font-bold text-brand-navy">TTD Certified</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Column (4 cols): Sticky Luxury Booking Calculator Panel */}
-          <div className="lg:col-span-4">
-            <LuxuryBookingPanel
-              car={currentCar}
-              onNavigate={onNavigate}
-              onBookingSuccess={() => {
-                if (onNavigate) onNavigate("/dashboard");
+          {/* Main 2-Column Details & Booking Grid */}
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+              {/* Left Column (8 cols): HD Gallery, Specs, Pricing Tiers, Ghat Advice */}
+              <div className="lg:col-span-8 space-y-12">
+                {/* 1. HD Gallery */}
+                <CarGallerySection car={currentCar} />
+
+                {/* 2. Comprehensive Specs & Safety Matrix */}
+                <CarInfoSpecsSection car={currentCar} />
+
+                {/* 3. Multi-Duration Pricing Tiers Card */}
+                <PricingTiersCard car={currentCar} />
+
+                {/* 4. Ghat Road Guidelines for this Model */}
+                <div className="p-6 rounded-3xl bg-brand-mist/40 border border-border space-y-3">
+                  <span className="text-xs font-bold uppercase tracking-widest text-brand-teal flex items-center gap-1.5">
+                    <Compass className="h-4 w-4" /> Tirumala Ghat Road Guidelines
+                  </span>
+                  <h4 className="text-lg font-bold text-brand-navy">
+                    Driving the {currentCar.name} to Tirumala Hills
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    This vehicle is equipped with Hill-Hold Assist and automated braking sensors. Please observe TTD's minimum travel duration rule (28 mins Up-Ghat, 40 mins Down-Ghat). All required toll passes & FASTag are pre-calibrated.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column (4 cols): Sticky Luxury Booking Calculator Panel */}
+              <div className="lg:col-span-4">
+                <LuxuryBookingPanel
+                  car={currentCar}
+                  onNavigate={onNavigate}
+                  onBookingSuccess={() => {
+                    if (onNavigate) onNavigate("/dashboard");
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Similar Cars & Recommendations */}
+            <SimilarAndRecommendedCars
+              currentCar={currentCar}
+              allCars={fleet}
+              wishlistIds={wishlistIds}
+              compareList={compareList}
+              onToggleWishlist={handleToggleWishlist}
+              onToggleCompare={handleToggleCompare}
+              onOpen360={(c) => setSelected360Car(c)}
+              onSelectCar={(c) => {
+                setCurrentCar(c);
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             />
+
+            {/* FAQ Section */}
+            <div className="mt-16">
+              <FaqSection />
+            </div>
           </div>
-        </div>
-
-        {/* Similar Cars & Recommendations */}
-        <SimilarAndRecommendedCars
-          currentCar={currentCar}
-          allCars={fleet}
-          wishlistIds={wishlistIds}
-          compareList={compareList}
-          onToggleWishlist={handleToggleWishlist}
-          onToggleCompare={handleToggleCompare}
-          onOpen360={(c) => setSelected360Car(c)}
-          onSelectCar={(c) => {
-            setCurrentCar(c);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        />
-
-        {/* FAQ Section */}
-        <div className="mt-16">
-          <FaqSection />
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Mobile App Download */}
       <AppDownloadSection />

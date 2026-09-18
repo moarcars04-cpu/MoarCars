@@ -68,12 +68,12 @@ export default function ReviewsModeration({
   return (
     <main className="flex-1 p-8 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <Star className="w-6 h-6 text-[#D4AF37]" /> Customer Reviews & Testimonials Moderation
+            <Star className="w-6 h-6 text-[#c88d18]" /> Customer Reviews & Testimonials Moderation
           </h2>
-          <p className="text-xs text-purple-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Audit customer feedback, approve ratings, feature on homepage, and publish official Moar Cars replies
           </p>
         </div>
@@ -85,8 +85,8 @@ export default function ReviewsModeration({
               onClick={() => setFilterStatus(st)}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition-all capitalize ${
                 filterStatus === st
-                  ? "bg-[#D4AF37] text-slate-950 font-black shadow-md"
-                  : "bg-[#2A1336]/60 text-purple-300 border border-purple-500/20 hover:text-white"
+                  ? "bg-[#c88d18] text-slate-950 font-black shadow-md"
+                  : "bg-[#0b1426]/60 text-slate-400 border border-slate-800 hover:text-white"
               }`}
             >
               {st === "all" ? "All Reviews" : st}
@@ -100,13 +100,13 @@ export default function ReviewsModeration({
         {filtered.map((r) => (
           <div
             key={r.id}
-            className="p-6 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-2xl space-y-3"
+            className="p-6 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-2xl space-y-3"
           >
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-white text-sm">{r.customerName}</h4>
-                  <span className="text-[10px] text-purple-400">{r.customerPhone}</span>
+                  <span className="text-[10px] text-slate-400">{r.customerPhone}</span>
                   <span
                     className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
                       r.status === "Approved"
@@ -119,44 +119,44 @@ export default function ReviewsModeration({
                     {r.status}
                   </span>
                   {r.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#D4AF37] text-slate-950">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#c88d18] text-slate-950">
                       ★ FEATURED ON HOME
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[#D4AF37] font-semibold mt-0.5 flex items-center gap-1">
-                  <Car className="w-3.5 h-3.5" /> {r.carName} &bull; <span className="text-purple-300">{r.date}</span>
+                <p className="text-xs text-[#c88d18] font-semibold mt-0.5 flex items-center gap-1">
+                  <Car className="w-3.5 h-3.5" /> {r.carName} &bull; <span className="text-slate-400">{r.date}</span>
                 </p>
               </div>
 
-              <div className="flex items-center gap-1 text-[#D4AF37] font-black text-sm">
+              <div className="flex items-center gap-1 text-[#c88d18] font-black text-sm">
                 {Array.from({ length: 5 }).map((_, idx) => (
                   <Star
                     key={idx}
-                    className={`w-4 h-4 ${idx < r.rating ? "fill-[#D4AF37] text-[#D4AF37]" : "text-purple-900"}`}
+                    className={`w-4 h-4 ${idx < r.rating ? "fill-[#c88d18] text-[#c88d18]" : "text-slate-700"}`}
                   />
                 ))}
               </div>
             </div>
 
-            <p className="text-xs text-purple-200/90 leading-relaxed bg-[#14081E] p-3.5 rounded-2xl border border-purple-500/20">
+            <p className="text-xs text-slate-300/90 leading-relaxed bg-[#070e1c] p-3.5 rounded-2xl border border-slate-800">
               "{r.comment}"
             </p>
 
             {r.adminReply && (
-              <div className="p-3.5 rounded-2xl bg-purple-950/60 border border-[#D4AF37]/30 text-xs text-purple-200 space-y-1">
-                <span className="text-[10px] text-[#D4AF37] font-bold uppercase block">Official Response from Moar Cars</span>
+              <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-[#c88d18]/30 text-xs text-slate-300 space-y-1">
+                <span className="text-[10px] text-[#c88d18] font-bold uppercase block">Official Response from Moar Cars</span>
                 <p className="italic">{r.adminReply}</p>
               </div>
             )}
 
-            <div className="flex justify-between items-center pt-2 border-t border-purple-500/20 text-xs">
+            <div className="flex justify-between items-center pt-2 border-t border-slate-800 text-xs">
               <button
                 onClick={() => handleToggleFeatured(r.id)}
                 className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-1 ${
                   r.isFeatured
-                    ? "bg-[#D4AF37] text-slate-950 border-amber-400"
-                    : "bg-purple-950 text-purple-300 border-purple-500/30 hover:text-white"
+                    ? "bg-[#c88d18] text-slate-950 border-amber-400"
+                    : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" /> {r.isFeatured ? "Featured" : "Feature on Homepage"}
@@ -168,7 +168,7 @@ export default function ReviewsModeration({
                     setReplyingReview(r);
                     setReplyText(r.adminReply || "");
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-purple-950 hover:bg-[#432650] text-[#D4AF37] border border-purple-500/30 font-bold"
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-[#c88d18]/20 text-[#c88d18] border border-slate-800 font-bold"
                 >
                   <MessageSquare className="w-3.5 h-3.5 inline mr-1" /> Reply
                 </button>
@@ -197,39 +197,39 @@ export default function ReviewsModeration({
       {/* REPLY MODAL */}
       {replyingReview && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-[#2E1439] border border-purple-500/30 rounded-3xl w-full max-w-md p-6 shadow-2xl text-white space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-purple-500/20">
+          <div className="bg-[#0b1426] border border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl text-white space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
               <h3 className="text-base font-black flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-[#D4AF37]" /> Reply to {replyingReview.customerName}
+                <MessageSquare className="w-5 h-5 text-[#c88d18]" /> Reply to {replyingReview.customerName}
               </h3>
-              <button onClick={() => setReplyingReview(null)} className="text-purple-400 hover:text-white">
+              <button onClick={() => setReplyingReview(null)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs text-purple-300 italic bg-[#14081E] p-3 rounded-xl">"{replyingReview.comment}"</p>
+            <p className="text-xs text-slate-400 italic bg-[#070e1c] p-3 rounded-xl">"{replyingReview.comment}"</p>
 
             <div>
-              <label className="block text-purple-300 font-bold text-xs mb-1">Official Response Message</label>
+              <label className="block text-slate-400 font-bold text-xs mb-1">Official Response Message</label>
               <textarea
                 rows={4}
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Thank you for choosing Moar Cars..."
-                className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-3 text-xs text-white"
+                className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-3 text-xs text-white"
               ></textarea>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-purple-500/20">
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setReplyingReview(null)}
-                className="px-4 py-2 rounded-xl bg-purple-950 text-purple-300 text-xs"
+                className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSendReply}
-                className="px-5 py-2 rounded-xl bg-[#D4AF37] text-slate-950 font-black text-xs"
+                className="px-5 py-2 rounded-xl bg-[#c88d18] text-slate-950 font-black text-xs"
               >
                 Publish Reply
               </button>

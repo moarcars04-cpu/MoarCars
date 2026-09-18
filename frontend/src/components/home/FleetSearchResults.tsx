@@ -417,9 +417,9 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
               </div>
 
               {/* Hub Marker 4: Tirumala Hill Gate */}
-              <div className="absolute top-12 left-1/2 -translate-x-1/2 p-3 rounded-2xl bg-slate-900/90 border border-purple-500/40 shadow-xl text-center cursor-pointer hover:scale-110 transition-transform">
-                <span className="flex h-3 w-3 mx-auto rounded-full bg-purple-400 animate-ping mb-1" />
-                <p className="text-xs font-bold text-purple-300">Tirumala Ghat Gate</p>
+              <div className="absolute top-12 left-1/2 -translate-x-1/2 p-3 rounded-2xl bg-slate-900/90 border border-amber-500/40 shadow-xl text-center cursor-pointer hover:scale-110 transition-transform">
+                <span className="flex h-3 w-3 mx-auto rounded-full bg-amber-400 animate-ping mb-1" />
+                <p className="text-xs font-bold text-amber-300">Tirumala Ghat Gate</p>
                 <p className="text-[10px] text-white/70">Express Checkpoint Hub</p>
               </div>
             </div>

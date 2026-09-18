@@ -33,6 +33,23 @@ function AppContent() {
     };
   }, [openAuthModal]);
 
+  // Dynamic SEO Page Title & Meta Management
+  useEffect(() => {
+    if (path === "/admin" || path.startsWith("/admin")) {
+      document.title = "Admin Fleet & Booking Portal | Moar Cars";
+    } else if (path === "/dashboard" || path === "/profile" || path === "/my-bookings") {
+      document.title = "My Trips & Account | Moar Cars";
+    } else if (path === "/checkout" || path.startsWith("/checkout")) {
+      document.title = "Booking Checkout & Verification | Moar Cars";
+    } else if (path === "/cars" || path === "/cars/" || path === "/fleet") {
+      document.title = "Available Fleet & Rental Cars in Tirupati | Moar Cars";
+    } else if (path.startsWith("/car/")) {
+      document.title = "Car Specifications & Booking | Moar Cars";
+    } else {
+      document.title = "Moar Cars | Premium Self-Drive Car Rentals in Tirupati & AP";
+    }
+  }, [path]);
+
   const navigateTo = (newPath: string, state?: any) => {
     if (newPath.startsWith("/#")) {
       const hash = newPath.replace("/", "");

@@ -96,25 +96,25 @@ export default function CouponEngine({
   return (
     <main className="flex-1 p-8 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-purple-500/20">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <Tag className="w-6 h-6 text-[#D4AF37]" /> Promotional Coupons & Surge Engine
+            <Tag className="w-6 h-6 text-[#c88d18]" /> Promotional Coupons & Surge Engine
           </h2>
-          <p className="text-xs text-purple-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Configure discount promo codes, 7 offer types, percentage & flat discounts, referral perks, and usage limits
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative w-72">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-purple-400" />
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
               placeholder="Search coupon code, type..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#14081E] border border-purple-500/30 rounded-2xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+              className="w-full bg-[#070e1c] border border-slate-800 rounded-2xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-[#c88d18]"
             />
           </div>
 
@@ -123,7 +123,7 @@ export default function CouponEngine({
               setEditingCoupon(null);
               setIsAddEditModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95"
           >
             <Plus className="w-4 h-4" /> Create Coupon
           </button>
@@ -132,30 +132,30 @@ export default function CouponEngine({
 
       {/* TOP METRIC CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Active Promo Codes</span>
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Active Promo Codes</span>
           <h4 className="text-2xl font-black text-white mt-1">{coupons.filter((c) => c.isActive).length} Live</h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">Auto-Redeem Active</p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Total Redemptions</span>
-          <h4 className="text-2xl font-black text-[#D4AF37] mt-1">
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Total Redemptions</span>
+          <h4 className="text-2xl font-black text-[#c88d18] mt-1">
             {coupons.reduce((acc, c) => acc + c.usedCount, 0)} Used
           </h4>
-          <p className="text-[10px] text-purple-300 mt-0.5">Across All Bookings</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">Across All Bookings</p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Total Customer Savings</span>
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Total Customer Savings</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">₹1,84,500</h4>
-          <p className="text-[10px] text-purple-300 mt-0.5 font-bold">Promotional Value Delivered</p>
+          <p className="text-[10px] text-slate-400 mt-0.5 font-bold">Promotional Value Delivered</p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-xl">
-          <span className="text-xs text-purple-300 font-bold block">Highest Converting Code</span>
-          <h4 className="text-2xl font-black text-purple-200 mt-1">MOARFIRST</h4>
-          <p className="text-[10px] text-[#D4AF37] mt-0.5 font-bold">412 Successful Bookings</p>
+        <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
+          <span className="text-xs text-slate-400 font-bold block">Highest Converting Code</span>
+          <h4 className="text-2xl font-black text-slate-300 mt-1">MOARFIRST</h4>
+          <p className="text-[10px] text-[#c88d18] mt-0.5 font-bold">412 Successful Bookings</p>
         </div>
       </div>
 
@@ -176,8 +176,8 @@ export default function CouponEngine({
             onClick={() => setFilterType(tp)}
             className={`px-3.5 py-1.5 rounded-xl font-bold transition-all capitalize ${
               filterType === tp
-                ? "bg-[#D4AF37] text-slate-950 font-black shadow-md"
-                : "bg-[#2A1336]/60 text-purple-300 border border-purple-500/20 hover:text-white"
+                ? "bg-[#c88d18] text-slate-950 font-black shadow-md"
+                : "bg-[#0b1426]/60 text-slate-400 border border-slate-800 hover:text-white"
             }`}
           >
             {tp === "all" ? "All 7 Offer Types" : tp}
@@ -190,10 +190,10 @@ export default function CouponEngine({
         {filteredCoupons.map((cp) => (
           <div
             key={cp.id}
-            className="p-6 rounded-3xl bg-[#2A1336]/60 backdrop-blur-2xl border border-purple-500/20 shadow-2xl space-y-4 hover:border-[#D4AF37]/50 transition-all"
+            className="p-6 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-2xl space-y-4 hover:border-[#c88d18]/50 transition-all"
           >
             <div className="flex justify-between items-start">
-              <span className="px-3.5 py-1.5 rounded-xl bg-[#14081E] border border-amber-400/40 font-mono font-black text-sm text-[#D4AF37] tracking-wider shadow-inner">
+              <span className="px-3.5 py-1.5 rounded-xl bg-[#070e1c] border border-amber-400/40 font-mono font-black text-sm text-[#c88d18] tracking-wider shadow-inner">
                 {cp.code}
               </span>
               <button
@@ -209,11 +209,11 @@ export default function CouponEngine({
             </div>
 
             <div className="text-xs space-y-1">
-              <p className="text-purple-400 uppercase text-[10px] font-bold tracking-wider">{cp.type}</p>
+              <p className="text-slate-400 uppercase text-[10px] font-bold tracking-wider">{cp.type}</p>
               <h3 className="text-2xl font-black text-white">
                 {cp.isPercent ? `${cp.discountValue}% OFF` : `₹${cp.discountValue} FLAT OFF`}
               </h3>
-              <p className="text-purple-300 text-[11px]">
+              <p className="text-slate-400 text-[11px]">
                 Min Booking: <strong className="text-white">₹{cp.minBookingValue.toLocaleString()}</strong>
                 {cp.maxDiscount && ` (Cap ₹${cp.maxDiscount})`}
               </p>
@@ -221,27 +221,27 @@ export default function CouponEngine({
 
             {/* Usage Progress Bar */}
             <div>
-              <div className="flex justify-between text-[10px] text-purple-300 font-bold mb-1">
+              <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-1">
                 <span>Usage Progress</span>
                 <span>{cp.usedCount} of {cp.usageLimit}</span>
               </div>
-              <div className="w-full h-2 rounded-full bg-[#14081E] overflow-hidden border border-purple-500/20">
+              <div className="w-full h-2 rounded-full bg-[#070e1c] overflow-hidden border border-slate-800">
                 <div
-                  className="h-full bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] rounded-full transition-all"
+                  className="h-full bg-gradient-to-r from-[#c88d18] to-[#d49b29] rounded-full transition-all"
                   style={{ width: `${Math.min(100, (cp.usedCount / cp.usageLimit) * 100)}%` }}
                 ></div>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-purple-500/20 flex justify-between items-center text-[10px] text-purple-400">
-              <span>Expires: <strong className="text-purple-200">{cp.expiryDate}</strong></span>
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
+              <span>Expires: <strong className="text-slate-300">{cp.expiryDate}</strong></span>
               <div className="flex gap-1.5">
                 <button
                   onClick={() => {
                     setEditingCoupon(cp);
                     setIsAddEditModalOpen(true);
                   }}
-                  className="p-1.5 rounded-lg bg-purple-950/60 hover:bg-[#432650] text-purple-200 border border-purple-500/30"
+                  className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-[#c88d18]/20 text-slate-300 border border-slate-800"
                   title="Edit Coupon"
                 >
                   <Edit className="w-3.5 h-3.5" />
@@ -264,12 +264,12 @@ export default function CouponEngine({
           ==================================================================== */}
       {isAddEditModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-[#2E1439] border border-purple-500/30 rounded-3xl w-full max-w-md p-6 shadow-2xl text-white space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-purple-500/20">
+          <div className="bg-[#0b1426] border border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-2xl text-white space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-800">
               <h3 className="text-base font-black flex items-center gap-2">
-                <Tag className="w-5 h-5 text-[#D4AF37]" /> {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : "Create Promotional Coupon"}
+                <Tag className="w-5 h-5 text-[#c88d18]" /> {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : "Create Promotional Coupon"}
               </h3>
-              <button onClick={() => setIsAddEditModalOpen(false)} className="text-purple-400 hover:text-white">
+              <button onClick={() => setIsAddEditModalOpen(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -292,23 +292,23 @@ export default function CouponEngine({
               className="space-y-3 text-xs"
             >
               <div>
-                <label className="block text-purple-300 font-bold mb-1">Coupon Promo Code *</label>
+                <label className="block text-slate-400 font-bold mb-1">Coupon Promo Code *</label>
                 <input
                   name="code"
                   defaultValue={editingCoupon?.code || ""}
                   required
                   placeholder="FESTIVAL30"
-                  className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-[#D4AF37] font-black font-mono text-sm uppercase tracking-wider"
+                  className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-black font-mono text-sm uppercase tracking-wider"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Offer Category</label>
+                  <label className="block text-slate-400 font-bold mb-1">Offer Category</label>
                   <select
                     name="type"
                     defaultValue={editingCoupon?.type || "Flat Discount"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   >
                     <option value="Flat Discount">Flat Discount</option>
                     <option value="Percentage Discount">Percentage Discount</option>
@@ -320,11 +320,11 @@ export default function CouponEngine({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Discount Mode</label>
+                  <label className="block text-slate-400 font-bold mb-1">Discount Mode</label>
                   <select
                     name="isPercent"
                     defaultValue={editingCoupon?.isPercent ? "true" : "false"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   >
                     <option value="false">Flat Rupees (₹)</option>
                     <option value="true">Percentage (%)</option>
@@ -334,58 +334,58 @@ export default function CouponEngine({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Discount Value *</label>
+                  <label className="block text-slate-400 font-bold mb-1">Discount Value *</label>
                   <input
                     name="discountValue"
                     type="number"
                     defaultValue={editingCoupon?.discountValue || 500}
                     required
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-emerald-400 font-bold"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Min Booking Value (₹)</label>
+                  <label className="block text-slate-400 font-bold mb-1">Min Booking Value (₹)</label>
                   <input
                     name="minBookingValue"
                     type="number"
                     defaultValue={editingCoupon?.minBookingValue || 2500}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Total Usage Limit</label>
+                  <label className="block text-slate-400 font-bold mb-1">Total Usage Limit</label>
                   <input
                     name="usageLimit"
                     type="number"
                     defaultValue={editingCoupon?.usageLimit || 500}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-purple-300 font-bold mb-1">Expiry Date</label>
+                  <label className="block text-slate-400 font-bold mb-1">Expiry Date</label>
                   <input
                     name="expiryDate"
                     type="date"
                     defaultValue={editingCoupon?.expiryDate || "2027-12-31"}
-                    className="w-full bg-[#14081E] border border-purple-500/30 rounded-xl p-2.5 text-white"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-purple-500/20">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsAddEditModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-purple-950 text-purple-300 text-xs"
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#D4AF37] text-slate-950 font-black text-xs"
+                  className="px-5 py-2 rounded-xl bg-[#c88d18] text-slate-950 font-black text-xs"
                 >
                   {editingCoupon ? "Save Changes" : "Create Coupon"}
                 </button>

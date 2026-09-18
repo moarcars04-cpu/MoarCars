@@ -41,10 +41,11 @@ export const adminApi = {
     return fetchJson<CarItem[]>(`${API_BASE}/admin/cars`);
   },
   async createCar(car: Partial<CarItem>): Promise<CarItem | null> {
+    const { id, ...data } = car;
     return fetchJson<CarItem>(`${API_BASE}/admin/cars`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(car),
+      body: JSON.stringify(data),
     });
   },
   async updateCar(id: number, car: Partial<CarItem>): Promise<CarItem | null> {
@@ -66,10 +67,11 @@ export const adminApi = {
     return fetchJson<BookingItem[]>(`${API_BASE}/admin/bookings`);
   },
   async createBooking(booking: Partial<BookingItem>): Promise<BookingItem | null> {
+    const { id, ...data } = booking;
     return fetchJson<BookingItem>(`${API_BASE}/admin/bookings`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(booking),
+      body: JSON.stringify(data),
     });
   },
   async updateBooking(id: number, booking: Partial<BookingItem>): Promise<BookingItem | null> {
@@ -91,10 +93,11 @@ export const adminApi = {
     return fetchJson<CustomerItem[]>(`${API_BASE}/admin/customers`);
   },
   async createCustomer(customer: Partial<CustomerItem>): Promise<CustomerItem | null> {
+    const { id, ...data } = customer;
     return fetchJson<CustomerItem>(`${API_BASE}/admin/customers`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(customer),
+      body: JSON.stringify(data),
     });
   },
   async updateCustomer(id: number, customer: Partial<CustomerItem>): Promise<CustomerItem | null> {
@@ -116,10 +119,11 @@ export const adminApi = {
     return fetchJson<DriverItem[]>(`${API_BASE}/admin/drivers`);
   },
   async createDriver(driver: Partial<DriverItem>): Promise<DriverItem | null> {
+    const { id, ...data } = driver;
     return fetchJson<DriverItem>(`${API_BASE}/admin/drivers`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(driver),
+      body: JSON.stringify(data),
     });
   },
   async updateDriver(id: number, driver: Partial<DriverItem>): Promise<DriverItem | null> {
@@ -141,10 +145,11 @@ export const adminApi = {
     return fetchJson<BranchItem[]>(`${API_BASE}/admin/branches`);
   },
   async createBranch(branch: Partial<BranchItem>): Promise<BranchItem | null> {
+    const { id, ...data } = branch;
     return fetchJson<BranchItem>(`${API_BASE}/admin/branches`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(branch),
+      body: JSON.stringify(data),
     });
   },
   async updateBranch(id: number, branch: Partial<BranchItem>): Promise<BranchItem | null> {
@@ -166,10 +171,11 @@ export const adminApi = {
     return fetchJson<PaymentItem[]>(`${API_BASE}/admin/payments`);
   },
   async createPayment(payment: Partial<PaymentItem>): Promise<PaymentItem | null> {
+    const { id, ...data } = payment;
     return fetchJson<PaymentItem>(`${API_BASE}/admin/payments`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payment),
+      body: JSON.stringify(data),
     });
   },
   async refundPayment(id: string, payload?: { damageDeduction?: number; refundAmount?: number }): Promise<PaymentItem | null> {
@@ -191,10 +197,11 @@ export const adminApi = {
     return fetchJson<CouponItem[]>(`${API_BASE}/admin/coupons`);
   },
   async createCoupon(coupon: Partial<CouponItem>): Promise<CouponItem | null> {
+    const { id, ...data } = coupon;
     return fetchJson<CouponItem>(`${API_BASE}/admin/coupons`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(coupon),
+      body: JSON.stringify(data),
     });
   },
   async updateCoupon(id: number, coupon: Partial<CouponItem>): Promise<CouponItem | null> {
@@ -216,10 +223,11 @@ export const adminApi = {
     return fetchJson<ReviewItem[]>(`${API_BASE}/admin/reviews`);
   },
   async createReview(review: Partial<ReviewItem>): Promise<ReviewItem | null> {
+    const { id, ...data } = review;
     return fetchJson<ReviewItem>(`${API_BASE}/admin/reviews`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(review),
+      body: JSON.stringify(data),
     });
   },
   async replyReview(id: number, reply: string): Promise<ReviewItem | null> {

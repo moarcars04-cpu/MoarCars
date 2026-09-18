@@ -33,7 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";
 import { MoarLogo } from "@/components/common/MoarLogo";
-import { DEFAULT_DATABASE_CARS, CarFleetItem } from "@/data/defaultCars";
+import { CarFleetItem } from "@/data/defaultCars";
 import { Viewer360Modal } from "@/components/home/360ViewerModal";
 import { QuickBookingModal } from "@/components/home/QuickBookingModal";
 
@@ -44,8 +44,8 @@ interface CarsPageProps {
 export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
-  // Fleet state initialized with database defaults
-  const [fleet, setFleet] = useState<CarFleetItem[]>(DEFAULT_DATABASE_CARS);
+  // Fleet state initialized with live database cars
+  const [fleet, setFleet] = useState<CarFleetItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Search & Filter State
@@ -83,26 +83,26 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
       })
       .then((res) => {
         if (!isMounted) return;
-        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res.success && Array.isArray(res.data)) {
           const mapped: CarFleetItem[] = res.data.map((car: any) => ({
             ...car,
-            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "1699").replace(/[^0-9]/g, ""), 10) || 1699,
-            priceDisplay: car.priceDisplay || (car.price ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(car.pricePerDay || 1699).toLocaleString("en-IN")}`),
+            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0,
+            priceDisplay: car.priceDisplay || (car.price ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(Number(car.pricePerDay) || 0).toLocaleString("en-IN")}`),
             subCategory: car.subCategory || car.variant || `${car.category || "Fleet"} Vehicle`,
-            hasSunroof: car.hasSunroof ?? (car.name?.includes("ZX") || car.name?.includes("Scorpio") || car.name?.includes("Creta") || car.name?.includes("BMW") || car.name?.includes("Mercedes")),
+            hasSunroof: car.hasSunroof ?? false,
             hasGPS: car.hasGPS ?? true,
             hasAC: car.hasAC ?? true,
             instantBooking: car.instantBooking ?? true,
             freeCancellation: car.freeCancellation ?? true,
             doorstepDelivery: car.doorstepDelivery ?? true,
-            rating: car.rating || 4.8,
-            tripsCount: car.totalTrips || car.tripsCount || 35,
+            rating: car.rating || 5.0,
+            tripsCount: car.totalTrips || car.tripsCount || 0,
           }));
           setFleet(mapped);
         }
       })
       .catch((err) => {
-        console.warn("Could not fetch live cars from database, using verified database defaults:", err);
+        console.warn("[CarsPage] Fetch live cars:", err);
       })
       .finally(() => {
         if (isMounted) setIsLoading(false);

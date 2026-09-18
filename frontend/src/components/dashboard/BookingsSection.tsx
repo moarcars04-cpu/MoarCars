@@ -46,78 +46,6 @@ interface BookingsSectionProps {
   onBrowseFleet: () => void;
 }
 
-// Fallback demo bookings for interactive exploration if database has empty trips
-const DEMO_BOOKINGS: BookingItem[] = [
-  {
-    id: 1042,
-    bookingType: "Self Drive (Unlimited KM)",
-    pickup: "Tirupati Central Station Hub",
-    startDate: "2026-09-08 09:00 AM",
-    endDate: "2026-09-10 09:00 PM",
-    carName: "Toyota Innova Crysta ZX Captain",
-    status: "Active", // Ongoing
-    customerName: "Moar Member",
-    customerPhone: "+91 98765 43210",
-    customerEmail: "member@moarcars.com",
-    driverName: "K. Srinivasulu Reddy",
-    driverPhone: "+91 85000 12345",
-    amount: 5499,
-    securityDeposit: 3000,
-    taxAmount: 580,
-    duration: "2 Days (48 Hours)",
-  },
-  {
-    id: 1039,
-    bookingType: "Self Drive Premium",
-    pickup: "Renigunta Airport Hub (TIR T1)",
-    startDate: "2026-09-14 10:00 AM",
-    endDate: "2026-09-16 08:00 PM",
-    carName: "Mahindra Thar 4x4 Hardtop",
-    status: "Confirmed", // Upcoming
-    customerName: "Moar Member",
-    customerPhone: "+91 98765 43210",
-    customerEmail: "member@moarcars.com",
-    driverName: "B. Venkatesh Naik",
-    driverPhone: "+91 85000 23456",
-    amount: 4899,
-    securityDeposit: 3000,
-    taxAmount: 510,
-    duration: "2 Days",
-  },
-  {
-    id: 1018,
-    bookingType: "Self Drive Executive",
-    pickup: "Tirupati Central Hub",
-    startDate: "2026-08-20 08:00 AM",
-    endDate: "2026-08-22 09:00 PM",
-    carName: "Hyundai Creta SX(O) Sunroof",
-    status: "Completed",
-    customerName: "Moar Member",
-    customerPhone: "+91 98765 43210",
-    customerEmail: "member@moarcars.com",
-    amount: 4598,
-    securityDeposit: 3000,
-    taxAmount: 490,
-    duration: "2 Days",
-  },
-  {
-    id: 1005,
-    bookingType: "Self Drive Compact",
-    pickup: "Alipiri Tirumala Gate",
-    startDate: "2026-08-05 06:00 AM",
-    endDate: "2026-08-06 08:00 PM",
-    carName: "Maruti Swift ZXi+",
-    status: "Cancelled",
-    customerName: "Moar Member",
-    customerPhone: "+91 98765 43210",
-    customerEmail: "member@moarcars.com",
-    amount: 3398,
-    securityDeposit: 3000,
-    taxAmount: 360,
-    duration: "1.5 Days",
-  },
-];
-
 type TripTabType = "all" | "upcoming" | "ongoing" | "completed" | "cancelled" | "refunded";
 
 export const BookingsSection: React.FC<BookingsSectionProps> = ({
@@ -125,11 +53,10 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
   recentBookings,
   onBrowseFleet,
 }) => {
-  // Combine all user bookings from props or fallback to demo data
-  const rawList = [...upcomingBookings, ...recentBookings];
-  const initialList = rawList.length > 0 ? rawList : DEMO_BOOKINGS;
+  // Combine all user bookings from props
+  const rawList = [...(upcomingBookings || []), ...(recentBookings || [])];
 
-  const [bookingsList, setBookingsList] = useState<BookingItem[]>(initialList);
+  const [bookingsList, setBookingsList] = useState<BookingItem[]>(rawList);
   const [activeTab, setActiveTab] = useState<TripTabType>("upcoming");
 
   // Modal States

@@ -27,75 +27,12 @@ interface ReviewsSectionProps {
   onBrowseFleet: () => void;
 }
 
-const DEMO_REVIEWS: ReviewItem[] = [
-  {
-    id: 101,
-    customerName: "S. Vishnu Vardhan",
-    customerAvatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
-    carName: "Toyota Innova Crysta ZX Captain",
-    rating: 5,
-    cleanlinessRating: 5,
-    performanceRating: 5,
-    handoverRating: 5,
-    valueRating: 5,
-    comment: "The Innova was in pristine condition! Cruised up the Tirumala second ghat road effortlessly with full family and luggage. Fastag was active and security deposit was refunded in 45 minutes!",
-    photoUrls: [
-      "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80",
-    ],
-    date: "September 2026",
-    status: "Approved",
-    isFeatured: true,
-    likesCount: 14,
-    adminReply: "Thank you for choosing Moar Cars for your family pilgrimage! We look forward to serving you again.",
-  },
-  {
-    id: 102,
-    customerName: "Dr. K. Raghavendra",
-    customerAvatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80",
-    carName: "Mahindra Thar 4x4 Hardtop",
-    rating: 5,
-    cleanlinessRating: 5,
-    performanceRating: 5,
-    handoverRating: 4,
-    valueRating: 5,
-    comment: "Took the Thar for a weekend road trip to Talakona waterfalls. Phenomenal ground clearance and rugged suspension. Digital keyless unlock worked seamlessly through the app.",
-    photoUrls: [
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80",
-    ],
-    videoUrl: "https://youtube.com/shorts/demo-thar",
-    date: "August 2026",
-    status: "Approved",
-    likesCount: 9,
-  },
-  {
-    id: 103,
-    customerName: "P. Sneha Rao",
-    customerAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-    carName: "Hyundai Creta SX(O) Sunroof",
-    rating: 5,
-    cleanlinessRating: 5,
-    performanceRating: 4,
-    handoverRating: 5,
-    valueRating: 5,
-    comment: "Very clean interior with fresh lavender fragrance. Airport delivery at Renigunta TIR T1 was right on time. Highly recommended self-drive service in AP!",
-    photoUrls: [
-      "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80",
-    ],
-    date: "August 2026",
-    status: "Approved",
-    likesCount: 6,
-  },
-];
-
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
-  userReviews,
+  userReviews = [],
   completedBookings = [],
   onBrowseFleet,
 }) => {
-  const [reviews, setReviews] = useState<ReviewItem[]>(
-    userReviews && userReviews.length > 0 ? userReviews : DEMO_REVIEWS
-  );
+  const [reviews, setReviews] = useState<ReviewItem[]>(userReviews || []);
   const [filterRating, setFilterRating] = useState<string>("all");
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [editingReview, setEditingReview] = useState<ReviewItem | null>(null);
@@ -225,8 +162,17 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
       </div>
 
       {/* Reviews Grid */}
-      <div className="grid grid-cols-1 gap-5">
-        {filteredReviews.map((rev) => (
+      {filteredReviews.length === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-12 text-center space-y-3">
+          <Star className="h-10 w-10 text-white/20 mx-auto" />
+          <h4 className="text-base font-bold text-white">No Reviews Found</h4>
+          <p className="text-xs text-white/50 max-w-sm mx-auto">
+            Reviews from verified customer trips will be displayed here. Share your feedback after completing your ride!
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5">
+          {filteredReviews.map((rev) => (
           <div
             key={rev.id}
             className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-xl space-y-4 hover:border-brand-gold/30 transition-all text-xs"
@@ -358,6 +304,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
           </div>
         ))}
       </div>
+      )}
 
       {/* Review Modal */}
       {showReviewModal && (
