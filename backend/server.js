@@ -895,7 +895,9 @@ const getTransporter = () => {
   const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
   const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: { user, pass },
     tls: { rejectUnauthorized: false },
   });
@@ -913,7 +915,7 @@ app.post("/api/admin/send-otp", async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
 
     otpStore.set(targetEmail, { otp, expiresAt, attempts: 0 });
 
@@ -929,6 +931,7 @@ app.post("/api/admin/send-otp", async (req, res) => {
       from: `"Moar Cars Admin Security" <${authorizedEmail}>`,
       to: targetEmail,
       subject: `🔑 ${otp} is your Admin Portal Verification Code - Moar Cars`,
+      text: `Your Moar Cars Admin Verification Code is: ${otp}. Valid for 15 minutes.`,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070e1c; color: #f8fafc; padding: 40px 20px; border-radius: 16px; max-width: 520px; margin: 0 auto; border: 1px solid #1e293b;">
           <div style="text-align: center; margin-bottom: 24px;">
@@ -941,7 +944,7 @@ app.post("/api/admin/send-otp", async (req, res) => {
             <div style="background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 34px; font-weight: 900; letter-spacing: 10px; padding: 16px 24px; border-radius: 12px; display: inline-block; margin: 8px 0; box-shadow: 0 4px 20px rgba(200, 141, 24, 0.25); font-family: monospace;">
               ${otp}
             </div>
-            <p style="font-size: 12px; color: #94a3b8; margin: 18px 0 0 0;">⏱️ This code is valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+            <p style="font-size: 12px; color: #94a3b8; margin: 18px 0 0 0;">⏱️ This code is valid for <strong>15 minutes</strong>. Do not share this code with anyone.</p>
           </div>
           <div style="text-align: center; margin-top: 24px; font-size: 11px; color: #64748b; line-height: 1.5;">
             If you did not request this login attempt, please secure your administrative credentials immediately.<br/>
@@ -951,13 +954,17 @@ app.post("/api/admin/send-otp", async (req, res) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`[AUTH] Admin OTP sent successfully to ${targetEmail}: ${otp}`);
+    const mailInfo = await transporter.sendMail(mailOptions);
+    console.log(`[AUTH] Real Admin OTP email successfully sent to ${targetEmail}: ${otp} (MessageId: ${mailInfo.messageId})`);
 
-    res.json({ success: true, message: `Verification code sent to ${targetEmail}` });
+    return res.json({
+      success: true,
+      message: `Real verification OTP sent directly to ${targetEmail}. Please check your inbox.`,
+      emailDelivered: true,
+    });
   } catch (error) {
-    console.error("[AUTH] Error sending admin OTP:", error);
-    res.status(500).json({ success: false, message: `Failed to send email: ${error.message}` });
+    console.error("[AUTH] Error sending real admin OTP:", error);
+    res.status(500).json({ success: false, message: `Failed to send email to ${req.body?.email || 'admin'}: ${error.message}` });
   }
 });
 
@@ -970,18 +977,6 @@ app.post("/api/admin/verify-otp", async (req, res) => {
 
     const trimmedOtp = otp.toString().trim();
 
-    // Emergency master code fallback
-    if (trimmedOtp === "882194" || trimmedOtp === "123456") {
-      return res.json({
-        success: true,
-        message: "Admin verification successful!",
-        username: "Executive Super Admin",
-        email: targetEmail,
-        role: "Super Admin",
-        branch: "All Branches"
-      });
-    }
-
     let record = otpStore.get(targetEmail);
     if (!record) {
       const dbRecord = await AdminOtp.findOne({ where: { email: targetEmail }, order: [["createdAt", "DESC"]] });
@@ -989,7 +984,7 @@ app.post("/api/admin/verify-otp", async (req, res) => {
     }
 
     if (!record) {
-      return res.status(400).json({ success: false, message: "No active verification code found. Please request a new OTP." });
+      return res.status(400).json({ success: false, message: "No active verification code found for this email. Please request a new OTP." });
     }
 
     if (Date.now() > record.expiresAt) {
@@ -999,7 +994,7 @@ app.post("/api/admin/verify-otp", async (req, res) => {
 
     if (record.otp !== trimmedOtp) {
       record.attempts = (record.attempts || 0) + 1;
-      return res.status(400).json({ success: false, message: `Invalid code. ${Math.max(0, 5 - record.attempts)} attempt(s) remaining.` });
+      return res.status(400).json({ success: false, message: `Invalid verification code. ${Math.max(0, 5 - record.attempts)} attempt(s) remaining.` });
     }
 
     otpStore.delete(targetEmail);

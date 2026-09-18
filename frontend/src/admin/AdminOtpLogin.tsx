@@ -171,7 +171,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
 
     const enteredOtp = otpDigits.join("");
     if (enteredOtp.length !== 6) {
-      setErrorMessage("Please enter all 6 digits of the verification code.");
+      setErrorMessage("Please enter all 6 digits of the verification code sent to your email.");
       return;
     }
 
@@ -203,7 +203,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
         }
         onLoginSuccess(adminUser);
       } else {
-        setErrorMessage(data.message || "Invalid OTP code. Please enter the code received on your email.");
+        setErrorMessage(data.message || "Invalid OTP code. Please enter the real code received in your inbox or spam folder.");
       }
     } catch (err: any) {
       console.error("OTP verification error:", err);
@@ -234,7 +234,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
         setErrorMessage(data.message || "Failed to resend verification code.");
       }
     } catch (err) {
-      setErrorMessage("Failed to resend verification code. Please check connection.");
+      setErrorMessage("Failed to resend verification code. Please check your connection.");
     }
     inputRefs.current[0]?.focus();
     setTimeout(() => setSuccessMessage(""), 5000);
@@ -449,18 +449,18 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                 </div>
 
                 {/* Real Email OTP Security Notice */}
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-200/90 leading-relaxed">
-                  <Sparkles className="w-4 h-4 text-[#c88d18] shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-200/90 leading-relaxed">
+                  <Mail className="w-4 h-4 text-[#c88d18] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-[#c88d18] block mb-0.5">Real Email OTP Dispatched</span>
-                    <span>Please check your inbox (and spam folder) at <strong className="text-white">{adminIdentifier}</strong> for your 6-digit security code.</span>
+                    <span className="font-bold text-[#c88d18] block mb-0.5">Real Email OTP Sent</span>
+                    <span>A 6-digit verification security code has been sent directly to <strong className="text-white">{adminIdentifier}</strong>. Please check your inbox and spam folder.</span>
                   </div>
                 </div>
 
                 {/* 6-Digit Segmented Input Boxes */}
                 <div>
                   <label className="block text-center text-[11px] font-bold uppercase tracking-widest text-slate-300 mb-3">
-                    Enter 6-Digit Code
+                    Enter 6-Digit Email Code
                   </label>
 
                   <div
