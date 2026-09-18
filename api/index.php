@@ -150,7 +150,8 @@ function sendViaCurlSmtp($toEmail, $subject, $htmlBody, $plainText, &$logs) {
         curl_setopt($ch, CURLOPT_INFILESIZE, strlen($rawMessage));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
         if (strpos($url, '587') !== false) {
             curl_setopt($ch, CURLOPT_USE_SSL, CURLUSESSL_ALL);
         }
@@ -194,13 +195,13 @@ function sendViaSocketSmtp($toEmail, $subject, $htmlBody, $plainText, &$logs) {
     foreach ($conns as $c) {
         $errno = 0;
         $errstr = '';
-        $socket = @stream_socket_client($c['uri'], $errno, $errstr, 8, STREAM_CLIENT_CONNECT, $context);
+        $socket = @stream_socket_client($c['uri'], $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context);
         if (!$socket) {
             $logs[] = "Socket connect to {$c['uri']} failed: $errstr ($errno)";
             continue;
         }
 
-        stream_set_timeout($socket, 8);
+        stream_set_timeout($socket, 5);
         $read = function() use ($socket) {
             $data = '';
             while ($line = fgets($socket, 515)) {
@@ -736,10 +737,21 @@ function getDefaultCars() {
 }
 
 // Complete Schema Auto-Migration for MySQL on Hostinger
-function ensureTablesExist($pdo) {
+function ensureTablesExist($pdo, $force = false) {
     static $checked = false;
     if ($checked || !$pdo) return;
     $checked = true;
+
+    if (!$force) {
+        try {
+            $test = $pdo->query("SELECT 1 FROM AdminOtps LIMIT 1");
+            if ($test !== false) {
+                return; // Tables already exist and migrated
+            }
+        } catch (Exception $e) {
+            // Table doesn't exist yet, proceed with migration below
+        }
+    }
 
     try {
         // 1. Create Base Tables
