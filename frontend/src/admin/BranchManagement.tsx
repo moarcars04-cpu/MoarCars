@@ -44,16 +44,15 @@ export default function BranchManagement({
       b.managerName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSaveBranch = (formData: Partial<BranchItem>) => {
+  const handleSaveBranch = async (formData: Partial<BranchItem>) => {
     if (editingBranch) {
       setBranches((prev) =>
         prev.map((b) => (b.id === editingBranch.id ? { ...b, ...formData } : b))
       );
       setNotice({ type: "success", text: `Station Hub "${formData.name || editingBranch.name}" updated!` });
-      adminApi.updateBranch(editingBranch.id, formData);
+      await adminApi.updateBranch(editingBranch.id, formData);
     } else {
-      const newB: BranchItem = {
-        id: Math.floor(400 + Math.random() * 600),
+      const payload: Partial<BranchItem> = {
         name: formData.name || "New Station Hub",
         city: formData.city || "Tirupati",
         state: formData.state || "Andhra Pradesh",
@@ -67,19 +66,23 @@ export default function BranchManagement({
         monthlyRevenue: formData.monthlyRevenue || 120000,
         isActive: true,
       };
-      setBranches([newB, ...branches]);
+      const created = await adminApi.createBranch(payload);
+      const newB: BranchItem = created || {
+        id: Math.floor(400 + Math.random() * 600),
+        ...(payload as any),
+      };
+      setBranches((prev) => [newB, ...prev.filter((b) => b.id !== newB.id)]);
       setNotice({ type: "success", text: `Station Hub "${newB.name}" created successfully!` });
-      adminApi.createBranch(newB);
     }
     setIsAddEditModalOpen(false);
     setEditingBranch(null);
   };
 
-  const handleDeleteBranch = (id: number) => {
+  const handleDeleteBranch = async (id: number) => {
     if (confirm("Are you sure you want to delete this station hub?")) {
       setBranches((prev) => prev.filter((b) => b.id !== id));
       setNotice({ type: "info", text: `Station Hub #${id} deleted.` });
-      adminApi.deleteBranch(id);
+      await adminApi.deleteBranch(id);
     }
   };
 

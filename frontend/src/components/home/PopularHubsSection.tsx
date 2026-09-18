@@ -1,75 +1,68 @@
 import React from "react";
 import { MapPin, Navigation, Clock, ShieldCheck, ArrowRight, Car, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocations } from "@/hooks/useLocations";
 
 interface PopularHubsSectionProps {
   onSelectHub?: (hubName: string) => void;
 }
 
-const HUBS = [
-  {
-    id: "railway",
-    name: "Tirupati Central Railway Station",
-    location: "Platform 1 & 6 Express Parking",
-    tag: "24/7 Desk",
-    carsAvailable: "24+ Cars",
-    deliveryTime: "Instant (5 min)",
-    image: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
-    description: "Instant doorstep handover right outside the VIP exit or Station car park.",
-  },
-  {
-    id: "airport",
-    name: "Renigunta International Airport (TIR)",
-    location: "Terminal 1 Arrivals & Canopy",
-    tag: "Airport Handover",
-    carsAvailable: "18+ Cars",
-    deliveryTime: "10 mins before flight arrival",
-    image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80",
-    description: "Flight-tracking handovers with keyless curbside pickup upon landing.",
-  },
-  {
-    id: "alipiri",
-    name: "Alipiri Tirumala Checkpost",
-    location: "Bypass Road, Alipiri Gate",
-    tag: "Ghat Road Transit",
-    carsAvailable: "15+ SUVs",
-    deliveryTime: "Instant Handover",
-    image: "https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&w=600&q=80",
-    description: "Ghat-certified SUVs equipped with hill-hold and TTD pass clearance readiness.",
-  },
-  {
-    id: "srikalahasti",
-    name: "Srikalahasti Temple Corridor",
-    location: "Swarnamukhi River Bypass",
-    tag: "Temple Hub",
-    carsAvailable: "12+ Cars",
-    deliveryTime: "Within 20 mins",
-    image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=600&q=80",
-    description: "Convenient pickup for Rahu-Ketu pooja pilgrims and Chittoor highway travellers.",
-  },
-  {
-    id: "horsley",
-    name: "Horsley Hills & Madanapalle",
-    location: "Madanapalle Junction",
-    tag: "Hill Station Route",
-    carsAvailable: "10+ Cars",
-    deliveryTime: "Pre-scheduled",
-    image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80",
-    description: "Self-drive hatchbacks and rugged 4x4s tuned for cool mountain switchbacks.",
-  },
-  {
-    id: "kanipakam",
-    name: "Kanipakam Ganesha Highway",
-    location: "Chittoor-Tirupati Expressway",
-    tag: "Express Drop",
-    carsAvailable: "8+ Cars",
-    deliveryTime: "Within 25 mins",
-    image: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&w=600&q=80",
-    description: "Fast multi-day handover with free return drop anywhere along the NH140 corridor.",
-  },
-];
+const DEFAULT_HUB_IMAGES: Record<string, string> = {
+  station: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
+  airport: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80",
+  alipiri: "https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&w=600&q=80",
+  temple: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=600&q=80",
+  highway: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=600&q=80",
+  chandragiri: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80",
+};
 
 export const PopularHubsSection: React.FC<PopularHubsSectionProps> = ({ onSelectHub }) => {
+  const { hubs } = useLocations();
+
+  const displayHubs = hubs.length > 0
+    ? hubs.map((h, i) => ({
+        id: String(h.id),
+        name: h.name,
+        location: h.address || `${h.city}, ${h.state}`,
+        tag: h.operatingHours || "24/7 Desk",
+        carsAvailable: `${h.totalCars || 8}+ Cars`,
+        deliveryTime: "Instant Handover",
+        image: Object.values(DEFAULT_HUB_IMAGES)[i % Object.values(DEFAULT_HUB_IMAGES).length],
+        description: `Dedicated pickup and key dispatch hub in ${h.city}. Managed by ${h.managerName || "Station Manager"} (${h.managerPhone || "+91 94400 11223"}).`,
+      }))
+    : [
+        {
+          id: "1",
+          name: "Tirupati Central Hub (Station)",
+          location: "Railway Station Road, Tirupati",
+          tag: "24/7 Desk",
+          carsAvailable: "24+ Cars",
+          deliveryTime: "Instant (5 min)",
+          image: DEFAULT_HUB_IMAGES.station,
+          description: "Instant doorstep handover right outside the VIP exit or Station car park.",
+        },
+        {
+          id: "2",
+          name: "Renigunta Airport Hub (TIR T1)",
+          location: "Terminal 1 Arrivals, Tirupati Airport",
+          tag: "Airport Handover",
+          carsAvailable: "18+ Cars",
+          deliveryTime: "Flight-tracking",
+          image: DEFAULT_HUB_IMAGES.airport,
+          description: "Flight-tracking handovers with keyless curbside pickup upon landing.",
+        },
+        {
+          id: "3",
+          name: "Alipiri Tirumala Gate Hub",
+          location: "Bypass Road, Alipiri Gate",
+          tag: "Ghat Road Transit",
+          carsAvailable: "15+ SUVs",
+          deliveryTime: "Instant Handover",
+          image: DEFAULT_HUB_IMAGES.alipiri,
+          description: "Ghat-certified SUVs equipped with hill-hold and TTD pass clearance readiness.",
+        },
+      ];
+
   return (
     <section className="py-6 sm:py-8 bg-card border-b border-border">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-5">
@@ -95,7 +88,7 @@ export const PopularHubsSection: React.FC<PopularHubsSectionProps> = ({ onSelect
 
         {/* Hub Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {HUBS.map((hub) => (
+          {displayHubs.map((hub) => (
             <div
               key={hub.id}
               className="group relative rounded-3xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"

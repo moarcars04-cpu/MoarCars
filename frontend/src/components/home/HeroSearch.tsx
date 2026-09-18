@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   MapPin,
   Calendar,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
+import { useLocations } from "@/hooks/useLocations";
 
 interface HeroSearchProps {
   onSearch: (params: {
@@ -30,17 +31,6 @@ interface HeroSearchProps {
   }) => void;
   showBadges?: boolean;
 }
-
-const popularLocations = [
-  "Tirupati Central Hub (Station)",
-  "Renigunta Airport Hub (T1)",
-  "Chandragiri Heritage Point",
-  "Tirumala Hill Gate Hub",
-  "Bengaluru Airport (BLR)",
-  "Hyderabad RGI Airport (HYD)",
-  "Chennai Central Hub",
-  "Doorstep Delivery (Hotel / Home)",
-];
 
 const carTypes = [
   "All Types",
@@ -117,9 +107,10 @@ export const TrustBadgesBar: React.FC = () => {
 };
 
 export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
+  const { locations } = useLocations();
   const [serviceType, setServiceType] = useState<"self" | "chauffeur" | "airport">("self");
-  const [pickup, setPickup] = useState("Tirupati Central Hub (Station)");
-  const [dropoff, setDropoff] = useState("Tirupati Central Hub (Station)");
+  const [pickup, setPickup] = useState(locations[0] || "Tirupati Central Hub (Station)");
+  const [dropoff, setDropoff] = useState(locations[0] || "Tirupati Central Hub (Station)");
   const [startDate, setStartDate] = useState(getTodayDateStr());
   const [startTime, setStartTime] = useState("09:00");
   const [returnDate, setReturnDate] = useState(getFutureDateStr(2));
@@ -127,6 +118,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   const [carType, setCarType] = useState("All Types");
   const [isLocating, setIsLocating] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+
+  useEffect(() => {
+    if (locations.length > 0) {
+      if (!pickup || !locations.includes(pickup)) setPickup(locations[0]);
+      if (!dropoff || !locations.includes(dropoff)) setDropoff(locations[0]);
+    }
+  }, [locations]);
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -250,7 +248,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 onChange={(e) => setPickup(e.target.value)}
                 className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
-                {popularLocations.map((loc) => (
+                {locations.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}
                   </option>
@@ -271,7 +269,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 onChange={(e) => setDropoff(e.target.value)}
                 className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
-                {popularLocations.map((loc) => (
+                {locations.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}
                   </option>

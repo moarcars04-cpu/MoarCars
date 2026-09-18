@@ -454,8 +454,44 @@ app.delete("/api/admin/drivers/:id", async (req, res) => {
 });
 
 // ======================================================================
-// 5. BRANCHES API
+// 5. BRANCHES & LOCATIONS API
 // ======================================================================
+// Public endpoint for customer-facing search dropdowns & booking forms
+app.get("/api/locations", async (req, res) => {
+  try {
+    const branches = await Branch.findAll({ order: [["id", "ASC"]] });
+    const activeBranches = branches.filter((b) => b.isActive !== false);
+    const locationNames = activeBranches.map((b) => b.name);
+    res.json({
+      success: true,
+      data: activeBranches,
+      locations: locationNames.length > 0 ? locationNames : [
+        "Tirupati Central Hub (Station)",
+        "Renigunta Airport Hub (TIR T1)",
+        "Alipiri Tirumala Gate Hub",
+        "Chandragiri Heritage Point",
+        "Horsley Hills Route Hub"
+      ],
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+app.get("/api/branches", async (req, res) => {
+  try {
+    const branches = await Branch.findAll({ order: [["id", "ASC"]] });
+    const activeBranches = branches.filter((b) => b.isActive !== false);
+    res.json({
+      success: true,
+      data: activeBranches,
+      locations: activeBranches.map((b) => b.name),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 app.get("/api/admin/branches", async (req, res) => {
   try {
     const branches = await Branch.findAll({ order: [["id", "ASC"]] });

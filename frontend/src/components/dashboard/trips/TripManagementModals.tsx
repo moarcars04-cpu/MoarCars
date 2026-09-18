@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
+import { useLocations } from "@/hooks/useLocations";
 
 interface ModalProps {
   booking: any;
@@ -29,7 +30,8 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [pickup, setPickup] = useState(booking.pickup || "Tirupati Central Station Hub");
+  const { locations } = useLocations();
+  const [pickup, setPickup] = useState(booking.pickup || locations[0] || "Tirupati Central Station Hub");
   const [startDate, setStartDate] = useState(booking.startDate?.split(" ")[0] || getTodayDateStr());
   const [startTime, setStartTime] = useState(booking.startDate?.split(" ")[1] || "09:00");
   const [endDate, setEndDate] = useState(booking.endDate?.split(" ")[0] || getFutureDateStr(2));
@@ -79,12 +81,13 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
             <select
               value={pickup}
               onChange={(e) => setPickup(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none"
+              className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
             >
-              <option value="Tirupati Central Station Hub">Tirupati Central Station Hub</option>
-              <option value="Renigunta Airport Hub (TIR T1)">Renigunta Airport Hub (TIR T1)</option>
-              <option value="Alipiri Tirumala Checkpost">Alipiri Tirumala Checkpost</option>
-              <option value="Chandragiri Heritage Point">Chandragiri Heritage Point</option>
+              {locations.map((loc) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
             </select>
           </div>
 

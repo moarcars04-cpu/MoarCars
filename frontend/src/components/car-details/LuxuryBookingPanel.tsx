@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
+import { useLocations } from "@/hooks/useLocations";
 
 interface LuxuryBookingPanelProps {
   car: any;
@@ -27,29 +28,28 @@ interface LuxuryBookingPanelProps {
   onNavigate?: (path: string, state?: any) => void;
 }
 
-const HUBS = [
-  "Tirupati Central Hub (Station)",
-  "Renigunta Airport Hub (TIR T1)",
-  "Alipiri Tirumala Gate Hub",
-  "Chandragiri Heritage Point",
-  "Horsley Hills Route Hub",
-];
-
 export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   car,
   onBookingSuccess,
   onNavigate,
 }) => {
   const { user, openAuthModal } = useAuth();
+  const { locations } = useLocations();
 
   // Booking parameters
-  const [pickupHub, setPickupHub] = useState(HUBS[0]);
+  const [pickupHub, setPickupHub] = useState(locations[0] || "Tirupati Central Hub (Station)");
   const [deliveryMode, setDeliveryMode] = useState<"hub" | "doorstep">("hub");
   const [doorstepAddress, setDoorstepAddress] = useState("");
   const [startDate, setStartDate] = useState(getTodayDateStr());
   const [startTime, setStartTime] = useState("09:00");
   const [endDate, setEndDate] = useState(getFutureDateStr(2));
   const [endTime, setEndTime] = useState("21:00");
+
+  useEffect(() => {
+    if (locations.length > 0 && (!pickupHub || !locations.includes(pickupHub))) {
+      setPickupHub(locations[0]);
+    }
+  }, [locations]);
 
   // Chauffeur option
   const [withDriver, setWithDriver] = useState(false);
@@ -334,7 +334,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
             onChange={(e) => setPickupHub(e.target.value)}
             className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-bold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
           >
-            {HUBS.map((h) => (
+            {locations.map((h) => (
               <option key={h} value={h}>
                 {h}
               </option>
