@@ -35,6 +35,141 @@ try {
     $dbError = $e->getMessage();
 }
 
+// Universal Environment Variable Getter
+function getEnvValue($key, $default = '') {
+    $val = getenv($key);
+    if ($val !== false && $val !== '') return $val;
+    if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+    if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+
+    static $envFileVars = null;
+    if ($envFileVars === null) {
+        $envFileVars = [];
+        $paths = [__DIR__ . '/.env', __DIR__ . '/../.env', __DIR__ . '/../backend/.env'];
+        foreach ($paths as $p) {
+            if (file_exists($p) && is_readable($p)) {
+                $lines = file($p, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if ($line === '' || $line[0] === '#') continue;
+                    if (strpos($line, '=') !== false) {
+                        list($k, $v) = explode('=', $line, 2);
+                        $envFileVars[trim($k)] = trim(trim($v), "\"'");
+                    }
+                }
+            }
+        }
+    }
+    return $envFileVars[$key] ?? $default;
+}
+
+// Real SMTP Mailer using Gmail SSL (Port 465) and TLS (Port 587) Fallback
+function sendRealSmtpEmail($toEmail, $subject, $htmlContent, &$debugLog = null) {
+    $smtpUser = trim(getEnvValue('ADMIN_EMAIL', 'moarcars04@gmail.com'));
+    $smtpPass = trim(str_replace(' ', '', getEnvValue('ADMIN_EMAIL_APP_PASSWORD', 'giykjehrkoeeoqzc')));
+
+    $connections = [
+        ['host' => 'ssl://smtp.gmail.com', 'port' => 465, 'tls' => false],
+        ['host' => 'tcp://smtp.gmail.com', 'port' => 587, 'tls' => true],
+    ];
+
+    $context = stream_context_create([
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true
+        ]
+    ]);
+
+    $socket = null;
+    $connectedConfig = null;
+    $debug = [];
+
+    foreach ($connections as $conn) {
+        $debug[] = "Trying {$conn['host']}:{$conn['port']}...";
+        $socket = @stream_socket_client("{$conn['host']}:{$conn['port']}", $errno, $errstr, 8, STREAM_CLIENT_CONNECT, $context);
+        if ($socket) {
+            $connectedConfig = $conn;
+            $debug[] = "Connected to {$conn['host']}:{$conn['port']}";
+            break;
+        } else {
+            $debug[] = "Failed: $errstr ($errno)";
+        }
+    }
+
+    if (!$socket) {
+        $debugLog = implode(' | ', $debug);
+        error_log("[SMTP CONNECT FAILED] $debugLog");
+        $headers = "MIME-Version: 1.0\r\nContent-type: text/html; charset=UTF-8\r\nFrom: Moar Cars Admin <{$smtpUser}>\r\n";
+        return @mail($toEmail, "=?UTF-8?B?" . base64_encode($subject) . "?=", $htmlContent, $headers);
+    }
+
+    $read = function($sock) {
+        $response = '';
+        while ($line = fgets($sock, 515)) {
+            $response .= $line;
+            if (substr($line, 3, 1) === ' ') break;
+        }
+        return $response;
+    };
+
+    $write = function($sock, $cmd) use ($read) {
+        fputs($sock, $cmd . "\r\n");
+        return $read($sock);
+    };
+
+    $res = $read($socket);
+    $debug[] = "Greeting: " . trim($res);
+
+    $write($socket, "EHLO moarcars.com");
+
+    if ($connectedConfig['tls']) {
+        $startTls = $write($socket, "STARTTLS");
+        $debug[] = "STARTTLS: " . trim($startTls);
+        if (strpos($startTls, '220') !== false) {
+            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            $write($socket, "EHLO moarcars.com");
+        }
+    }
+
+    $write($socket, "AUTH LOGIN");
+    $write($socket, base64_encode($smtpUser));
+    $authRes = $write($socket, base64_encode($smtpPass));
+    $debug[] = "Auth: " . trim($authRes);
+
+    if (strpos($authRes, '235') === false) {
+        $debugLog = implode(' | ', $debug);
+        error_log("[SMTP AUTH FAILED] $debugLog");
+        fclose($socket);
+        return false;
+    }
+
+    $write($socket, "MAIL FROM:<{$smtpUser}>");
+    $write($socket, "RCPT TO:<{$toEmail}>");
+    $write($socket, "DATA");
+
+    $headers = [
+        "From: =?UTF-8?B?" . base64_encode("Moar Cars Admin Security") . "?= <{$smtpUser}>",
+        "To: <{$toEmail}>",
+        "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=",
+        "Date: " . date("r"),
+        "MIME-Version: 1.0",
+        "Content-Type: text/html; charset=UTF-8",
+        "Content-Transfer-Encoding: base64",
+        "X-Mailer: MoarCarsMailer/2.0"
+    ];
+
+    $emailPayload = implode("\r\n", $headers) . "\r\n\r\n" . chunk_split(base64_encode($htmlContent)) . "\r\n.";
+    $sendRes = $write($socket, $emailPayload);
+    $debug[] = "Send: " . trim($sendRes);
+
+    $write($socket, "QUIT");
+    fclose($socket);
+
+    $debugLog = implode(' | ', $debug);
+    return (strpos($sendRes, '250') !== false);
+}
+
 // Helpers for JSON column handling
 function safeJsonEncode($val) {
     if ($val === null) return '[]';
@@ -1007,7 +1142,7 @@ if ($route === 'health' || $route === '') {
 if ($route === 'admin/send-otp' && $method === 'POST') {
     $email = strtolower(trim($input['email'] ?? 'moarcars04@gmail.com'));
     $otp = (string)rand(100000, 999999);
-    $expiresAt = (time() + 600) * 1000;
+    $expiresAt = (time() + 900) * 1000; // 15 mins
 
     if (isset($pdo)) {
         try {
@@ -1018,19 +1153,31 @@ if ($route === 'admin/send-otp' && $method === 'POST') {
         } catch (Exception $e) {}
     }
 
-    $subject = "=?UTF-8?B?" . base64_encode("🔑 $otp is your Admin Portal Verification Code - Moar Cars") . "?=";
-    $headers = "MIME-Version: 1.0\r\nContent-type: text/html; charset=UTF-8\r\nFrom: Moar Cars Admin <moarcars04@gmail.com>\r\n";
+    $subject = "🔑 $otp is your Admin Portal Verification Code - Moar Cars";
     $msgBody = "
         <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
-          <h2 style='color: #ffffff; margin: 0 0 10px 0;'>MOAR <span style='color: #c88d18;'>CARS</span></h2>
-          <p style='color: #cbd5e1; font-size: 14px;'>Your one-time security verification code for Admin Portal access is:</p>
-          <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 14px; text-align: center; border-radius: 10px; margin: 15px 0;'>$otp</div>
-          <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for 10 minutes. Do not share this code with anyone.</p>
+          <div style='text-align: center; margin-bottom: 20px;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;'>MOAR <span style='color: #c88d18;'>CARS</span></h1>
+            <p style='color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;'>Security Operations Center • 2FA</p>
+          </div>
+          <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
+            <p style='color: #cbd5e1; font-size: 14px; margin: 0 0 12px 0;'>Your one-time security verification code for Admin Portal access is:</p>
+            <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 32px; font-weight: 900; letter-spacing: 8px; padding: 14px; text-align: center; border-radius: 10px; margin: 12px 0; font-family: monospace;'>$otp</div>
+            <p style='font-size: 12px; color: #94a3b8; margin: 12px 0 0 0;'>⏱️ Valid for <strong>15 minutes</strong>. Do not share this code with anyone.</p>
+          </div>
+          <p style='font-size: 11px; color: #64748b; text-align: center; margin-top: 20px;'>&copy; " . date('Y') . " Moar Cars Rental. Enterprise Fleet Security.</p>
         </div>
     ";
-    @mail($email, $subject, $msgBody, $headers);
 
-    echo json_encode(["success" => true, "message" => "Verification code sent to $email"]);
+    $debugLog = '';
+    $mailSent = sendRealSmtpEmail($email, $subject, $msgBody, $debugLog);
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Real verification OTP code sent directly to $email. Please check your inbox.",
+        "emailDelivered" => $mailSent,
+        "debug" => $debugLog
+    ]);
     exit();
 }
 
@@ -1044,22 +1191,11 @@ if ($route === 'admin/verify-otp' && $method === 'POST') {
         exit();
     }
 
-    if ($otp === '123456' || $otp === '882194') {
-        echo json_encode([
-            "success" => true,
-            "message" => "Admin verified successfully!",
-            "username" => "Executive Super Admin",
-            "email" => $email,
-            "role" => "Super Admin",
-            "branch" => "All Branches"
-        ]);
-        exit();
-    }
-
     if (isset($pdo)) {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM AdminOtps WHERE email = ? ORDER BY id DESC LIMIT 1");
-            $stmt->execute([$email]);
+            $now = time() * 1000;
+            $stmt = $pdo->prepare("SELECT * FROM AdminOtps WHERE email = ? AND expiresAt >= ? ORDER BY id DESC LIMIT 1");
+            $stmt->execute([$email, $now]);
             $record = $stmt->fetch();
             if ($record) {
                 if ($record['otp'] === $otp) {
@@ -1075,21 +1211,23 @@ if ($route === 'admin/verify-otp' && $method === 'POST') {
                     exit();
                 } else {
                     http_response_code(400);
-                    echo json_encode(["success" => false, "message" => "Invalid OTP code. Please check your email."]);
+                    echo json_encode(["success" => false, "message" => "Invalid OTP code. Please enter the real code received in your email."]);
                     exit();
                 }
+            } else {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "Verification code expired or not found. Please request a new OTP."]);
+                exit();
             }
-        } catch (Exception $e) {}
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+            exit();
+        }
     }
 
-    echo json_encode([
-        "success" => true,
-        "message" => "Admin verified successfully!",
-        "username" => "Executive Super Admin",
-        "email" => $email,
-        "role" => "Super Admin",
-        "branch" => "All Branches"
-    ]);
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "No verification session found."]);
     exit();
 }
 
@@ -1251,19 +1389,28 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
         } catch (Exception $e) {}
     }
 
-    // Try sending email if mail function or SMTP configured
-    @mail(
-        $email,
-        "🚗 Your Moar Cars Registration Verification Code: $otp",
-        "Hello $name,\n\nYour Moar Cars verification code is: $otp\n\nValid for 10 minutes. Enter this code to verify your email and activate your ₹250 welcome bonus.\n\nMoar Cars Tirupati",
-        "From: Moar Cars <no-reply@moarcars.com>\r\nReply-To: support@moarcars.com\r\nX-Mailer: PHP/" . phpversion()
-    );
+    // Send real SMTP email via Gmail SSL
+    $regMsg = "
+        <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+          <div style='text-align: center; margin-bottom: 20px;'>
+            <h1 style='color: #ffffff; margin: 0; font-size: 22px; font-weight: 800;'>MOAR <span style='color: #c88d18;'>CARS</span></h1>
+            <p style='color: #c88d18; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; font-weight: bold;'>Self-Drive Freedom in Tirupati</p>
+          </div>
+          <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
+            <h2 style='font-size: 18px; color: #ffffff; margin-top: 0;'>Confirm Your Email Address</h2>
+            <p style='font-size: 13px; color: #94a3b8; line-height: 1.5;'>Hello " . htmlspecialchars($name) . ", thank you for joining Moar Cars! Enter the 6-digit confirmation code below to complete your registration and activate your <strong>₹250 Welcome Bonus</strong>.</p>
+            <div style='background: linear-gradient(135deg, #d49b29, #c88d18); color: #070e1c; font-size: 32px; font-weight: 900; letter-spacing: 8px; padding: 14px 24px; border-radius: 10px; display: inline-block; margin: 15px 0; font-family: monospace;'>$otp</div>
+            <p style='font-size: 12px; color: #64748b; margin-top: 15px;'>⏱️ Valid for <strong>15 minutes</strong>. Do not share this code with anyone.</p>
+          </div>
+          <p style='font-size: 11px; color: #475569; text-align: center; margin-top: 20px;'>&copy; " . date('Y') . " Moar Cars Rental. Tirupati Central & Airport Services.</p>
+        </div>
+    ";
+    sendRealSmtpEmail($email, "🚗 Your Moar Cars Registration Verification Code: $otp", $regMsg);
 
     echo json_encode([
         "success" => true,
         "message" => "Verification code sent to $email",
-        "demoOtp" => $otp,
-        "expiresInSeconds" => 600
+        "expiresInSeconds" => 900
     ]);
     exit();
 }
@@ -1283,9 +1430,7 @@ if ($route === 'auth/verify-registration-otp' && $method === 'POST') {
     }
 
     $isValid = false;
-    if ($otp === '123456') {
-        $isValid = true;
-    } elseif (isset($pdo)) {
+    if (isset($pdo)) {
         try {
             $now = time() * 1000;
             $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND expiresAt >= ? ORDER BY id DESC LIMIT 1");
@@ -1359,7 +1504,7 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
     }
 
     $otp = (string)rand(100000, 999999);
-    $expiresAt = (time() + 600) * 1000;
+    $expiresAt = (time() + 900) * 1000;
 
     if (isset($pdo)) {
         try {
@@ -1371,12 +1516,15 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
     }
 
     if (strpos($identifier, '@') !== false) {
-        @mail(
-            $identifier,
-            "🚗 Your Moar Cars Sign-In Code: $otp",
-            "Hello,\n\nYour Moar Cars sign-in verification code is: $otp\n\nValid for 10 minutes. Do not share this code with anyone.\n\nMoar Cars Tirupati",
-            "From: Moar Cars <no-reply@moarcars.com>\r\nReply-To: support@moarcars.com\r\nX-Mailer: PHP/" . phpversion()
-        );
+        $loginMsg = "
+            <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; background-color: #070e1c; color: #ffffff; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; border: 1px solid #1e293b;'>
+              <h2 style='color: #ffffff; margin: 0 0 10px 0;'>MOAR <span style='color: #c88d18;'>CARS</span></h2>
+              <p style='color: #cbd5e1; font-size: 14px;'>Your Moar Cars sign-in verification code is:</p>
+              <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 14px; text-align: center; border-radius: 10px; margin: 15px 0;'>$otp</div>
+              <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for 15 minutes. Do not share this code with anyone.</p>
+            </div>
+        ";
+        sendRealSmtpEmail($identifier, "🚗 Your Moar Cars Sign-In Code: $otp", $loginMsg);
     }
 
     echo json_encode([
@@ -1384,8 +1532,7 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
         "message" => strpos($identifier, '@') !== false 
             ? "Verification code sent to $identifier. Please check your inbox." 
             : "6-digit OTP verification code sent to +91 $identifier",
-        "demoOtp" => $otp,
-        "expiresInSeconds" => 600
+        "expiresInSeconds" => 900
     ]);
     exit();
 }
