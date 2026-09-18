@@ -453,7 +453,10 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                   <Mail className="w-4 h-4 text-[#c88d18] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-[#c88d18] block mb-0.5">Real Email OTP Sent</span>
-                    <span>A 6-digit verification security code has been sent directly to <strong className="text-white">{adminIdentifier}</strong>. Please check your inbox and spam folder.</span>
+                    <span>A 6-digit verification code has been sent directly to <strong className="text-white">{adminIdentifier}</strong>.</span>
+                    <span className="block mt-1 text-[11px] text-amber-200/80">
+                      💡 <strong>Gmail Tip:</strong> In your inbox, look for the email sent from <strong className="text-white">"me"</strong> with subject <strong className="text-[#c88d18]">"🔑 [Code] is your Admin Portal Verification Code"</strong>.
+                    </span>
                   </div>
                 </div>
 
