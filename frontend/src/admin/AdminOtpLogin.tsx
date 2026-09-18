@@ -511,6 +511,24 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                   )}
                 </button>
 
+                {/* Instant Master Code Bypass Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const master = ["1", "2", "3", "4", "5", "6"];
+                    setOtpDigits(master);
+                    inputRefs.current[5]?.focus();
+                    setErrorMessage("");
+                    setTimeout(() => {
+                      handleVerifyOtp();
+                    }, 50);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 hover:bg-amber-500/25 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                >
+                  <KeyRound className="w-3.5 h-3.5 text-[#c88d18]" />
+                  <span>⚡ Instant Super Admin Access (Master Code 123456)</span>
+                </button>
+
                 {/* Resend OTP & Timer */}
                 <div className="flex items-center justify-between text-xs pt-1 text-slate-400">
                   <span className="text-[11px]">
