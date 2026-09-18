@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
+import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
 
 interface LuxuryBookingPanelProps {
   car: any;
@@ -45,9 +46,9 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   const [pickupHub, setPickupHub] = useState(HUBS[0]);
   const [deliveryMode, setDeliveryMode] = useState<"hub" | "doorstep">("hub");
   const [doorstepAddress, setDoorstepAddress] = useState("");
-  const [startDate, setStartDate] = useState("2026-09-08");
+  const [startDate, setStartDate] = useState(getTodayDateStr());
   const [startTime, setStartTime] = useState("09:00");
-  const [endDate, setEndDate] = useState("2026-09-10");
+  const [endDate, setEndDate] = useState(getFutureDateStr(2));
   const [endTime, setEndTime] = useState("21:00");
 
   // Chauffeur option
@@ -245,9 +246,17 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
             </label>
             <input
               type="date"
+              min={getTodayDateStr()}
+              max={getMaxBookingDateStr(2)}
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none"
+              onChange={(e) => {
+                const val = e.target.value;
+                setStartDate(val);
+                if (endDate < val) {
+                  setEndDate(val);
+                }
+              }}
+              className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none cursor-pointer"
             />
             <input
               type="time"
@@ -264,9 +273,11 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
             </label>
             <input
               type="date"
+              min={startDate || getTodayDateStr()}
+              max={getMaxBookingDateStr(2)}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none"
+              className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none cursor-pointer"
             />
             <input
               type="time"

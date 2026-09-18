@@ -105,6 +105,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
 
 // ----------------------------------------------------------------------
 // TYPES & MODULAR COMPONENTS
@@ -2844,6 +2845,8 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                 <label className="block text-slate-400 font-bold mb-1">New Pickup Date</label>
                 <input
                   type="date"
+                  min={getTodayDateStr()}
+                  max={getMaxBookingDateStr(2)}
                   value={rescheduleDates.startDate}
                   onChange={(e) => setRescheduleDates({ ...rescheduleDates, startDate: e.target.value })}
                   className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
@@ -2853,6 +2856,8 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                 <label className="block text-slate-400 font-bold mb-1">New Return Date</label>
                 <input
                   type="date"
+                  min={rescheduleDates.startDate || getTodayDateStr()}
+                  max={getMaxBookingDateStr(2)}
                   value={rescheduleDates.endDate}
                   onChange={(e) => setRescheduleDates({ ...rescheduleDates, endDate: e.target.value })}
                   className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
@@ -3190,11 +3195,25 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-400 font-bold mb-1">Pickup Date</label>
-                  <input name="startDate" type="date" defaultValue={editingBooking?.startDate || "2026-09-06"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                  <input
+                    name="startDate"
+                    type="date"
+                    min={getTodayDateStr()}
+                    max={getMaxBookingDateStr(2)}
+                    defaultValue={editingBooking?.startDate || getTodayDateStr()}
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
                 </div>
                 <div>
                   <label className="block text-slate-400 font-bold mb-1">Return Date</label>
-                  <input name="endDate" type="date" defaultValue={editingBooking?.endDate || "2026-09-08"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                  <input
+                    name="endDate"
+                    type="date"
+                    min={getTodayDateStr()}
+                    max={getMaxBookingDateStr(2)}
+                    defaultValue={editingBooking?.endDate || getFutureDateStr(2)}
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
                 </div>
               </div>
 

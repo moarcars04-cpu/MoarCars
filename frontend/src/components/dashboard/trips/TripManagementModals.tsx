@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
 
 interface ModalProps {
   booking: any;
@@ -29,8 +30,8 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
   onSuccess,
 }) => {
   const [pickup, setPickup] = useState(booking.pickup || "Tirupati Central Station Hub");
-  const [startDate, setStartDate] = useState(booking.startDate?.split(" ")[0] || "2026-09-08");
-  const [endDate, setEndDate] = useState(booking.endDate?.split(" ")[0] || "2026-09-10");
+  const [startDate, setStartDate] = useState(booking.startDate?.split(" ")[0] || getTodayDateStr());
+  const [endDate, setEndDate] = useState(booking.endDate?.split(" ")[0] || getFutureDateStr(2));
   const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
@@ -90,18 +91,28 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
               <label className="font-bold text-brand-navy">Start Date</label>
               <input
                 type="date"
+                min={getTodayDateStr()}
+                max={getMaxBookingDateStr(2)}
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setStartDate(val);
+                  if (endDate < val) {
+                    setEndDate(val);
+                  }
+                }}
+                className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
               />
             </div>
             <div className="space-y-1.5">
               <label className="font-bold text-brand-navy">Return Date</label>
               <input
                 type="date"
+                min={startDate || getTodayDateStr()}
+                max={getMaxBookingDateStr(2)}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none"
+                className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
               />
             </div>
           </div>

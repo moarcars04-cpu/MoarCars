@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
 
 interface HeroSearchProps {
   onSearch: (params: {
@@ -118,8 +119,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   const [serviceType, setServiceType] = useState<"self" | "chauffeur" | "airport">("self");
   const [pickup, setPickup] = useState("Tirupati Central Hub (Station)");
   const [dropoff, setDropoff] = useState("Tirupati Central Hub (Station)");
-  const [startDate, setStartDate] = useState("2026-09-08");
-  const [returnDate, setReturnDate] = useState("2026-09-10");
+  const [startDate, setStartDate] = useState(getTodayDateStr());
+  const [returnDate, setReturnDate] = useState(getFutureDateStr(2));
   const [carType, setCarType] = useState("All Types");
   const [isLocating, setIsLocating] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
@@ -288,8 +289,16 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 <input
                   type="date"
                   required
+                  min={getTodayDateStr()}
+                  max={getMaxBookingDateStr(2)}
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setStartDate(val);
+                    if (returnDate < val) {
+                      setReturnDate(val);
+                    }
+                  }}
                   className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"
                 />
               </div>
@@ -305,6 +314,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 <input
                   type="date"
                   required
+                  min={startDate || getTodayDateStr()}
+                  max={getMaxBookingDateStr(2)}
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
                   className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"

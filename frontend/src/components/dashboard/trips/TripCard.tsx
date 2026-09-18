@@ -142,7 +142,7 @@ export const TripCard: React.FC<TripCardProps> = ({
               <MapPin className="h-3 w-3 text-brand-teal" /> Pickup Station
             </span>
             <p className="font-bold text-brand-navy">{booking.pickup || "Tirupati Central Station"}</p>
-            <p className="text-[11px] text-brand-teal font-semibold">{booking.startDate || "2026-09-08 09:00"}</p>
+            <p className="text-[11px] text-brand-teal font-semibold">{booking.startDate || "Pickup Date Scheduled"}</p>
           </div>
 
           <div className="space-y-0.5 sm:border-l sm:border-border sm:pl-3">
@@ -150,7 +150,7 @@ export const TripCard: React.FC<TripCardProps> = ({
               <Clock className="h-3 w-3 text-brand-gold" /> Return Schedule
             </span>
             <p className="font-bold text-brand-navy">{booking.dropLocation || booking.pickup || "Tirupati Hub"}</p>
-            <p className="text-[11px] text-brand-gold font-semibold">{booking.endDate || "2026-09-10 21:00"}</p>
+            <p className="text-[11px] text-brand-gold font-semibold">{booking.endDate || "Return Date Scheduled"}</p>
           </div>
         </div>
       </div>

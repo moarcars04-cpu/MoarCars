@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";
 import heroLuxuryImg from "@/assets/hero.png";
 import { MoarLogo } from "@/components/common/MoarLogo";
+import { getTodayDateStr, getFutureDateStr } from "@/lib/dateUtils";
 
 // Home Subcomponents
 import { HeroSearch, TrustBadgesBar } from "./components/home/HeroSearch";
@@ -95,9 +96,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   const [searchParams, setSearchParams] = useState({
     pickup: "Tirupati Central Hub (Station)",
     dropoff: "Tirupati Central Hub (Station)",
-    startDate: "2026-09-08",
+    startDate: getTodayDateStr(),
     startTime: "09:00",
-    endDate: "2026-09-10",
+    endDate: getFutureDateStr(2),
     endTime: "21:00",
   });
 

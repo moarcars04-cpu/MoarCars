@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getTodayDateStr, getFutureDateStr } from "@/lib/dateUtils";
 import { useAuth } from "./context/AuthContext";
 import { BookingSummaryCard } from "./components/checkout/BookingSummaryCard";
 import { DiscountsAndWalletSection } from "./components/checkout/DiscountsAndWalletSection";
@@ -70,9 +71,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [dropLocation, setDropLocation] = useState(
     initialParams?.dropoff || initialParams?.pickup || "Tirupati Central Station Hub"
   );
-  const [startDate, setStartDate] = useState(initialParams?.startDate || "2026-09-08");
+  const [startDate, setStartDate] = useState(initialParams?.startDate || getTodayDateStr());
   const [startTime, setStartTime] = useState(initialParams?.startTime || "09:00");
-  const [endDate, setEndDate] = useState(initialParams?.endDate || "2026-09-10");
+  const [endDate, setEndDate] = useState(initialParams?.endDate || getFutureDateStr(2));
   const [endTime, setEndTime] = useState(initialParams?.endTime || "21:00");
 
   // Options & Extras

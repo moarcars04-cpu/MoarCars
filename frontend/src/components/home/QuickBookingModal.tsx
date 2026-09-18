@@ -15,14 +15,17 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
+import { getTodayDateStr, getFutureDateStr } from "@/lib/dateUtils";
 
 interface QuickBookingModalProps {
   car: any;
-  pickup: string;
-  startDate: string;
-  endDate: string;
+  pickup?: string;
+  startDate?: string;
+  endDate?: string;
+  searchParams?: any;
   onClose: () => void;
-  onBookingSuccess: (bookingId: number) => void;
+  onBookingSuccess?: (bookingId: number) => void;
+  onNavigate?: (path: string, state?: any) => void;
 }
 
 export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
@@ -30,10 +33,16 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
   pickup,
   startDate,
   endDate,
+  searchParams,
   onClose,
   onBookingSuccess,
+  onNavigate,
 }) => {
   const { user, openAuthModal } = useAuth();
+
+  const finalPickup = pickup || searchParams?.pickup || "Tirupati Central Hub (Station)";
+  const finalStartDate = startDate || searchParams?.startDate || getTodayDateStr();
+  const finalEndDate = endDate || searchParams?.endDate || getFutureDateStr(2);
 
   const [customerName, setCustomerName] = useState(user?.name || "");
   const [customerPhone, setCustomerPhone] = useState(user?.phone || "");
@@ -75,9 +84,9 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          pickup: pickup || "Tirupati Central Hub",
-          startDate,
-          endDate,
+          pickup: finalPickup,
+          startDate: finalStartDate,
+          endDate: finalEndDate,
           carName: car.name,
           bookingType: "Self Drive",
           status: "Confirmed",
@@ -99,7 +108,14 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
       setIsBooking(false);
 
       if (data.success) {
-        onBookingSuccess(data.data?.id || 1001);
+        if (onBookingSuccess) {
+          onBookingSuccess(data.data?.id || 1001);
+        } else if (onNavigate) {
+          onClose();
+          onNavigate("/dashboard");
+        } else {
+          onClose();
+        }
       } else {
         setErrorMsg(data.message || "Failed to submit booking.");
       }
@@ -144,10 +160,10 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
           <div className="rounded-2xl bg-slate-950/80 border border-white/10 p-4 space-y-2 text-xs">
             <div className="flex items-center justify-between font-bold text-white">
               <span className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 text-brand-gold" /> {pickup || "Tirupati Central Hub"}
+                <MapPin className="h-4 w-4 text-brand-gold" /> {finalPickup}
               </span>
               <span className="flex items-center gap-1.5 text-white/70">
-                <CalendarDays className="h-4 w-4 text-brand-teal" /> {startDate} to {endDate} (2 Days)
+                <CalendarDays className="h-4 w-4 text-brand-teal" /> {finalStartDate} to {finalEndDate} (2 Days)
               </span>
             </div>
           </div>

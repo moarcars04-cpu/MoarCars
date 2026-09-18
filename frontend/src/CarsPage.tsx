@@ -36,6 +36,7 @@ import { MoarLogo } from "@/components/common/MoarLogo";
 import { CarFleetItem } from "@/data/defaultCars";
 import { Viewer360Modal } from "@/components/home/360ViewerModal";
 import { QuickBookingModal } from "@/components/home/QuickBookingModal";
+import { getTodayDateStr, getFutureDateStr } from "@/lib/dateUtils";
 
 interface CarsPageProps {
   onNavigate?: (path: string, state?: any) => void;
@@ -1391,9 +1392,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
           searchParams={{
             pickup: bookingTargetCar.location || "Tirupati Central Hub",
             dropoff: bookingTargetCar.location || "Tirupati Central Hub",
-            startDate: new Date().toISOString().split("T")[0] || "2026-09-08",
+            startDate: getTodayDateStr(),
             startTime: "09:00",
-            endDate: new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0] || "2026-09-10",
+            endDate: getFutureDateStr(2),
             endTime: "21:00",
           }}
           onClose={() => setBookingTargetCar(null)}
