@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   MapPin,
   Calendar,
+  Clock,
   Search,
   Navigation,
   ArrowRight,
@@ -120,7 +121,9 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   const [pickup, setPickup] = useState("Tirupati Central Hub (Station)");
   const [dropoff, setDropoff] = useState("Tirupati Central Hub (Station)");
   const [startDate, setStartDate] = useState(getTodayDateStr());
+  const [startTime, setStartTime] = useState("09:00");
   const [returnDate, setReturnDate] = useState(getFutureDateStr(2));
+  const [endTime, setEndTime] = useState("21:00");
   const [carType, setCarType] = useState("All Types");
   const [isLocating, setIsLocating] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
@@ -156,9 +159,9 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
       pickup: pickup === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : pickup,
       dropoff: dropoff === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : dropoff,
       startDate,
-      startTime: "09:00",
+      startTime,
       endDate: returnDate,
-      endTime: "21:00",
+      endTime,
       category: carType === "All Types" ? undefined : carType,
       serviceType,
     });
@@ -277,15 +280,15 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* 3 & 4. Dates in 2-Column Grid on Mobile */}
+          {/* 3 & 4. Dates & Times in 2-Column Grid on Mobile */}
           <div className="grid grid-cols-2 gap-2 sm:col-span-2 lg:col-span-2">
-            {/* Pickup Date Box */}
-            <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
+            {/* Pickup Date & Time Box */}
+            <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-                Pickup Date
+                Pickup Date & Time
               </span>
-              <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
-                <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-[#c88d18] shrink-0" />
                 <input
                   type="date"
                   required
@@ -302,15 +305,25 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                   className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"
                 />
               </div>
+              <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <input
+                  type="time"
+                  required
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full bg-transparent text-[10px] sm:text-[11px] font-semibold text-slate-600 outline-none cursor-pointer"
+                />
+              </div>
             </div>
 
-            {/* Return Date Box */}
-            <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors">
+            {/* Return Date & Time Box */}
+            <div className="p-2 sm:p-2.5 rounded-xl border border-slate-200/80 bg-white hover:border-amber-400 transition-colors space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">
-                Return Date
+                Return Date & Time
               </span>
-              <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
-                <Calendar className="h-4 w-4 text-[#c88d18] shrink-0" />
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-[#c88d18] shrink-0" />
                 <input
                   type="date"
                   required
@@ -319,6 +332,16 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
                   className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100">
+                <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                <input
+                  type="time"
+                  required
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full bg-transparent text-[10px] sm:text-[11px] font-semibold text-slate-600 outline-none cursor-pointer"
                 />
               </div>
             </div>

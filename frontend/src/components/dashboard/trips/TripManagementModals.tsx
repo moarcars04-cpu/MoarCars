@@ -31,7 +31,9 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
 }) => {
   const [pickup, setPickup] = useState(booking.pickup || "Tirupati Central Station Hub");
   const [startDate, setStartDate] = useState(booking.startDate?.split(" ")[0] || getTodayDateStr());
+  const [startTime, setStartTime] = useState(booking.startDate?.split(" ")[1] || "09:00");
   const [endDate, setEndDate] = useState(booking.endDate?.split(" ")[0] || getFutureDateStr(2));
+  const [endTime, setEndTime] = useState(booking.endDate?.split(" ")[1] || "21:00");
   const [isSaving, setIsSaving] = useState(false);
 
   if (!isOpen) return null;
@@ -42,8 +44,8 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
       ...booking,
       pickup,
       pickupLocation: pickup,
-      startDate: `${startDate} 09:00`,
-      endDate: `${endDate} 21:00`,
+      startDate: `${startDate} ${startTime}`,
+      endDate: `${endDate} ${endTime}`,
     };
 
     try {
@@ -88,7 +90,9 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="font-bold text-brand-navy">Start Date</label>
+              <label className="font-bold text-brand-navy flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-brand-teal" /> Start Schedule
+              </label>
               <input
                 type="date"
                 min={getTodayDateStr()}
@@ -101,18 +105,32 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
                     setEndDate(val);
                   }
                 }}
-                className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
+                className="w-full p-2 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
+              />
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full p-2 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer text-xs"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="font-bold text-brand-navy">Return Date</label>
+              <label className="font-bold text-brand-navy flex items-center gap-1">
+                <Clock className="h-3 w-3 text-brand-gold" /> Return Schedule
+              </label>
               <input
                 type="date"
                 min={startDate || getTodayDateStr()}
                 max={getMaxBookingDateStr(2)}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
+                className="w-full p-2 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"
+              />
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full p-2 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer text-xs"
               />
             </div>
           </div>
