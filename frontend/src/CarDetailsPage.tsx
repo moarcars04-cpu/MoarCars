@@ -19,6 +19,7 @@ import {
   HelpCircle,
   Clock,
   Compass,
+  Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";

@@ -1195,12 +1195,11 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             ) : activeTab === "coupons" ? (
               <button
                 onClick={() => {
-                  setEditingCoupon(null);
-                  setIsCouponModalOpen(true);
+                  setActiveTab("coupons");
                 }}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20"
               >
-                <Plus className="w-4 h-4" /> Create Coupon
+                <Tag className="w-4 h-4" /> Manage Coupons
               </button>
             ) : (
               <button
@@ -2095,6 +2094,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           <CustomerManagement
             customers={customers}
             setCustomers={setCustomers}
+            bookings={bookings}
             setNotice={setNotice}
           />
         )}
@@ -2117,6 +2117,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           <BranchManagement
             branches={branches}
             setBranches={setBranches}
+            fleet={fleet}
             setNotice={setNotice}
           />
         )}
@@ -2220,7 +2221,6 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         {/* ------------------------------------------------------------------ */}
         {(activeTab === "security" || activeTab === "roles" || activeTab === "sessions") && (
           <SecurityCenter
-            initialTab={activeTab === "sessions" ? "sessions" : "rbac"}
             setNotice={setNotice}
           />
         )}

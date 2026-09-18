@@ -158,7 +158,7 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
 
     const newDigits = ["", "", "", "", "", ""];
     for (let i = 0; i < pasted.length; i++) {
-      newDigits[i] = pasted[i];
+      newDigits[i] = pasted[i] || "";
     }
     setOtpDigits(newDigits);
     const nextIdx = Math.min(pasted.length, 5);
@@ -516,7 +516,9 @@ export const AdminOtpLogin: React.FC<AdminOtpLoginProps> = ({
                     {otpDigits.map((digit, idx) => (
                       <input
                         key={idx}
-                        ref={(el) => (inputRefs.current[idx] = el)}
+                        ref={(el) => {
+                          inputRefs.current[idx] = el;
+                        }}
                         type="text"
                         inputMode="numeric"
                         maxLength={1}

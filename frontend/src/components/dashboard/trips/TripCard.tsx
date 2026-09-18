@@ -23,6 +23,7 @@ import {
   Trash2,
   Star,
   Receipt,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingTimelineStepper } from "./BookingTimelineStepper";
