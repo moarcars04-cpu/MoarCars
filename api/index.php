@@ -3248,7 +3248,56 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
                 $stmt->execute($values);
                 $id = (int)$pdo->lastInsertId();
                 $input['id'] = $id;
-                echo json_encode(["success" => true, "message" => "Booking saved successfully!", "data" => $input]);
+
+                // Auto-sync or create customer record in Customers table
+                $custEmail = trim($input['customerEmail'] ?? '');
+                $custPhone = trim($input['customerPhone'] ?? '');
+                $custName = trim($input['customerName'] ?? 'Valued Customer');
+                $custDl = trim($input['drivingLicense'] ?? ($input['dlNumber'] ?? ''));
+                $custUser = null;
+
+                if (!empty($custEmail)) {
+                    $chkCust = $pdo->prepare("SELECT * FROM Customers WHERE email = ? LIMIT 1");
+                    $chkCust->execute([$custEmail]);
+                    $existing = $chkCust->fetch();
+                    if ($existing) {
+                        $updSql = "UPDATE Customers SET totalBookings = COALESCE(totalBookings, 0) + 1";
+                        $updParams = [];
+                        if (!empty($custDl) && empty($existing['dlNumber'])) {
+                            $updSql .= ", dlNumber = ?";
+                            $updParams[] = $custDl;
+                        }
+                        if (!empty($custPhone) && empty($existing['phone'])) {
+                            $updSql .= ", phone = ?";
+                            $updParams[] = $custPhone;
+                        }
+                        $updSql .= " WHERE id = ?";
+                        $updParams[] = $existing['id'];
+                        $pdo->prepare($updSql)->execute($updParams);
+
+                        $refreshStmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ? LIMIT 1");
+                        $refreshStmt->execute([$existing['id']]);
+                        $custUser = formatCustomerResponse($refreshStmt->fetch());
+                    } else {
+                        $newTok = 'usr_' . bin2hex(random_bytes(16));
+                        $insCust = $pdo->prepare("
+                            INSERT INTO Customers (name, email, phone, dlNumber, walletBalance, rewardPoints, loyaltyPoints, loyaltyTier, kycStatus, token)
+                            VALUES (?, ?, ?, ?, 0, 150, 150, 'Gold VIP', 'Pending', ?)
+                        ");
+                        $insCust->execute([$custName, $custEmail, $custPhone, $custDl, $newTok]);
+                        $newCustId = (int)$pdo->lastInsertId();
+                        $fetchCust = $pdo->prepare("SELECT * FROM Customers WHERE id = ? LIMIT 1");
+                        $fetchCust->execute([$newCustId]);
+                        $custUser = formatCustomerResponse($fetchCust->fetch());
+                    }
+                }
+
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Booking saved successfully!",
+                    "data" => $input,
+                    "user" => $custUser
+                ]);
                 exit();
             }
         } catch (Exception $e) {

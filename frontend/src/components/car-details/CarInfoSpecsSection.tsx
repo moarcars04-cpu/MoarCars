@@ -77,7 +77,7 @@ export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car })
           <span className="text-xs font-bold text-muted-foreground">Certified Fleet Data</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {specs.map((item, idx) => {
             const Icon = item.icon;
             return (
@@ -105,7 +105,7 @@ export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car })
           <Sparkles className="h-5 w-5 text-brand-gold" /> Comfort & Cabin Features
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {comfortFeatures.map((feat, idx) => (
             <div
               key={idx}

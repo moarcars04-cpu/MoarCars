@@ -1,8 +1,26 @@
+# Moar Cars - Robots.txt for Search Engines
 User-agent: Googlebot
 Allow: /
+Allow: /cars
+Allow: /fleet
+Allow: /checkout
+Allow: /dashboard
+Disallow: /api/admin/
+Disallow: /admin/
+Disallow: /api/auth/
+Disallow: /api/cron
+
+User-agent: Googlebot-Image
+Allow: /assets/
+Allow: /moarcars-logo.png
+Allow: /*.jpg$
+Allow: /*.png$
+Allow: /*.webp$
 
 User-agent: Bingbot
 Allow: /
+Disallow: /api/admin/
+Disallow: /admin/
 
 User-agent: Twitterbot
 Allow: /
@@ -10,7 +28,19 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: LinkedInBot
 Allow: /
 
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: *
+Allow: /
+Disallow: /api/admin/
+Disallow: /admin/
+
+Host: https://moarcars.com
 Sitemap: https://moarcars.com/sitemap.xml

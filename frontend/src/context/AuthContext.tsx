@@ -27,6 +27,7 @@ interface AuthContextType {
   redeemRewards: (points: number) => Promise<{ success: boolean; message: string }>;
   claimBirthdayReward: () => Promise<{ success: boolean; message: string }>;
   fetchDashboardData: () => Promise<UserDashboardData | null>;
+  saveSession: (newUser: UserProfile | null, newToken: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -462,6 +463,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         redeemRewards,
         claimBirthdayReward,
         fetchDashboardData,
+        saveSession,
       }}
     >
       {children}

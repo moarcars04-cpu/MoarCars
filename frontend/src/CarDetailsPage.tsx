@@ -395,19 +395,35 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
             </div>
           </div>
 
-          {/* Main 2-Column Details & Booking Grid */}
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              {/* Left Column (8 cols): HD Gallery, Specs, Pricing Tiers, Ghat Advice, Real Reviews */}
-              <div className="lg:col-span-8 space-y-12">
-                {/* 1. HD Gallery */}
+          {/* Main Vehicle Details & Booking Section */}
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6 space-y-12">
+            {/* 1. Hero Gallery & Luxury Booking Calculator Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+              {/* Left Column (8 cols): HD Gallery */}
+              <div className="lg:col-span-8">
                 <CarGallerySection car={currentCar} />
+              </div>
 
-                {/* 2. Comprehensive Specs & Safety Matrix */}
-                <CarInfoSpecsSection car={currentCar} />
+              {/* Right Column (4 cols): Luxury Booking Calculator Panel */}
+              <div className="lg:col-span-4">
+                <LuxuryBookingPanel
+                  car={currentCar}
+                  onNavigate={onNavigate}
+                  onBookingSuccess={() => {
+                    if (onNavigate) onNavigate("/dashboard");
+                  }}
+                />
+              </div>
+            </div>
 
-                {/* 3. Ghat Road Guidelines for this Model */}
-                <div className="p-6 rounded-3xl bg-brand-mist/40 border border-border space-y-3">
+            {/* 2. Full-Width Technical Specifications & Comfort Features */}
+            <div className="space-y-10 pt-2">
+              <CarInfoSpecsSection car={currentCar} />
+
+              {/* 3. Balanced 2-Column Section: Ghat Guidelines (5 cols) & Verified Customer Reviews (7 cols) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                {/* Left: Tirumala Ghat Road Guidelines */}
+                <div className="lg:col-span-5 p-6 rounded-3xl bg-brand-mist/40 border border-border space-y-3">
                   <span className="text-xs font-bold uppercase tracking-widest text-brand-teal flex items-center gap-1.5">
                     <Compass className="h-4 w-4" /> Tirumala Ghat Road Guidelines
                   </span>
@@ -419,8 +435,8 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                   </p>
                 </div>
 
-                {/* 5. Verified Customer Reviews for this specific car */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border space-y-6 shadow-sm">
+                {/* Right: Verified Customer Reviews for this specific car */}
+                <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-card border border-border space-y-6 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-widest text-brand-teal flex items-center gap-1.5">
@@ -509,17 +525,6 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                   )}
                 </div>
               </div>
-
-              {/* Right Column (4 cols): Sticky Luxury Booking Calculator Panel */}
-              <div className="lg:col-span-4">
-                <LuxuryBookingPanel
-                  car={currentCar}
-                  onNavigate={onNavigate}
-                  onBookingSuccess={() => {
-                    if (onNavigate) onNavigate("/dashboard");
-                  }}
-                />
-              </div>
             </div>
 
             {/* Similar Cars & Recommendations */}
@@ -538,7 +543,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
             />
 
             {/* FAQ Section */}
-            <div className="mt-16">
+            <div className="mt-8">
               <FaqSection />
             </div>
           </div>

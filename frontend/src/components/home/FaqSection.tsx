@@ -27,9 +27,9 @@ const FAQS: FAQItem[] = [
   {
     id: "3",
     category: "deposit",
-    question: "How much is the security deposit and when is it refunded?",
+    question: "How does the Online Advance Payment work?",
     answer:
-      "The refundable security deposit ranges from ₹2,000 to ₹5,000 depending on the vehicle category (Hatchback vs SUV/Luxury). Upon safe return and vehicle check-in, the deposit is processed back to your original payment method / UPI within 2 hours guaranteed.",
+      "To confirm your reservation, you only pay the configured online advance percentage (e.g. 20%) calculated on your total rental duration. The remaining balance is payable conveniently upon vehicle inspection and handover.",
   },
   {
     id: "4",
@@ -43,7 +43,7 @@ const FAQS: FAQItem[] = [
     category: "deposit",
     question: "What is the cancellation and refund policy?",
     answer:
-      "We offer 100% Free Cancellation up to 6 hours prior to your scheduled pickup time. Cancellations within 6 hours incur a nominal one-hour rental charge, and the remaining amount is refunded immediately.",
+      "Cancellations requested 24+ hours prior to scheduled pickup receive a prompt full advance refund. For assistance, reach out directly to our 24/7 Tirupati support team.",
   },
   {
     id: "6",
@@ -70,10 +70,12 @@ const FAQS: FAQItem[] = [
 
 export const FaqSection: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<"all" | "kyc" | "ghat" | "deposit" | "fuel">("all");
-  const [expandedId, setExpandedId] = useState<string | null>("1");
+  const [expandedIds, setExpandedIds] = useState<string[]>(["1"]);
 
   const toggleAccordion = (id: string) => {
-    setExpandedId((prev) => (prev === id ? null : id));
+    setExpandedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
   };
 
   const filteredFaqs = activeCategory === "all" ? FAQS : FAQS.filter((f) => f.category === activeCategory);
@@ -117,22 +119,22 @@ export const FaqSection: React.FC = () => {
           ))}
         </div>
 
-        {/* Accordion List */}
-        <div className="max-w-4xl mx-auto space-y-3 w-full">
+        {/* 2-Column Responsive FAQ Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full items-start">
           {filteredFaqs.map((faq) => {
-            const isExpanded = expandedId === faq.id;
+            const isExpanded = expandedIds.includes(faq.id);
             return (
               <div
                 key={faq.id}
-                className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                className={`rounded-2xl border transition-all duration-200 overflow-hidden h-fit ${
                   isExpanded ? "border-brand-teal/40 bg-brand-mist/30 shadow-md" : "border-border bg-card hover:border-brand-teal/20"
                 }`}
               >
                 <button
                   onClick={() => toggleAccordion(faq.id)}
-                  className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 focus:outline-none"
+                  className="w-full text-left px-5 py-4 sm:py-5 flex items-center justify-between gap-3 focus:outline-none"
                 >
-                  <span className="text-sm sm:text-base font-bold text-brand-navy">
+                  <span className="text-xs sm:text-sm font-bold text-brand-navy leading-snug">
                     {faq.question}
                   </span>
                   <div
@@ -145,7 +147,7 @@ export const FaqSection: React.FC = () => {
                 </button>
 
                 {isExpanded && (
-                  <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/40">
+                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/40">
                     {faq.answer}
                   </div>
                 )}

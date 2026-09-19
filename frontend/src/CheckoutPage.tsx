@@ -38,7 +38,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   initialParams,
   onNavigate,
 }) => {
-  const { user, openAuthModal } = useAuth();
+  const { user, openAuthModal, saveSession } = useAuth();
 
   const [car, setCar] = useState<any | null>(initialCar || null);
   const [currentStep, setCurrentStep] = useState<"details" | "payment" | "confirmed">("details");
@@ -59,10 +59,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Renter Details
   const [customerName, setCustomerName] = useState(user?.name || "");
-  const [customerPhone, setCustomerPhone] = useState(user?.phone || "");
+  const [customerPhone, setCustomerPhone] = useState(user?.phone ? user.phone.replace(/\D/g, "").slice(-10) : "");
   const [customerEmail, setCustomerEmail] = useState(user?.email || "");
-  const [drivingLicense, setDrivingLicense] = useState("");
+  const [drivingLicense, setDrivingLicense] = useState(user?.dlNumber || "");
   const [emergencyContact, setEmergencyContact] = useState("");
+
+  // Validation Errors
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    phone?: string;
+    email?: string;
+    dl?: string;
+    terms?: string;
+  }>({});
 
   // Trip Timeline
   const [pickupLocation, setPickupLocation] = useState(
@@ -99,7 +108,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   // Payment Method
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodType>("upi");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodType>("razorpay");
 
   // Submission & Confirmation state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,8 +119,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   useEffect(() => {
     if (user) {
       if (!customerName) setCustomerName(user.name || "");
-      if (!customerPhone) setCustomerPhone(user.phone || "");
+      if (!customerPhone && user.phone) setCustomerPhone(user.phone.replace(/\D/g, "").slice(-10));
       if (!customerEmail) setCustomerEmail(user.email || "");
+      if (!drivingLicense && user.dlNumber) setDrivingLicense(user.dlNumber);
     }
   }, [user]);
 
@@ -198,6 +208,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const balanceDue = Math.max(0, grandTotal - payableNow);
   const securityDeposit = 0;
 
+  // Helper: Dynamically load Razorpay SDK
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   // Apply Coupon Handler
   const handleApplyCoupon = async (code: string) => {
     const cleanCode = code.trim().toUpperCase();
@@ -233,24 +258,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     return false;
   };
 
-  // Final Payment & Reservation Submission
-  const handleConfirmAndPay = async () => {
-    if (!customerName || !customerPhone) {
-      setSubmissionError("Please fill in your legal name and contact mobile number.");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    if (!hasAcceptedTerms) {
-      setSubmissionError("Please accept the Moar Cars Self-Drive Rental Agreement & Ghat road rules.");
-      return;
-    }
-
+  // Save Booking & Sync User Profile
+  const finalizeBooking = async (bookingId: string, transactionId: string) => {
     setIsSubmitting(true);
     setSubmissionError("");
 
-    const bookingId = `MC-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-    const transactionId = `TXN-MOAR-${Date.now().toString().slice(-6)}`;
+    const cleanPhone = customerPhone.replace(/\D/g, "");
 
     const bookingPayload = {
       bookingId,
@@ -260,22 +273,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       dropLocation,
       startDate: `${startDate} ${startTime}`,
       endDate: `${endDate} ${endTime}`,
-      carName: car.name,
+      carName: car?.name || "Premium Fleet Vehicle",
       car,
+      carId: car?.id,
       bookingType: "Self Drive",
-      customerName: customerName || user?.name || "Valued Customer",
-      customerPhone: customerPhone || user?.phone || "+91 98765 43210",
-      customerEmail: customerEmail || user?.email || "customer@moarcars.com",
-      drivingLicense: drivingLicense || user?.dlNumber || "DL-AP03-2024-XXXX",
+      customerName: customerName.trim(),
+      customerPhone: cleanPhone,
+      customerEmail: customerEmail.trim().toLowerCase(),
+      drivingLicense: drivingLicense.trim().toUpperCase(),
       emergencyContact,
       status: "Confirmed",
-      paymentStatus:
-        balanceDue > 0
-          ? "Advance Paid"
-          : selectedPaymentMethod === "cash"
-          ? "Pending_At_Pickup"
-          : "Paid",
-      paymentMethod: selectedPaymentMethod,
+      paymentStatus: balanceDue > 0 ? "Advance Paid" : "Paid",
+      paymentMethod: "Razorpay",
       bookingSource: "Web Checkout Gateway",
       totalDays: rentalDays,
       amount: grandTotal,
@@ -290,7 +299,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       discountAmount: totalDiscounts,
       gstRate,
       gstAmount,
-      securityDeposit,
+      securityDeposit: 0,
       grandTotal,
       advancePaymentPercent,
       paidAmount: payableNow,
@@ -306,6 +315,22 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       });
       const data = await res.json();
 
+      // Auto-generate or update user session
+      const generatedUser = data.user || {
+        id: data.data?.userId || (user?.id || Date.now()),
+        name: customerName.trim(),
+        email: customerEmail.trim().toLowerCase(),
+        phone: cleanPhone,
+        dlNumber: drivingLicense.trim().toUpperCase(),
+        kycStatus: user?.kycStatus || "Pending",
+        walletBalance: user?.walletBalance || 0,
+        rewardPoints: (user?.rewardPoints || 100) + 50,
+        loyaltyPoints: (user?.loyaltyPoints || 100) + 50,
+        loyaltyTier: user?.loyaltyTier || "Gold VIP",
+      };
+
+      saveSession(generatedUser, generatedUser.token || user?.token || `session_${Date.now()}`);
+
       setConfirmedBookingData({
         ...bookingPayload,
         bookingId: data.data?.id ? `MC-2026-${data.data.id}` : bookingId,
@@ -314,11 +339,122 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.warn("Optimistic booking confirmation:", err);
+      // Even in offline/fallback, create profile session
+      const fallbackUser = {
+        id: user?.id || Date.now(),
+        name: customerName.trim(),
+        email: customerEmail.trim().toLowerCase(),
+        phone: cleanPhone,
+        dlNumber: drivingLicense.trim().toUpperCase(),
+        kycStatus: user?.kycStatus || "Pending",
+        walletBalance: user?.walletBalance || 0,
+        rewardPoints: 150,
+        loyaltyPoints: 150,
+        loyaltyTier: "Gold VIP",
+      };
+      saveSession(fallbackUser as any, `session_${Date.now()}`);
+
       setConfirmedBookingData(bookingPayload);
       setCurrentStep("confirmed");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Final Payment & Reservation Submission with Razorpay & Strict Form Validation
+  const handleConfirmAndPay = async () => {
+    // 1. Strict Form Validations
+    const errors: { name?: string; phone?: string; email?: string; dl?: string; terms?: string } = {};
+
+    if (!customerName || customerName.trim().length < 3) {
+      errors.name = "Full Legal Name is required (minimum 3 characters).";
+    }
+
+    const cleanPhone = customerPhone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      errors.phone = "Mobile number must be exactly 10 digits (digits only).";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!customerEmail || !emailRegex.test(customerEmail.trim())) {
+      errors.email = "Please enter a valid email address (e.g. name@example.com).";
+    }
+
+    if (!drivingLicense || drivingLicense.trim().length < 5) {
+      errors.dl = "Driving License Number is required (minimum 5 characters).";
+    }
+
+    if (!hasAcceptedTerms) {
+      errors.terms = "Please accept the Moar Cars Self-Drive Rental Agreement & terms.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setSubmissionError(Object.values(errors)[0]);
+      window.scrollTo({ top: 120, behavior: "smooth" });
+      return;
+    }
+
+    setFieldErrors({});
+    setSubmissionError("");
+    setIsSubmitting(true);
+
+    // 2. Load Razorpay SDK
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded) {
+      setIsSubmitting(false);
+      setSubmissionError("Unable to connect to Razorpay payment gateway. Please check your internet connection.");
+      return;
+    }
+
+    const bookingId = `MC-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const amountInPaise = Math.max(100, Math.round(payableNow * 100)); // amount in paise
+
+    const options = {
+      key: "rzp_test_SwedUUn1KgRMs0",
+      amount: amountInPaise,
+      currency: "INR",
+      name: "MOAR CARS",
+      description: `Self-Drive Rental Advance: ${car?.name || "Vehicle"} (${rentalDays} Days)`,
+      image: "https://moarcars.com/assets/moarcars-logo-DK578w77.png",
+      prefill: {
+        name: customerName.trim(),
+        email: customerEmail.trim(),
+        contact: cleanPhone,
+      },
+      notes: {
+        bookingId,
+        carName: car?.name || "Vehicle",
+        pickupLocation,
+        rentalDays: String(rentalDays),
+        payableNow: String(payableNow),
+        balanceDue: String(balanceDue),
+      },
+      theme: {
+        color: "#0b1426",
+      },
+      modal: {
+        ondismiss: function () {
+          setIsSubmitting(false);
+        },
+      },
+      handler: async function (response: any) {
+        const paymentId = response.razorpay_payment_id || `rzp_test_${Date.now()}`;
+        await finalizeBooking(bookingId, paymentId);
+      },
+    };
+
+    try {
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setIsSubmitting(false);
+        setSubmissionError(`Payment failed: ${response.error?.description || "Transaction declined by bank/gateway"}`);
+      });
+      rzp.open();
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setSubmissionError(err?.message || "Failed to initialize Razorpay checkout.");
     }
   };
 
@@ -476,48 +612,121 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Full Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy">Full Legal Name (as per DL)</label>
+                    <label className="text-xs font-bold text-brand-navy flex items-center justify-between">
+                      <span>Full Legal Name (as per DL) <span className="text-rose-500">*</span></span>
+                    </label>
                     <input
                       type="text"
                       placeholder="e.g. Rajesh Reddy"
                       value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-semibold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
+                      onChange={(e) => {
+                        setCustomerName(e.target.value);
+                        if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                      }}
+                      className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs font-semibold text-brand-navy outline-none transition-all ${
+                        fieldErrors.name
+                          ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
+                          : "border-border focus:ring-1 focus:ring-brand-teal"
+                      }`}
                     />
+                    {fieldErrors.name && (
+                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.name}
+                      </p>
+                    )}
                   </div>
 
+                  {/* Mobile Number - Exactly 10 Digits */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy">Mobile Number</label>
-                    <input
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-semibold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
-                    />
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-brand-navy">
+                        Mobile Number <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[10px] font-mono font-bold text-muted-foreground">
+                        {customerPhone.length}/10 digits
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground select-none">
+                        +91
+                      </span>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        inputMode="numeric"
+                        placeholder="9876543210"
+                        value={customerPhone}
+                        onChange={(e) => {
+                          const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setCustomerPhone(digitsOnly);
+                          if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+                        }}
+                        className={`w-full pl-12 pr-3 py-3 rounded-2xl bg-brand-mist/60 border text-xs font-semibold text-brand-navy outline-none tracking-wide transition-all ${
+                          fieldErrors.phone
+                            ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
+                            : "border-border focus:ring-1 focus:ring-brand-teal"
+                        }`}
+                      />
+                    </div>
+                    {fieldErrors.phone && (
+                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.phone}
+                      </p>
+                    )}
                   </div>
 
+                  {/* Email Address */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy">Email Address</label>
+                    <label className="text-xs font-bold text-brand-navy flex items-center justify-between">
+                      <span>Email Address <span className="text-rose-500">*</span></span>
+                    </label>
                     <input
                       type="email"
                       placeholder="rajesh@example.com"
                       value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-semibold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
+                      onChange={(e) => {
+                        setCustomerEmail(e.target.value);
+                        if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                      }}
+                      className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs font-semibold text-brand-navy outline-none transition-all ${
+                        fieldErrors.email
+                          ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
+                          : "border-border focus:ring-1 focus:ring-brand-teal"
+                      }`}
                     />
+                    {fieldErrors.email && (
+                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.email}
+                      </p>
+                    )}
                   </div>
 
+                  {/* Driving License */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy">Driving License Number</label>
+                    <label className="text-xs font-bold text-brand-navy flex items-center justify-between">
+                      <span>Driving License Number <span className="text-rose-500">*</span></span>
+                    </label>
                     <input
                       type="text"
                       placeholder="AP03 20220019281"
                       value={drivingLicense}
-                      onChange={(e) => setDrivingLicense(e.target.value)}
-                      className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs uppercase font-semibold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
+                      onChange={(e) => {
+                        setDrivingLicense(e.target.value.toUpperCase());
+                        if (fieldErrors.dl) setFieldErrors((prev) => ({ ...prev, dl: undefined }));
+                      }}
+                      className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs uppercase font-semibold text-brand-navy outline-none transition-all ${
+                        fieldErrors.dl
+                          ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
+                          : "border-border focus:ring-1 focus:ring-brand-teal"
+                      }`}
                     />
+                    {fieldErrors.dl && (
+                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.dl}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -564,19 +773,30 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     <input
                       type="checkbox"
                       checked={hasAcceptedTerms}
-                      onChange={(e) => setHasAcceptedTerms(e.target.checked)}
+                      onChange={(e) => {
+                        setHasAcceptedTerms(e.target.checked);
+                        if (fieldErrors.terms) setFieldErrors((prev) => ({ ...prev, terms: undefined }));
+                      }}
                       className="mt-0.5 rounded text-brand-teal focus:ring-0 accent-brand-teal"
                     />
                     <span>
                       I agree to the Moar Cars Self-Drive Rental Agreement, Tirumala Ghat Road speed bylaws, like-to-like fuel terms, and authorize my digital signature on the rental contract.
                     </span>
                   </label>
+                  {fieldErrors.terms && (
+                    <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1 mt-1.5">
+                      <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.terms}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* 4. PAYMENT METHOD SELECTOR */}
               <PaymentMethodsSection
                 grandTotal={grandTotal}
+                payableNow={payableNow}
+                balanceDue={balanceDue}
+                advancePaymentPercent={advancePaymentPercent}
                 selectedMethod={selectedPaymentMethod}
                 onSelectMethod={setSelectedPaymentMethod}
               />
@@ -587,14 +807,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   size="lg"
                   disabled={isSubmitting}
                   onClick={handleConfirmAndPay}
-                  className="w-full h-14 rounded-2xl bg-brand-gold hover:bg-brand-gold/90 text-brand-navy text-sm font-black uppercase tracking-wider shadow-2xl hover:shadow-brand-gold/20 flex items-center justify-center gap-2 transition-transform active:scale-95"
+                  className="w-full h-14 rounded-2xl bg-[#c88d18] hover:bg-[#b07b14] text-white text-sm font-black uppercase tracking-wider shadow-2xl hover:shadow-[#c88d18]/25 flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
                 >
                   {isSubmitting ? (
-                    "Securing Booking..."
+                    "Processing Razorpay Checkout..."
                   ) : (
                     <>
                       <span>
-                        Authorize ₹{payableNow.toLocaleString("en-IN")} & Complete Booking
+                        Pay ₹{payableNow.toLocaleString("en-IN")} Advance via Razorpay
                       </span>
                       <ArrowRight className="h-4 w-4" />
                     </>
@@ -602,15 +822,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </Button>
 
                 {balanceDue > 0 && (
-                  <p className="text-center text-xs font-bold text-amber-700 bg-amber-500/10 py-1.5 px-3 rounded-xl border border-amber-500/20">
-                    ℹ️ Advance of ₹{payableNow.toLocaleString("en-IN")} charged now. Remaining balance ₹{balanceDue.toLocaleString("en-IN")} payable at car handover.
+                  <p className="text-center text-xs font-bold text-amber-700 bg-amber-500/10 py-2 px-3 rounded-xl border border-amber-500/20">
+                    ℹ️ Advance of ₹{payableNow.toLocaleString("en-IN")} ({advancePaymentPercent}%) paid securely online now. Remaining balance ₹{balanceDue.toLocaleString("en-IN")} payable at car handover.
                   </p>
                 )}
 
                 <p className="text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                   <span>
-                    Instant Booking Confirmation • Flexible Trip Dates • Zero Hidden Charges
+                    256-Bit SSL Razorpay Gateway • Instant Trip Confirmation • Zero Hidden Charges
                   </span>
                 </p>
               </div>

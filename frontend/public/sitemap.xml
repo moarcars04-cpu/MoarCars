@@ -1,33 +1,95 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- Home Page -->
   <url>
     <loc>https://moarcars.com/</loc>
-    <lastmod>2026-09-12</lastmod>
+    <lastmod>2026-09-19</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://moarcars.com/assets/moarcars-logo-DK578w77.png</image:loc>
+      <image:title>Moar Cars - #1 Self-Drive Car Rental in Tirupati</image:title>
+    </image:image>
   </url>
+
+  <!-- Live Cars Fleet Directory -->
   <url>
     <loc>https://moarcars.com/cars</loc>
-    <lastmod>2026-09-12</lastmod>
+    <lastmod>2026-09-19</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.9</priority>
+    <priority>0.95</priority>
   </url>
+
+  <!-- SUV Car Rentals -->
   <url>
-    <loc>https://moarcars.com/fleet</loc>
-    <lastmod>2026-09-12</lastmod>
+    <loc>https://moarcars.com/cars?type=SUV</loc>
+    <lastmod>2026-09-19</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.90</priority>
   </url>
+
+  <!-- Luxury Fleet Rentals -->
+  <url>
+    <loc>https://moarcars.com/cars?type=Luxury</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- 7-Seater Family Car Rentals -->
+  <url>
+    <loc>https://moarcars.com/cars?seats=7</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Automatic Transmission Cars -->
+  <url>
+    <loc>https://moarcars.com/cars?transmission=Automatic</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Tirupati Airport Delivery Hub -->
+  <url>
+    <loc>https://moarcars.com/cars?pickup=Tirupati+Airport</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- Tirupati Railway Station Delivery Hub -->
+  <url>
+    <loc>https://moarcars.com/cars?pickup=Tirupati+Central+Station+Hub</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- Tirumala Ghat Road Cars -->
+  <url>
+    <loc>https://moarcars.com/cars?ghatCertified=true</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Secure Reservation Checkout -->
   <url>
     <loc>https://moarcars.com/checkout</loc>
-    <lastmod>2026-09-12</lastmod>
+    <lastmod>2026-09-19</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.80</priority>
   </url>
+
+  <!-- User Account & Trips Dashboard -->
   <url>
     <loc>https://moarcars.com/dashboard</loc>
-    <lastmod>2026-09-12</lastmod>
+    <lastmod>2026-09-19</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.60</priority>
   </url>
 </urlset>
