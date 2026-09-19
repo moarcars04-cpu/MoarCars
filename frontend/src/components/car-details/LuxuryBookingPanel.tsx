@@ -51,9 +51,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
     }
   }, [locations]);
 
-  // Chauffeur option
-  const [withDriver, setWithDriver] = useState(false);
-
   // Promo code engine
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number; discount: number } | null>(null);
@@ -112,10 +109,10 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   const dailyRate = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0;
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
-  const driverFee = withDriver ? 699 * rentalDays : 0;
+  const driverFee = 0;
   const extrasTotal = 0;
 
-  const subtotalBeforeDiscount = baseFare + deliveryFee + driverFee;
+  const subtotalBeforeDiscount = baseFare + deliveryFee;
 
   // Promo discount calculation
   const discountAmount = appliedPromo ? Math.round((subtotalBeforeDiscount * appliedPromo.percent) / 100) : 0;
@@ -177,9 +174,9 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       carName: car.name,
       car,
       carId: car.id,
-      withDriver,
+      withDriver: false,
       deliveryMode,
-      bookingType: withDriver ? "Chauffeur Driven" : "Self Drive",
+      bookingType: "Self Drive",
       customerName: customerName || user?.name || "Valued Guest",
       customerPhone: customerPhone || user?.phone || "+91 98765 43210",
       customerEmail: customerEmail || user?.email || "guest@moarcars.com",
@@ -376,27 +373,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         )}
       </div>
 
-      {/* Driver Option */}
-      <div className="p-3.5 rounded-2xl bg-brand-mist/40 border border-border flex items-center justify-between">
-        <div>
-          <h4 className="text-xs font-bold text-brand-navy">Add VIP Temple Chauffeur?</h4>
-          <p className="text-[10px] text-muted-foreground">Experienced ghat-road driver (+₹699/day)</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setWithDriver(!withDriver)}
-          className={`h-6 w-11 rounded-full transition-colors relative ${
-            withDriver ? "bg-brand-teal" : "bg-muted"
-          }`}
-        >
-          <span
-            className={`h-4 w-4 rounded-full bg-white block shadow transition-transform ${
-              withDriver ? "translate-x-6" : "translate-x-1"
-            }`}
-          />
-        </button>
-      </div>
-
       {/* Promo Code Engine */}
       <div className="space-y-2">
         <div className="flex gap-2">
@@ -437,13 +413,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
           <div className="flex justify-between text-muted-foreground">
             <span>Express Doorstep Delivery</span>
             <span>₹{deliveryFee}</span>
-          </div>
-        )}
-
-        {driverFee > 0 && (
-          <div className="flex justify-between text-muted-foreground">
-            <span>VIP Chauffeur ({rentalDays} Days)</span>
-            <span>₹{driverFee.toLocaleString("en-IN")}</span>
           </div>
         )}
 

@@ -28,7 +28,6 @@ import { CarInfoSpecsSection } from "./components/car-details/CarInfoSpecsSectio
 import { LuxuryBookingPanel } from "./components/car-details/LuxuryBookingPanel";
 import { SimilarAndRecommendedCars } from "./components/car-details/SimilarAndRecommendedCars";
 import { FaqSection } from "./components/home/FaqSection";
-import { AppDownloadSection } from "./components/home/AppDownloadSection";
 import { Viewer360Modal } from "./components/home/360ViewerModal";
 import { CompareModal } from "./components/home/CompareModal";
 
@@ -545,9 +544,6 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
           </div>
         </>
       )}
-
-      {/* Mobile App Download */}
-      <AppDownloadSection />
 
       {/* Luxury Footer */}
       <footer className="bg-brand-ink py-10 text-primary-foreground border-t border-white/10">

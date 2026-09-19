@@ -77,7 +77,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [endTime, setEndTime] = useState(initialParams?.endTime || "21:00");
 
   // Options & Extras
-  const [withDriver, setWithDriver] = useState(initialParams?.withDriver || false);
+  const [withDriver] = useState(false);
   const [deliveryMode, setDeliveryMode] = useState<"hub" | "doorstep">(
     initialParams?.deliveryMode || "hub"
   );
@@ -161,10 +161,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     0;
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
-  const driverFee = withDriver ? 699 * rentalDays : 0;
+  const driverFee = 0;
   const extrasTotal = 0;
 
-  const subtotalBeforeDiscounts = baseFare + deliveryFee + driverFee;
+  const subtotalBeforeDiscounts = baseFare + deliveryFee;
 
   // Real User Wallet and Loyalty Points values
   const userWalletBalance = user?.walletBalance !== undefined ? Number(user.walletBalance) : 0;
@@ -262,7 +262,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       endDate: `${endDate} ${endTime}`,
       carName: car.name,
       car,
-      bookingType: withDriver ? "Chauffeur Driven" : "Self Drive",
+      bookingType: "Self Drive",
       customerName: customerName || user?.name || "Valued Customer",
       customerPhone: customerPhone || user?.phone || "+91 98765 43210",
       customerEmail: customerEmail || user?.email || "customer@moarcars.com",
@@ -281,7 +281,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       amount: grandTotal,
       baseFare,
       deliveryFee,
-      driverFee,
+      driverFee: 0,
       extrasTotal,
       couponDiscount,
       walletDeduction,

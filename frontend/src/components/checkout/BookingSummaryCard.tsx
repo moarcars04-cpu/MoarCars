@@ -158,7 +158,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
           <span>Booking Mode:</span>
           <span className="font-bold text-brand-navy">
-            {withDriver ? "Chauffeur Driven (Temple VIP)" : "Self Drive (Unlimited KM)"}
+            Self Drive (Unlimited KM)
           </span>
         </div>
       </div>
@@ -174,13 +174,6 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
           <div className="flex justify-between text-muted-foreground">
             <span>Express Doorstep Delivery</span>
             <span className="font-semibold text-brand-navy">₹{deliveryFee}</span>
-          </div>
-        )}
-
-        {driverFee > 0 && (
-          <div className="flex justify-between text-muted-foreground">
-            <span>VIP Chauffeur Service ({rentalDays} Days)</span>
-            <span className="font-semibold text-brand-navy">₹{driverFee.toLocaleString("en-IN")}</span>
           </div>
         )}
 
