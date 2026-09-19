@@ -35,10 +35,12 @@ export default function CouponEngine({
   const [editingCoupon, setEditingCoupon] = useState<CouponItem | null>(null);
 
   const filteredCoupons = useMemo(() => {
-    return coupons.filter((c) => {
+    return (coupons || []).filter((c) => {
+      if (!c) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.type.toLowerCase().includes(searchQuery.toLowerCase());
+        (c.code || "").toLowerCase().includes(q) ||
+        (c.type || "").toLowerCase().includes(q);
 
       const matchType = filterType === "all" || c.type === filterType;
       return matchSearch && matchType;
@@ -214,8 +216,8 @@ export default function CouponEngine({
                 {cp.isPercent ? `${cp.discountValue}% OFF` : `₹${cp.discountValue} FLAT OFF`}
               </h3>
               <p className="text-slate-400 text-[11px]">
-                Min Booking: <strong className="text-white">₹{cp.minBookingValue.toLocaleString()}</strong>
-                {cp.maxDiscount && ` (Cap ₹${cp.maxDiscount})`}
+                Min Booking: <strong className="text-white">₹{Number(cp.minBookingValue || 0).toLocaleString()}</strong>
+                {cp.maxDiscount && ` (Cap ₹${Number(cp.maxDiscount || 0).toLocaleString()})`}
               </p>
             </div>
 

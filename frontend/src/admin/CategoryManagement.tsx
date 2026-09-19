@@ -63,10 +63,12 @@ export default function CategoryManagement({
   }, [fleet]);
 
   const filteredCategories = useMemo(() => {
-    return categories.filter((cat) => {
+    return (categories || []).filter((cat) => {
+      if (!cat) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        cat.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (cat.description && cat.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        String(cat.name ?? "").toLowerCase().includes(q) ||
+        String(cat.description ?? "").toLowerCase().includes(q);
 
       const matchStatus =
         filterStatus === "all" ||

@@ -42,12 +42,14 @@ export default function DriverManagement({
 
   // Filtered drivers
   const filteredDrivers = useMemo(() => {
-    return drivers.filter((d) => {
+    return (drivers || []).filter((d) => {
+      if (!d) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.phone.includes(searchQuery) ||
-        d.licenseNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.branch.toLowerCase().includes(searchQuery.toLowerCase());
+        String(d.name ?? "").toLowerCase().includes(q) ||
+        String(d.phone ?? "").includes(searchQuery) ||
+        String(d.licenseNumber ?? "").toLowerCase().includes(q) ||
+        String(d.branch ?? "").toLowerCase().includes(q);
 
       const matchStatus = filterStatus === "all" || d.status === filterStatus;
       const matchBranch = filterBranch === "all" || d.branch === filterBranch;
@@ -163,14 +165,14 @@ export default function DriverManagement({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Total Chauffeurs</span>
-          <h4 className="text-2xl font-black text-white mt-1">{drivers.length} Roster</h4>
+          <h4 className="text-2xl font-black text-white mt-1">{(drivers || []).length} Roster</h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">100% Police Verified</p>
         </div>
 
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Available for Dispatch</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">
-            {drivers.filter((d) => d.status === "Available").length} Ready
+            {(drivers || []).filter((d) => d?.status === "Available").length} Ready
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">Instant Station Assignment</p>
         </div>
@@ -178,7 +180,7 @@ export default function DriverManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Today's Completed Trips</span>
           <h4 className="text-2xl font-black text-[#c88d18] mt-1">
-            {drivers.reduce((acc, d) => acc + d.todayTrips, 0)} Trips
+            {(drivers || []).reduce((acc, d) => acc + (Number(d?.todayTrips) || 0), 0)} Trips
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">Pilgrimage & Airport Routes</p>
         </div>
@@ -186,7 +188,7 @@ export default function DriverManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Gross Chauffeur Payouts</span>
           <h4 className="text-2xl font-black text-slate-300 mt-1">
-            ₹{drivers.reduce((acc, d) => acc + d.earnings, 0).toLocaleString()}
+            ₹{(drivers || []).reduce((acc, d) => acc + (Number(d?.earnings) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">Weekly Direct Bank Settlement</p>
         </div>
@@ -285,8 +287,8 @@ export default function DriverManagement({
                 </td>
 
                 <td className="px-5 py-4">
-                  <p className="font-bold text-white">{d.totalTrips} Trips ({d.todayTrips} Today)</p>
-                  <p className="text-[10px] text-emerald-400 font-bold">Earned: ₹{d.earnings.toLocaleString()}</p>
+                  <p className="font-bold text-white">{Number(d.totalTrips || 0)} Trips ({Number(d.todayTrips || 0)} Today)</p>
+                  <p className="text-[10px] text-emerald-400 font-bold">Earned: ₹{Number(d.earnings || 0).toLocaleString()}</p>
                 </td>
 
                 <td className="px-5 py-4">

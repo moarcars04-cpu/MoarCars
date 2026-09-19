@@ -363,13 +363,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   // Filtered Fleet
   const filteredFleet = useMemo(() => {
-    return fleet.filter((c) => {
+    return (fleet || []).filter((c) => {
+      if (!c) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        (c.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.brand || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.registrationNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.vinNumber || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.branch || "").toLowerCase().includes(searchQuery.toLowerCase());
+        String(c.name ?? "").toLowerCase().includes(q) ||
+        String(c.brand ?? "").toLowerCase().includes(q) ||
+        String(c.registrationNumber ?? "").toLowerCase().includes(q) ||
+        String(c.vinNumber ?? "").toLowerCase().includes(q) ||
+        String(c.branch ?? "").toLowerCase().includes(q);
       const matchStatus = fleetFilterStatus === "all" || c.status === fleetFilterStatus;
       const matchCat = fleetFilterCategory === "all" || c.category === fleetFilterCategory;
       return matchSearch && matchStatus && matchCat;
@@ -378,13 +380,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   // Filtered Bookings
   const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
+    return (bookings || []).filter((b) => {
+      if (!b) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        (b.id || "").toString().includes(searchQuery) ||
-        (b.customerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (b.carName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (b.pickup || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (b.customerPhone || "").includes(searchQuery);
+        String(b.id ?? "").includes(searchQuery) ||
+        String(b.customerName ?? "").toLowerCase().includes(q) ||
+        String(b.carName ?? "").toLowerCase().includes(q) ||
+        String(b.pickup ?? "").toLowerCase().includes(q) ||
+        String(b.customerPhone ?? "").includes(searchQuery);
       const matchStatus = bookingFilterStatus === "all" || b.status === bookingFilterStatus;
       const matchType = bookingFilterType === "all" || b.bookingType === bookingFilterType;
       return matchSearch && matchStatus && matchType;
@@ -975,7 +979,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }`}
               >
                 <div className="flex items-center gap-3"><Users className="w-4 h-4" /> Customer CRM</div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-emerald-400 border border-slate-800">{customers.length}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-emerald-400 border border-slate-800">{(customers || []).length}</span>
               </button>
               <button
                 onClick={() => setActiveTab("drivers")}
@@ -984,7 +988,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }`}
               >
                 <div className="flex items-center gap-3"><Award className="w-4 h-4" /> Driver Roster</div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-blue-400 border border-slate-800">{drivers.length}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-blue-400 border border-slate-800">{(drivers || []).length}</span>
               </button>
               <button
                 onClick={() => setActiveTab("reviews")}
@@ -993,7 +997,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }`}
               >
                 <div className="flex items-center gap-3"><Star className="w-4 h-4" /> Customer Reviews</div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-[#c88d18] border border-slate-800">{reviews.length}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-[#c88d18] border border-slate-800">{(reviews || []).length}</span>
               </button>
               <button
                 onClick={() => setActiveTab("support")}
@@ -1003,7 +1007,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               >
                 <div className="flex items-center gap-3"><Headphones className="w-4 h-4" /> Support & Live Chat</div>
                 <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-red-400 border border-slate-800">
-                  {tickets.filter((t) => t.status === "Open" || t.status === "In Progress").length}
+                  {(tickets || []).filter((t) => t && (t.status === "Open" || t.status === "In Progress")).length}
                 </span>
               </button>
             </nav>
@@ -1020,7 +1024,9 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }`}
               >
                 <div className="flex items-center gap-3"><CreditCard className="w-4 h-4" /> Payments & Escrow</div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-emerald-400 border border-slate-800">₹5.98L</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-emerald-400 border border-slate-800">
+                  ₹{((payments || []).reduce((acc, p) => acc + (Number(p.amount) || 0), 0) / 100000).toFixed(2)}L
+                </span>
               </button>
               <button
                 onClick={() => setActiveTab("coupons")}
@@ -1029,7 +1035,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }`}
               >
                 <div className="flex items-center gap-3"><Tag className="w-4 h-4" /> Coupon Engine</div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-[#c88d18] border border-slate-800">{coupons.length}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-[#c88d18] border border-slate-800">{(coupons || []).length}</span>
               </button>
               <button
                 onClick={() => setActiveTab("reports")}
@@ -1196,6 +1202,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 <button
                   onClick={() => {
                     setEditingCar(null);
+                    setActiveCarModalTab("specs");
                     setIsAddCarModalOpen(true);
                   }}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#c88d18] to-[#d49b29] text-slate-950 font-black text-xs shadow-lg shadow-amber-500/20"
@@ -1340,7 +1347,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <span className="text-xs font-bold text-slate-400">Revenue Today</span>
                   <DollarSign className="w-4 h-4 text-[#c88d18]" />
                 </div>
-                <h3 className="text-2xl font-black mt-2 text-[#c88d18]">₹{stats.revenueToday.toLocaleString()}</h3>
+                <h3 className="text-2xl font-black mt-2 text-[#c88d18]">₹{Number(stats.revenueToday || 0).toLocaleString()}</h3>
                 <p className="text-[10px] text-emerald-400 mt-1">+14.2% vs yesterday</p>
               </div>
 
@@ -1349,7 +1356,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <span className="text-xs font-bold text-slate-400">Revenue Month</span>
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                 </div>
-                <h3 className="text-2xl font-black mt-2 text-emerald-400">₹{stats.revenueMonth.toLocaleString()}</h3>
+                <h3 className="text-2xl font-black mt-2 text-emerald-400">₹{Number(stats.revenueMonth || 0).toLocaleString()}</h3>
                 <p className="text-[10px] text-slate-400 mt-1">+28.5% YoY Growth</p>
               </div>
 
@@ -1676,6 +1683,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                             <button
                               onClick={() => {
                                 setEditingCar(c);
+                                setActiveCarModalTab("specs");
                                 setIsAddCarModalOpen(true);
                               }}
                               className="p-1.5 rounded-lg bg-slate-900/80 hover:bg-[#c88d18]/20 text-slate-300 border border-slate-800"
@@ -1781,7 +1789,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       <div key={c.id} className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 flex justify-between items-center">
                         <div>
                           <p className="font-bold text-white">{c.name} ({c.registrationNumber})</p>
-                          <p className="text-[10px] text-slate-400">Next Service at {c.nextServiceKm.toLocaleString()} km &bull; Last: {c.lastServiceKm.toLocaleString()} km</p>
+                          <p className="text-[10px] text-slate-400">Next Service at {Number(c.nextServiceKm || 10000).toLocaleString()} km &bull; Last: {Number(c.lastServiceKm || 0).toLocaleString()} km</p>
                         </div>
                         <div className="text-right">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
@@ -2315,13 +2323,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             </div>
 
             <form
+              key={editingCar ? `edit-car-${editingCar.id}` : "new-car-form"}
               onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.target as any;
                 const brand = form.brand?.value?.trim() || "";
                 const model = form.model?.value?.trim() || "";
                 const variant = form.variant?.value?.trim() || "";
-                const name = `${brand} ${model} ${variant}`.trim() || "Fleet Vehicle";
+                const name = `${brand} ${model} ${variant}`.trim() || editingCar?.name || "Fleet Vehicle";
                 const pricePerDay = parseInt(form.pricePerDay?.value) || 0;
 
                 const primaryImage = form.image?.value?.trim() || "";
@@ -2370,308 +2379,304 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               }}
               className="space-y-4 text-xs"
             >
-              {activeCarModalTab === "specs" && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Brand *</label>
-                      <input
-                        name="brand"
-                        defaultValue={editingCar?.brand || ""}
-                        placeholder="e.g. Maruti Suzuki / Hyundai / Toyota"
-                        required
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Model *</label>
-                      <input
-                        name="model"
-                        defaultValue={editingCar?.model || ""}
-                        placeholder="e.g. Swift / Creta / Innova"
-                        required
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Variant</label>
-                      <input
-                        name="variant"
-                        defaultValue={editingCar?.variant || ""}
-                        placeholder="e.g. ZXi Plus / SX(O)"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Reg Number *</label>
-                      <input
-                        name="registrationNumber"
-                        defaultValue={editingCar?.registrationNumber || ""}
-                        placeholder="e.g. AP 03 TX 1024"
-                        required
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white uppercase font-mono placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">VIN / Chassis No</label>
-                      <input
-                        name="vinNumber"
-                        defaultValue={editingCar?.vinNumber || ""}
-                        placeholder="e.g. MA3EYD21S00192844"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Year</label>
-                      <input
-                        name="year"
-                        type="number"
-                        defaultValue={editingCar?.year || ""}
-                        placeholder="e.g. 2024"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-3">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-slate-400 font-bold">Category *</label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newCatName = window.prompt("Enter new category name (e.g. 7-Seater, Convertible, Luxury SUV):");
-                            if (newCatName && newCatName.trim()) {
-                              const trimmed = newCatName.trim();
-                              if (!categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
-                                const newCatItem: CategoryItem = {
-                                  id: Math.floor(100 + Math.random() * 900),
-                                  name: trimmed,
-                                  description: `${trimmed} fleet segment`,
-                                  icon: "Car",
-                                  displayOrder: categories.length + 1,
-                                  isActive: true,
-                                };
-                                setCategories((prev) => [...prev, newCatItem]);
-                                adminApi.createCategory(newCatItem);
-                                setNotice({ type: "success", text: `Category "${trimmed}" created & ready!` });
-                              }
-                            }
-                          }}
-                          className="text-[10px] text-[#c88d18] hover:underline font-bold flex items-center gap-0.5"
-                          title="Quick create new category"
-                        >
-                          <Plus className="w-3 h-3" /> New
-                        </button>
-                      </div>
-                      <select
-                        name="category"
-                        defaultValue={editingCar?.category || categories[0]?.name || "Hatchback"}
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.name}>
-                            {cat.name}
-                          </option>
-                        ))}
-                        {editingCar?.category && !categories.some((c) => c.name === editingCar.category) && (
-                          <option value={editingCar.category}>{editingCar.category}</option>
-                        )}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Fuel Type</label>
-                      <select name="fuelType" defaultValue={editingCar?.fuelType || "Petrol"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
-                        <option value="Petrol">Petrol</option>
-                        <option value="Diesel">Diesel</option>
-                        <option value="Electric">Electric</option>
-                        <option value="CNG">CNG</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Transmission</label>
-                      <select name="transmission" defaultValue={editingCar?.transmission || "Manual"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
-                        <option value="Manual">Manual</option>
-                        <option value="Automatic">Automatic</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Seats</label>
-                      <input
-                        name="seats"
-                        type="number"
-                        defaultValue={editingCar?.seats || ""}
-                        placeholder="e.g. 5"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeCarModalTab === "pricing" && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Price Per Day (₹) *</label>
-                      <input
-                        name="pricePerDay"
-                        type="number"
-                        defaultValue={editingCar?.pricePerDay || ""}
-                        placeholder="e.g. 1999"
-                        required
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold text-sm placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Price Per Hour (₹)</label>
-                      <input
-                        name="pricePerHour"
-                        type="number"
-                        defaultValue={editingCar?.pricePerHour || ""}
-                        placeholder="e.g. 199"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Price Per Week (₹)</label>
-                      <input
-                        name="pricePerWeek"
-                        type="number"
-                        defaultValue={editingCar?.pricePerWeek || ""}
-                        placeholder="e.g. 9999"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Security Deposit (₹)</label>
-                      <input
-                        name="securityDeposit"
-                        type="number"
-                        defaultValue={editingCar?.securityDeposit || ""}
-                        placeholder="e.g. 3000"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-bold placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Late Fee / Hr (₹)</label>
-                      <input
-                        name="lateFeePerHour"
-                        type="number"
-                        defaultValue={editingCar?.lateFeePerHour || ""}
-                        placeholder="e.g. 150"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Initial Status</label>
-                      <select name="status" defaultValue={editingCar?.status || "Available"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
-                        <option value="Available">Available</option>
-                        <option value="Booked">Booked</option>
-                        <option value="In Maintenance">In Maintenance</option>
-                        <option value="Inactive">Inactive</option>
-                        <option value="Reserved">Reserved</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Online Advance Payment (%)</label>
-                      <input
-                        name="advancePaymentPercent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        defaultValue={editingCar?.advancePaymentPercent || ""}
-                        placeholder="e.g. 30 (Leave blank for global setting)"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                      <p className="text-[10px] text-slate-500 mt-1">Overrides global advance % setting for this vehicle.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeCarModalTab === "compliance" && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Branch / Station Hub</label>
-                      <select name="branch" defaultValue={editingCar?.branch || "Tirupati Central Hub"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
-                        <option value="Tirupati Central Hub">Tirupati Central Hub</option>
-                        <option value="Renigunta Airport Hub">Renigunta Airport Hub</option>
-                        <option value="Chandragiri Heritage Point">Chandragiri Heritage Point</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">FASTag Number</label>
-                      <input
-                        name="fastagNumber"
-                        defaultValue={editingCar?.fastagNumber || ""}
-                        placeholder="e.g. FTG-889021-39"
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Insurance Expiry Date</label>
-                      <input
-                        name="insuranceExpiry"
-                        type="date"
-                        defaultValue={editingCar?.insuranceExpiry || ""}
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">Pollution (PUC) Expiry</label>
-                      <input
-                        name="pollutionExpiry"
-                        type="date"
-                        defaultValue={editingCar?.pollutionExpiry || ""}
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeCarModalTab === "media" && (
-                <div className="space-y-3">
+              {/* TAB 1: SPECS & IDENTITY */}
+              <div className={activeCarModalTab === "specs" ? "space-y-3" : "hidden"}>
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-slate-400 font-bold mb-1">Primary Display Image URL *</label>
+                    <label className="block text-slate-400 font-bold mb-1">Brand *</label>
                     <input
-                      name="image"
-                      defaultValue={editingCar?.image || ""}
-                      placeholder="e.g. https://your-domain.com/car.jpg or image URL"
+                      name="brand"
+                      defaultValue={editingCar?.brand || (editingCar?.name ? editingCar.name.split(" ")[0] : "")}
+                      placeholder="e.g. Maruti Suzuki / Hyundai / Toyota"
+                      required
                       className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-400 font-bold mb-1">Additional Gallery Photos (Optional - One URL per line)</label>
-                    <textarea
-                      name="galleryImages"
-                      rows={4}
-                      defaultValue={
-                        Array.isArray(editingCar?.galleryImages)
-                          ? editingCar.galleryImages.filter((img: string) => img !== editingCar?.image).join("\n")
-                          : ""
-                      }
-                      placeholder="https://.../photo2.jpg&#10;https://.../photo3.jpg"
+                    <label className="block text-slate-400 font-bold mb-1">Model *</label>
+                    <input
+                      name="model"
+                      defaultValue={editingCar?.model || (editingCar?.name ? (editingCar.name.split(" ").length > 1 ? editingCar.name.split(" ")[1] : "") : "")}
+                      placeholder="e.g. Swift / Creta / Innova"
+                      required
                       className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
                     />
-                    <p className="text-[11px] text-slate-500 mt-1">Leave empty if you only have 1 image. Only images you enter here will be saved and displayed.</p>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Variant</label>
+                    <input
+                      name="variant"
+                      defaultValue={editingCar?.variant || (editingCar?.name ? editingCar.name.split(" ").slice(2).join(" ") : "")}
+                      placeholder="e.g. ZXi Plus / SX(O)"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
                   </div>
                 </div>
-              )}
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Reg Number *</label>
+                    <input
+                      name="registrationNumber"
+                      defaultValue={editingCar?.registrationNumber || ""}
+                      placeholder="e.g. AP 03 TX 1024"
+                      required
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white uppercase font-mono placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">VIN / Chassis No</label>
+                    <input
+                      name="vinNumber"
+                      defaultValue={editingCar?.vinNumber || ""}
+                      placeholder="e.g. MA3EYD21S00192844"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Year</label>
+                    <input
+                      name="year"
+                      type="number"
+                      defaultValue={editingCar?.year || new Date().getFullYear()}
+                      placeholder="e.g. 2024"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-slate-400 font-bold">Category *</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newCatName = window.prompt("Enter new category name (e.g. 7-Seater, Convertible, Luxury SUV):");
+                          if (newCatName && newCatName.trim()) {
+                            const trimmed = newCatName.trim();
+                            if (!categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+                              const newCatItem: CategoryItem = {
+                                id: Math.floor(100 + Math.random() * 900),
+                                name: trimmed,
+                                description: `${trimmed} fleet segment`,
+                                icon: "Car",
+                                displayOrder: categories.length + 1,
+                                isActive: true,
+                              };
+                              setCategories((prev) => [...prev, newCatItem]);
+                              adminApi.createCategory(newCatItem);
+                              setNotice({ type: "success", text: `Category "${trimmed}" created & ready!` });
+                            }
+                          }
+                        }}
+                        className="text-[10px] text-[#c88d18] hover:underline font-bold flex items-center gap-0.5"
+                        title="Quick create new category"
+                      >
+                        <Plus className="w-3 h-3" /> New
+                      </button>
+                    </div>
+                    <select
+                      name="category"
+                      defaultValue={editingCar?.category || categories[0]?.name || "Hatchback"}
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
+                      {editingCar?.category && !categories.some((c) => c.name === editingCar.category) && (
+                        <option value={editingCar.category}>{editingCar.category}</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Fuel Type</label>
+                    <select name="fuelType" defaultValue={editingCar?.fuelType || "Petrol"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
+                      <option value="Petrol">Petrol</option>
+                      <option value="Diesel">Diesel</option>
+                      <option value="Electric">Electric</option>
+                      <option value="CNG">CNG</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Transmission</label>
+                    <select name="transmission" defaultValue={editingCar?.transmission || "Manual"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
+                      <option value="Manual">Manual</option>
+                      <option value="Automatic">Automatic</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Seats</label>
+                    <input
+                      name="seats"
+                      type="number"
+                      defaultValue={editingCar?.seats || 5}
+                      placeholder="e.g. 5"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* TAB 2: PRICING */}
+              <div className={activeCarModalTab === "pricing" ? "space-y-3" : "hidden"}>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Price Per Day (₹) *</label>
+                    <input
+                      name="pricePerDay"
+                      type="number"
+                      defaultValue={editingCar?.pricePerDay !== undefined ? editingCar.pricePerDay : ""}
+                      placeholder="e.g. 1999"
+                      required
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold text-sm placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Price Per Hour (₹)</label>
+                    <input
+                      name="pricePerHour"
+                      type="number"
+                      defaultValue={editingCar?.pricePerHour !== undefined ? editingCar.pricePerHour : ""}
+                      placeholder="e.g. 199"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Price Per Week (₹)</label>
+                    <input
+                      name="pricePerWeek"
+                      type="number"
+                      defaultValue={editingCar?.pricePerWeek !== undefined ? editingCar.pricePerWeek : ""}
+                      placeholder="e.g. 9999"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Security Deposit (₹)</label>
+                    <input
+                      name="securityDeposit"
+                      type="number"
+                      defaultValue={editingCar?.securityDeposit !== undefined ? editingCar.securityDeposit : ""}
+                      placeholder="e.g. 3000"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-bold placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Late Fee / Hr (₹)</label>
+                    <input
+                      name="lateFeePerHour"
+                      type="number"
+                      defaultValue={editingCar?.lateFeePerHour !== undefined ? editingCar.lateFeePerHour : ""}
+                      placeholder="e.g. 150"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Initial Status</label>
+                    <select name="status" defaultValue={editingCar?.status || "Available"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
+                      <option value="Available">Available</option>
+                      <option value="Booked">Booked</option>
+                      <option value="In Maintenance">In Maintenance</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="Reserved">Reserved</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Online Advance Payment (%)</label>
+                    <input
+                      name="advancePaymentPercent"
+                      type="number"
+                      min="0"
+                      max="100"
+                      defaultValue={editingCar?.advancePaymentPercent !== undefined ? editingCar.advancePaymentPercent : ""}
+                      placeholder="e.g. 30 (Leave blank for global setting)"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">Overrides global advance % setting for this vehicle.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* TAB 3: COMPLIANCE */}
+              <div className={activeCarModalTab === "compliance" ? "space-y-3" : "hidden"}>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Branch / Station Hub</label>
+                    <select name="branch" defaultValue={editingCar?.branch || "Tirupati Central Hub"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
+                      <option value="Tirupati Central Hub">Tirupati Central Hub</option>
+                      <option value="Renigunta Airport Hub">Renigunta Airport Hub</option>
+                      <option value="Chandragiri Heritage Point">Chandragiri Heritage Point</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">FASTag Number</label>
+                    <input
+                      name="fastagNumber"
+                      defaultValue={editingCar?.fastagNumber || ""}
+                      placeholder="e.g. FTG-889021-39"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Insurance Expiry Date</label>
+                    <input
+                      name="insuranceExpiry"
+                      type="date"
+                      defaultValue={editingCar?.insuranceExpiry || ""}
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Pollution (PUC) Expiry</label>
+                    <input
+                      name="pollutionExpiry"
+                      type="date"
+                      defaultValue={editingCar?.pollutionExpiry || ""}
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* TAB 4: MEDIA */}
+              <div className={activeCarModalTab === "media" ? "space-y-3" : "hidden"}>
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Primary Display Image URL *</label>
+                  <input
+                    name="image"
+                    defaultValue={editingCar?.image || ""}
+                    placeholder="e.g. https://your-domain.com/car.jpg or image URL"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Additional Gallery Photos (Optional - One URL per line)</label>
+                  <textarea
+                    name="galleryImages"
+                    rows={4}
+                    defaultValue={
+                      Array.isArray(editingCar?.galleryImages)
+                        ? editingCar.galleryImages.filter((img: string) => img !== editingCar?.image).join("\n")
+                        : ""
+                    }
+                    placeholder="https://.../photo2.jpg&#10;https://.../photo3.jpg"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">Leave empty if you only have 1 image. Only images you enter here will be saved and displayed.</p>
+                </div>
+              </div>
 
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
                 <button type="button" onClick={() => setIsAddCarModalOpen(false)} className="px-4 py-2 rounded-xl bg-slate-900 text-slate-400 text-xs">

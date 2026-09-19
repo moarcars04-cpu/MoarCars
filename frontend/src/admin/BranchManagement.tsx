@@ -36,12 +36,13 @@ export default function BranchManagement({
   const [editingBranch, setEditingBranch] = useState<BranchItem | null>(null);
   const [viewingFleetBranch, setViewingFleetBranch] = useState<BranchItem | null>(null);
 
-  const filteredBranches = branches.filter(
+  const filteredBranches = (branches || []).filter(
     (b) =>
-      b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.state.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.managerName.toLowerCase().includes(searchQuery.toLowerCase())
+      b &&
+      ((b.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.city || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.state || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.managerName || "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleSaveBranch = async (formData: Partial<BranchItem>) => {
@@ -58,30 +59,41 @@ export default function BranchManagement({
         state: formData.state || "Andhra Pradesh",
         address: formData.address || "Main Highway Road, Tirupati",
         operatingHours: formData.operatingHours || "24 Hours (7 Days)",
-        managerName: formData.managerName || "M. Ramesh Reddy",
-        managerPhone: formData.managerPhone || "+91 94400 11223",
-        managerEmail: formData.managerEmail || "hub@moarcars.in",
-        totalCars: formData.totalCars || 4,
-        staffCount: formData.staffCount || 3,
-        monthlyRevenue: formData.monthlyRevenue || 120000,
-        isActive: true,
+        managerName: formData.managerName || "Station Incharge",
+        managerPhone: formData.managerPhone || "+91 98765 00000",
+        totalCars: 0,
+        availableCars: 0,
+        staffCount: 2,
+        monthlyRevenue: 0,
+        mapCoordinates: "13.6288° N, 79.4192° E",
       };
       const created = await adminApi.createBranch(payload);
-      const newB: BranchItem = created || {
-        id: Math.floor(400 + Math.random() * 600),
-        ...(payload as any),
+      const newB: BranchItem = {
+        id: created?.id || Math.floor(10 + Math.random() * 90),
+        name: payload.name!,
+        city: payload.city!,
+        state: payload.state!,
+        address: payload.address!,
+        operatingHours: payload.operatingHours!,
+        managerName: payload.managerName!,
+        managerPhone: payload.managerPhone!,
+        totalCars: 0,
+        availableCars: 0,
+        staffCount: 2,
+        monthlyRevenue: 0,
+        mapCoordinates: "13.6288° N, 79.4192° E",
       };
-      setBranches((prev) => [newB, ...prev.filter((b) => b.id !== newB.id)]);
-      setNotice({ type: "success", text: `Station Hub "${newB.name}" created successfully!` });
+      setBranches([newB, ...(branches || [])]);
+      setNotice({ type: "success", text: `Station Hub "${newB.name}" established!` });
     }
     setIsAddEditModalOpen(false);
     setEditingBranch(null);
   };
 
   const handleDeleteBranch = async (id: number) => {
-    if (confirm("Are you sure you want to delete this station hub?")) {
+    if (confirm("Are you sure you want to deactivate this station hub?")) {
       setBranches((prev) => prev.filter((b) => b.id !== id));
-      setNotice({ type: "info", text: `Station Hub #${id} deleted.` });
+      setNotice({ type: "info", text: `Station Hub #${id} marked inactive.` });
       await adminApi.deleteBranch(id);
     }
   };
@@ -93,10 +105,10 @@ export default function BranchManagement({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-2 text-white">
-            <Building2 className="w-6 h-6 text-[#c88d18]" /> Station Hubs & Dispatch Centers
+            <Building2 className="w-6 h-6 text-[#c88d18]" /> Station Hubs & Airport Branches
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Manage pickup station locations, managers, 24/7 operating hours, stationed cars, and revenue
+            Manage multi-city dispatch points, airport kiosks, railway desks & local fleet hubs
           </p>
         </div>
 
@@ -105,7 +117,7 @@ export default function BranchManagement({
             <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
-              placeholder="Search branch, city, manager..."
+              placeholder="Search station, city, manager..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#070e1c] border border-slate-800 rounded-2xl py-2 pl-9 pr-3 text-xs text-white focus:outline-none focus:border-[#c88d18]"
@@ -128,14 +140,14 @@ export default function BranchManagement({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Active Station Hubs</span>
-          <h4 className="text-2xl font-black text-white mt-1">{branches.length} Locations</h4>
+          <h4 className="text-2xl font-black text-white mt-1">{(branches || []).length} Locations</h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">100% Operational</p>
         </div>
 
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
-          <span className="text-xs text-slate-400 font-bold block">Stationed Fleet Total</span>
+          <span className="text-xs text-slate-400 font-bold block">Stationed Fleet Vehicles</span>
           <h4 className="text-2xl font-black text-[#c88d18] mt-1">
-            {branches.reduce((acc, b) => acc + b.totalCars, 0)} Cars
+            {(branches || []).reduce((acc, b) => acc + (Number(b?.totalCars) || 0), 0)} Cars
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">Across All Branches</p>
         </div>
@@ -143,7 +155,7 @@ export default function BranchManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Total Station Staff</span>
           <h4 className="text-2xl font-black text-slate-300 mt-1">
-            {branches.reduce((acc, b) => acc + b.staffCount, 0)} Agents
+            {(branches || []).reduce((acc, b) => acc + (Number(b?.staffCount) || 0), 0)} Agents
           </h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">24/7 Handover Ready</p>
         </div>
@@ -151,7 +163,7 @@ export default function BranchManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Monthly Network Revenue</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">
-            ₹{branches.reduce((acc, b) => acc + b.monthlyRevenue, 0).toLocaleString()}
+            ₹{(branches || []).reduce((acc, b) => acc + (Number(b?.monthlyRevenue) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">September 2026</p>
         </div>
@@ -202,12 +214,12 @@ export default function BranchManagement({
                   onClick={() => setViewingFleetBranch(br)}
                   className="font-bold text-white hover:text-[#c88d18] underline"
                 >
-                  {br.totalCars} Cars &bull; {br.staffCount} Staff
+                  {Number(br.totalCars || 0)} Cars &bull; {Number(br.staffCount || 0)} Staff
                 </button>
               </div>
               <div className="text-right">
                 <span className="text-slate-400 text-[10px] block">Monthly Gross</span>
-                <p className="font-black text-[#c88d18]">₹{br.monthlyRevenue.toLocaleString()}</p>
+                <p className="font-black text-[#c88d18]">₹{Number(br.monthlyRevenue || 0).toLocaleString()}</p>
               </div>
             </div>
 

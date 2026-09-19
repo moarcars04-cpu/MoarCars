@@ -53,19 +53,21 @@ export default function CustomerManagement({
 
   // Filtered customers
   const filteredCustomers = useMemo(() => {
-    return customers.filter((c) => {
+    return (customers || []).filter((c) => {
+      if (!c) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.phone.includes(searchQuery) ||
-        c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.dlNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.aadhaarNumber.includes(searchQuery);
+        String(c.name ?? "").toLowerCase().includes(q) ||
+        String(c.phone ?? "").includes(searchQuery) ||
+        String(c.email ?? "").toLowerCase().includes(q) ||
+        String(c.dlNumber ?? "").toLowerCase().includes(q) ||
+        String(c.aadhaarNumber ?? "").includes(searchQuery);
 
       const matchKyc =
         filterKyc === "all"
           ? true
           : filterKyc === "Blacklisted"
-          ? c.isBlacklisted
+          ? !!c.isBlacklisted
           : c.kycStatus === filterKyc;
 
       return matchSearch && matchKyc;
@@ -230,14 +232,14 @@ export default function CustomerManagement({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Total Registered Renters</span>
-          <h4 className="text-2xl font-black text-white mt-1">{customers.length} Active</h4>
+          <h4 className="text-2xl font-black text-white mt-1">{(customers || []).length} Active</h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">100% Mobile & OTP Verified</p>
         </div>
 
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">KYC Verified Profiles</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">
-            {customers.filter((c) => c.kycStatus === "Verified").length} Users
+            {(customers || []).filter((c) => c?.kycStatus === "Verified").length} Users
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">DL & Aadhaar Approved</p>
         </div>
@@ -245,7 +247,7 @@ export default function CustomerManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Total Prepaid Wallet Escrow</span>
           <h4 className="text-2xl font-black text-[#c88d18] mt-1">
-            ₹{customers.reduce((acc, c) => acc + c.walletBalance, 0).toLocaleString()}
+            ₹{(customers || []).reduce((acc, c) => acc + (Number(c?.walletBalance) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">Prepaid Customer Balance</p>
         </div>
@@ -253,7 +255,7 @@ export default function CustomerManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Loyalty Points Issued</span>
           <h4 className="text-2xl font-black text-slate-300 mt-1">
-            {customers.reduce((acc, c) => acc + c.loyaltyPoints, 0).toLocaleString()} Pts
+            {(customers || []).reduce((acc, c) => acc + (Number(c?.loyaltyPoints) || 0), 0).toLocaleString()} Pts
           </h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">Moar Club Rewards Active</p>
         </div>
@@ -296,7 +298,7 @@ export default function CustomerManagement({
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src={c.avatar}
+                      src={c.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"}
                       alt={c.name}
                       className="w-10 h-10 rounded-full object-cover border border-slate-800"
                     />
@@ -325,18 +327,18 @@ export default function CustomerManagement({
                         : "bg-red-500/20 text-red-300 border-red-500/30"
                     }`}
                   >
-                    {c.kycStatus}
+                    {c.kycStatus || "Pending"}
                   </span>
-                  <p className="text-[10px] text-slate-400 mt-1 font-mono">DL: {c.dlNumber}</p>
-                  <p className="text-[9px] text-slate-400 font-mono">Aadhaar: {c.aadhaarNumber}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-mono">DL: {c.dlNumber || "Not Provided"}</p>
+                  <p className="text-[9px] text-slate-400 font-mono">Aadhaar: {c.aadhaarNumber || "Not Provided"}</p>
                 </td>
 
                 <td className="px-5 py-4">
                   <p className="font-bold text-emerald-400 flex items-center gap-1">
-                    <Wallet className="w-3.5 h-3.5" /> ₹{c.walletBalance.toLocaleString()}
+                    <Wallet className="w-3.5 h-3.5" /> ₹{Number(c.walletBalance || 0).toLocaleString()}
                   </p>
                   <p className="text-[10px] text-[#c88d18] font-semibold flex items-center gap-1 mt-0.5">
-                    <Gift className="w-3 h-3" /> {c.loyaltyPoints} Pts
+                    <Gift className="w-3 h-3" /> {Number(c.loyaltyPoints || 0)} Pts
                   </p>
                 </td>
 
@@ -345,17 +347,17 @@ export default function CustomerManagement({
                     {c.loyaltyTier || "Silver"} Tier
                   </span>
                   <p className="text-[10px] text-slate-400 mt-1 font-mono flex items-center gap-1">
-                    <Share2 className="w-2.5 h-2.5 text-[#c88d18]" /> {c.referralCode}
+                    <Share2 className="w-2.5 h-2.5 text-[#c88d18]" /> {c.referralCode || "N/A"}
                   </p>
                 </td>
 
                 <td className="px-5 py-4">
-                  <p className="font-bold text-white">{c.totalBookings} Trips</p>
-                  <p className="text-[10px] text-emerald-400 font-bold">Spent: ₹{c.totalSpent.toLocaleString()}</p>
+                  <p className="font-bold text-white">{Number(c.totalBookings || 0)} Trips</p>
+                  <p className="text-[10px] text-emerald-400 font-bold">Spent: ₹{Number(c.totalSpent || 0).toLocaleString()}</p>
                 </td>
 
                 <td className="px-5 py-4 text-slate-400 text-[11px] max-w-xs truncate">
-                  {c.notes}
+                  {c.notes || "—"}
                 </td>
 
                 <td className="px-5 py-4 text-right space-x-1.5">
@@ -438,8 +440,8 @@ export default function CustomerManagement({
                   alt="DL Doc"
                   className="w-full h-32 object-cover rounded-xl border border-slate-800"
                 />
-                <p className="text-white font-mono font-bold text-xs">{viewingKycCustomer.dlNumber}</p>
-                <p className="text-[10px] text-slate-400">Expires: {viewingKycCustomer.dlExpiry || "2032-05-15"}</p>
+                <p className="text-white font-mono font-bold text-xs">{viewingKycCustomer.dlNumber || "Not Provided"}</p>
+                <p className="text-[10px] text-slate-400">Expires: {viewingKycCustomer.dlExpiry || "N/A"}</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 space-y-2">
@@ -449,21 +451,21 @@ export default function CustomerManagement({
                   alt="Aadhaar Doc"
                   className="w-full h-32 object-cover rounded-xl border border-slate-800"
                 />
-                <p className="text-white font-mono font-bold text-xs">{viewingKycCustomer.aadhaarNumber}</p>
+                <p className="text-white font-mono font-bold text-xs">{viewingKycCustomer.aadhaarNumber || "Not Provided"}</p>
                 <p className="text-[10px] text-slate-400">UIDAI Verified via Digilocker OTP</p>
               </div>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 text-xs">
               <span className="text-slate-400 text-[10px] uppercase font-bold block mb-1">CRM Audit Notes</span>
-              <p className="text-slate-300">{viewingKycCustomer.notes}</p>
+              <p className="text-slate-300">{viewingKycCustomer.notes || "No notes available"}</p>
             </div>
 
             <div className="flex justify-between items-center pt-3 border-t border-slate-800">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-400 font-bold">Current Status:</span>
                 <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-slate-900 text-[#c88d18] border border-amber-400/30">
-                  {viewingKycCustomer.kycStatus}
+                  {viewingKycCustomer.kycStatus || "Pending"}
                 </span>
               </div>
 
@@ -504,11 +506,11 @@ export default function CustomerManagement({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-4 rounded-2xl bg-[#070e1c] border border-slate-800">
                 <span className="text-slate-400 text-[10px] uppercase font-bold block">Prepaid Balance</span>
-                <span className="text-xl font-black text-emerald-400">₹{viewingWalletCustomer.walletBalance}</span>
+                <span className="text-xl font-black text-emerald-400">₹{Number(viewingWalletCustomer.walletBalance || 0).toLocaleString()}</span>
               </div>
               <div className="p-4 rounded-2xl bg-[#070e1c] border border-slate-800">
                 <span className="text-slate-400 text-[10px] uppercase font-bold block">Loyalty Points</span>
-                <span className="text-xl font-black text-[#c88d18]">{viewingWalletCustomer.loyaltyPoints} Pts</span>
+                <span className="text-xl font-black text-[#c88d18]">{Number(viewingWalletCustomer.loyaltyPoints || 0)} Pts</span>
               </div>
             </div>
 
@@ -568,8 +570,8 @@ export default function CustomerManagement({
             </div>
 
             <div className="space-y-3 text-xs">
-              {bookings
-                .filter((b) => b.customerPhone === viewingHistoryCustomer.phone || b.customerName === viewingHistoryCustomer.name)
+              {(bookings || [])
+                .filter((b) => b && (b.customerPhone === viewingHistoryCustomer.phone || b.customerName === viewingHistoryCustomer.name))
                 .map((b) => (
                   <div key={b.id} className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 flex justify-between items-center">
                     <div>
@@ -582,13 +584,16 @@ export default function CustomerManagement({
                       <p className="text-[10px] text-slate-400">{b.pickup}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-black text-emerald-400 text-sm">₹{b.amount.toLocaleString()}</p>
+                      <p className="font-black text-emerald-400 text-sm">₹{Number(b.amount || b.grandTotal || 0).toLocaleString()}</p>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-900 text-slate-300 border border-slate-800 mt-1 inline-block">
                         {b.status}
                       </span>
                     </div>
                   </div>
                 ))}
+              {(bookings || []).filter((b) => b && (b.customerPhone === viewingHistoryCustomer.phone || b.customerName === viewingHistoryCustomer.name)).length === 0 && (
+                <p className="text-center py-6 text-slate-400">No booking records found for this customer.</p>
+              )}
             </div>
 
             <div className="flex justify-end pt-2 border-t border-slate-800">
@@ -619,6 +624,7 @@ export default function CustomerManagement({
             </div>
 
             <form
+              key={editingCustomer ? `edit-cust-${editingCustomer.id}` : "new-cust-form"}
               onSubmit={(e) => {
                 e.preventDefault();
                 const t = e.target as any;
@@ -642,7 +648,7 @@ export default function CustomerManagement({
                   name="name"
                   defaultValue={editingCustomer?.name || ""}
                   required
-                  placeholder="Ramesh Kumar"
+                  placeholder="e.g. Ramesh Kumar"
                   className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                 />
               </div>
@@ -662,6 +668,7 @@ export default function CustomerManagement({
                   <label className="block text-slate-400 font-bold mb-1">Email</label>
                   <input
                     name="email"
+                    type="email"
                     defaultValue={editingCustomer?.email || ""}
                     placeholder="ramesh@gmail.com"
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
@@ -674,7 +681,8 @@ export default function CustomerManagement({
                   <label className="block text-slate-400 font-bold mb-1">Driving License</label>
                   <input
                     name="dlNumber"
-                    defaultValue={editingCustomer?.dlNumber || "AP03 2024009182"}
+                    defaultValue={editingCustomer?.dlNumber || ""}
+                    placeholder="AP03 2024009182"
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono uppercase"
                   />
                 </div>
@@ -682,7 +690,8 @@ export default function CustomerManagement({
                   <label className="block text-slate-400 font-bold mb-1">Aadhaar Number</label>
                   <input
                     name="aadhaarNumber"
-                    defaultValue={editingCustomer?.aadhaarNumber || "1234 5678 9012"}
+                    defaultValue={editingCustomer?.aadhaarNumber || ""}
+                    placeholder="1234 5678 9012"
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
                   />
                 </div>
@@ -690,7 +699,8 @@ export default function CustomerManagement({
                   <label className="block text-slate-400 font-bold mb-1">Passport No</label>
                   <input
                     name="passportNumber"
-                    defaultValue={editingCustomer?.passportNumber || "Z8899001"}
+                    defaultValue={editingCustomer?.passportNumber || ""}
+                    placeholder="Z8899001"
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono uppercase"
                   />
                 </div>
@@ -701,7 +711,8 @@ export default function CustomerManagement({
                   <label className="block text-slate-400 font-bold mb-1">Avatar Image URL</label>
                   <input
                     name="avatar"
-                    defaultValue={editingCustomer?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"}
+                    defaultValue={editingCustomer?.avatar || ""}
+                    placeholder="https://... (Optional)"
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
                 </div>
@@ -711,6 +722,7 @@ export default function CustomerManagement({
                     name="walletBalance"
                     type="number"
                     defaultValue={editingCustomer?.walletBalance || 0}
+                    placeholder="0"
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold"
                   />
                 </div>

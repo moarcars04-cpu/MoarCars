@@ -26,12 +26,14 @@ export default function ActivityLogsTimeline({
   const [filterModule, setFilterModule] = useState<string>("all");
 
   const filteredLogs = useMemo(() => {
-    return logs.filter((l) => {
+    return (logs || []).filter((l) => {
+      if (!l) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        l.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.details.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.adminName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.ipAddress.toLowerCase().includes(searchQuery.toLowerCase());
+        String(l.action ?? "").toLowerCase().includes(q) ||
+        String(l.details ?? "").toLowerCase().includes(q) ||
+        String(l.adminName ?? "").toLowerCase().includes(q) ||
+        String(l.ipAddress ?? "").toLowerCase().includes(q);
 
       const matchModule = filterModule === "all" || l.module === filterModule;
       return matchSearch && matchModule;

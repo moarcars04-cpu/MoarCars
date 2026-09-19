@@ -37,12 +37,14 @@ export default function PaymentManagement({
   const [deductionReason, setDeductionReason] = useState<string>("");
 
   const filteredPayments = useMemo(() => {
-    return payments.filter((p) => {
+    return (payments || []).filter((p) => {
+      if (!p) return false;
+      const q = searchQuery.toLowerCase();
       const matchSearch =
-        p.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.bookingId.toString().includes(searchQuery) ||
-        p.transactionId.toLowerCase().includes(searchQuery.toLowerCase());
+        String(p.id ?? "").toLowerCase().includes(q) ||
+        String(p.customerName ?? "").toLowerCase().includes(q) ||
+        String(p.bookingId ?? "").includes(searchQuery) ||
+        String(p.transactionId ?? "").toLowerCase().includes(q);
 
       const matchGateway = filterGateway === "all" || p.gateway === filterGateway;
       const matchStatus = filterStatus === "all" || p.status === filterStatus;
@@ -52,7 +54,7 @@ export default function PaymentManagement({
   }, [payments, searchQuery, filterGateway, filterStatus]);
 
   const handleProcessDepositRefund = (payment: PaymentItem) => {
-    const netRefund = Math.max(0, payment.depositAmount - damageDeduction);
+    const netRefund = Math.max(0, (Number(payment.depositAmount) || 0) - damageDeduction);
     setPayments((prev) =>
       prev.map((p) =>
         p.id === payment.id
@@ -77,7 +79,7 @@ export default function PaymentManagement({
 
   const handleExportCsv = () => {
     const headers = "TransactionID,BookingID,Customer,RentalFare,Deposit,GST18,Gateway,Status,Date\n";
-    const rows = payments
+    const rows = (payments || [])
       .map(
         (p) =>
           `${p.id},${p.bookingId},"${p.customerName}",${p.amount},${p.depositAmount},${p.gstAmount},${p.gateway},${p.status},${p.date}`
@@ -132,7 +134,7 @@ export default function PaymentManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Gross Collections</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">
-            ₹{payments.reduce((acc, p) => acc + p.amount, 0).toLocaleString()}
+            ₹{(payments || []).reduce((acc, p) => acc + (Number(p.amount) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5 font-bold">100% Reconciled</p>
         </div>
@@ -140,7 +142,7 @@ export default function PaymentManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Active Escrow Deposits Held</span>
           <h4 className="text-2xl font-black text-[#c88d18] mt-1">
-            ₹{payments.filter((p) => p.status === "Captured").reduce((acc, p) => acc + p.depositAmount, 0).toLocaleString()}
+            ₹{(payments || []).filter((p) => p.status === "Captured").reduce((acc, p) => acc + (Number(p.depositAmount) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5">Held in Safe Escrow</p>
         </div>
@@ -148,7 +150,7 @@ export default function PaymentManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">GST Tax Collected (18%)</span>
           <h4 className="text-2xl font-black text-slate-300 mt-1">
-            ₹{payments.reduce((acc, p) => acc + p.gstAmount, 0).toLocaleString()}
+            ₹{(payments || []).reduce((acc, p) => acc + (Number(p.gstAmount) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-emerald-400 mt-0.5 font-bold">CGST (9%) + SGST (9%)</p>
         </div>
@@ -156,7 +158,7 @@ export default function PaymentManagement({
         <div className="p-5 rounded-3xl bg-[#0b1426]/60 backdrop-blur-2xl border border-slate-800 shadow-xl">
           <span className="text-xs text-slate-400 font-bold block">Deposit Refunds Released</span>
           <h4 className="text-2xl font-black text-emerald-400 mt-1">
-            ₹{payments.filter((p) => p.status === "Refunded").reduce((acc, p) => acc + p.depositAmount, 0).toLocaleString()}
+            ₹{(payments || []).filter((p) => p.status === "Refunded").reduce((acc, p) => acc + (Number(p.depositAmount) || 0), 0).toLocaleString()}
           </h4>
           <p className="text-[10px] text-slate-400 mt-0.5 font-bold">Instant UPI Settlement</p>
         </div>
@@ -221,17 +223,17 @@ export default function PaymentManagement({
                   <p className="text-[10px] text-slate-400 font-mono">Booking #{p.bookingId}</p>
                 </td>
                 <td className="px-5 py-4">
-                  <p className="font-black text-emerald-400 text-sm">₹{p.amount.toLocaleString()}</p>
+                  <p className="font-black text-emerald-400 text-sm">₹{(Number(p.amount) || 0).toLocaleString()}</p>
                   {p.status === "Partial" && (
                     <span className="text-[9px] text-amber-300 font-bold block">Advance Paid: ₹2,000</span>
                   )}
                 </td>
                 <td className="px-5 py-4 font-bold text-slate-300">
-                  ₹{p.depositAmount.toLocaleString()}
+                  ₹{(Number(p.depositAmount) || 0).toLocaleString()}
                 </td>
                 <td className="px-5 py-4 text-slate-400">
-                  <p>GST: <strong className="text-white">₹{p.gstAmount}</strong></p>
-                  <p className="text-[9px] text-slate-400">TDS: ₹{p.tdsAmount}</p>
+                  <p>GST: <strong className="text-white">₹{Number(p.gstAmount || 0).toLocaleString()}</strong></p>
+                  <p className="text-[9px] text-slate-400">TDS: ₹{Number(p.tdsAmount || 0).toLocaleString()}</p>
                 </td>
                 <td className="px-5 py-4">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-900 border border-slate-800 text-slate-300">
@@ -298,7 +300,7 @@ export default function PaymentManagement({
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Escrow Deposit Held:</span>
-                <span className="font-bold text-white">₹{selectedPaymentForRefund.depositAmount}</span>
+                <span className="font-bold text-white">₹{Number(selectedPaymentForRefund.depositAmount || 0).toLocaleString()}</span>
               </div>
             </div>
 
@@ -331,7 +333,7 @@ export default function PaymentManagement({
             <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 flex justify-between items-center text-xs font-bold">
               <span className="text-slate-400">Net Refund Payable to Customer:</span>
               <span className="text-base font-black text-emerald-400">
-                ₹{Math.max(0, selectedPaymentForRefund.depositAmount - damageDeduction).toLocaleString()}
+                ₹{Math.max(0, (Number(selectedPaymentForRefund.depositAmount) || 0) - damageDeduction).toLocaleString()}
               </span>
             </div>
 

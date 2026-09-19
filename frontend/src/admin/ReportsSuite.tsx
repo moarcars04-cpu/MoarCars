@@ -239,12 +239,12 @@ export default function ReportsSuite({
               <tr key={i} className="hover:bg-slate-800/60 transition-colors">
                 <td className="px-5 py-4 font-bold text-white">{d.period}, 2026</td>
                 <td className="px-5 py-4 text-slate-300">{d.bookings} Dispatched</td>
-                <td className="px-5 py-4 font-black text-emerald-400">₹{d.revenue.toLocaleString()}</td>
-                <td className="px-5 py-4 text-slate-400">₹{(d.gst / 2).toLocaleString()}</td>
-                <td className="px-5 py-4 text-slate-400">₹{(d.gst / 2).toLocaleString()}</td>
-                <td className="px-5 py-4 text-amber-300">₹{Math.round(d.revenue * 0.24).toLocaleString()}</td>
+                <td className="px-5 py-4 font-black text-emerald-400">₹{Number(d.revenue || 0).toLocaleString()}</td>
+                <td className="px-5 py-4 text-slate-400">₹{(Number(d.gst || 0) / 2).toLocaleString()}</td>
+                <td className="px-5 py-4 text-slate-400">₹{(Number(d.gst || 0) / 2).toLocaleString()}</td>
+                <td className="px-5 py-4 text-amber-300">₹{Math.round(Number(d.revenue || 0) * 0.24).toLocaleString()}</td>
                 <td className="px-5 py-4 text-right font-black text-[#c88d18]">
-                  ₹{Math.round(d.revenue * 0.61).toLocaleString()}
+                  ₹{Math.round(Number(d.revenue || 0) * 0.61).toLocaleString()}
                 </td>
               </tr>
             ))}
