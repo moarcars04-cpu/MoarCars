@@ -125,6 +125,20 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
     }
   };
 
+  const handleProceedToAuth = (tab: "login" | "register") => {
+    const payload = {
+      car,
+      pickup: finalPickup,
+      startDate: finalStartDate,
+      endDate: finalEndDate,
+      rentalDays: days,
+      amount: totalPayable,
+    };
+    sessionStorage.setItem("moar_pending_checkout", JSON.stringify(payload));
+    onClose();
+    openAuthModal(tab);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-2xl rounded-3xl bg-slate-900 border border-amber-500/30 p-6 text-white space-y-5 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col">
@@ -148,14 +162,51 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
           </button>
         </div>
 
-        {errorMsg && (
-          <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs font-semibold text-rose-300 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
+        {/* AUTH GATE: If user is not logged in, prompt sign in or sign up */}
+        {!user ? (
+          <div className="p-6 text-center space-y-5 bg-slate-950/80 rounded-2xl border border-white/10">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c88d18]/20 border border-[#c88d18]/40 text-[#c88d18]">
+              <Sparkles className="h-7 w-7" />
+            </div>
 
-        <form onSubmit={handleConfirmBooking} className="space-y-4 overflow-y-auto pr-1">
+            <div className="space-y-1.5">
+              <h4 className="text-lg font-bold text-white">
+                Sign In to Reserve {car?.name || "Vehicle"}
+              </h4>
+              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                To guarantee secure vehicle handover, Ghat Road insurance clearance & instant booking, please sign in or create your profile.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto pt-2">
+              <Button
+                onClick={() => handleProceedToAuth("login")}
+                className="h-11 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs"
+              >
+                Existing User (Sign In)
+              </Button>
+              <Button
+                onClick={() => handleProceedToAuth("register")}
+                className="h-11 rounded-xl bg-[#c88d18] hover:bg-[#b07b14] text-white font-bold text-xs shadow-lg shadow-[#c88d18]/20"
+              >
+                New User (Create Profile)
+              </Button>
+            </div>
+
+            <p className="text-[11px] text-slate-400">
+              ⚡ Instant 6-digit email OTP verification • ₹250 welcome bonus credited on registration
+            </p>
+          </div>
+        ) : (
+          <>
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs font-semibold text-rose-300 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmBooking} className="space-y-4 overflow-y-auto pr-1">
           {/* Trip Summary Card */}
           <div className="rounded-2xl bg-slate-950/80 border border-white/10 p-4 space-y-2 text-xs">
             <div className="flex items-center justify-between font-bold text-white">
@@ -297,15 +348,17 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
             </div>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isBooking}
-            className="w-full h-12 rounded-2xl bg-brand-gold text-brand-navy font-black text-xs uppercase tracking-wider hover:bg-brand-gold-soft shadow-xl shadow-amber-900/30 flex items-center justify-center gap-2"
-          >
-            {isBooking ? "Confirming Booking..." : `Pay ₹${totalPayable.toLocaleString("en-IN")} & Confirm Reservation`}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              disabled={isBooking}
+              className="w-full h-12 rounded-2xl bg-brand-gold text-brand-navy font-black text-xs uppercase tracking-wider hover:bg-brand-gold-soft shadow-xl shadow-amber-900/30 flex items-center justify-center gap-2"
+            >
+              {isBooking ? "Confirming Booking..." : `Pay ₹${totalPayable.toLocaleString("en-IN")} & Confirm Reservation`}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </form>
+        </>
+        )}
       </div>
     </div>
   );

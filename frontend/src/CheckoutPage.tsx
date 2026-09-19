@@ -12,7 +12,6 @@ import {
   Car,
   CheckCircle2,
   AlertCircle,
-  FileText,
   CreditCard,
   Sparkles,
   ArrowRight,
@@ -21,9 +20,7 @@ import { Button } from "@/components/ui/button";
 import { getTodayDateStr, getFutureDateStr } from "@/lib/dateUtils";
 import { useAuth } from "./context/AuthContext";
 import { BookingSummaryCard } from "./components/checkout/BookingSummaryCard";
-import { DiscountsAndWalletSection } from "./components/checkout/DiscountsAndWalletSection";
-import { DigitalSignaturePad } from "./components/checkout/DigitalSignaturePad";
-import { RentalAgreementModal } from "./components/checkout/RentalAgreementModal";
+import { CouponSection } from "./components/checkout/CouponSection";
 import { PaymentMethodsSection, PaymentMethodType } from "./components/checkout/PaymentMethodsSection";
 import { BookingConfirmationScreen } from "./components/checkout/BookingConfirmationScreen";
 
@@ -70,7 +67,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     phone?: string;
     email?: string;
     dl?: string;
-    terms?: string;
   }>({});
 
   // Trip Timeline
@@ -92,20 +88,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   );
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
-  // Discounts & Wallet
-  const [useWallet, setUseWallet] = useState(false);
-  const [useRewards, setUseRewards] = useState(false);
+  // Admin Coupons
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
     percent: number;
     discount: number;
   } | null>(null);
-  const [referralDiscount, setReferralDiscount] = useState(0);
-
-  // Agreement & Signature
-  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
-  const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
-  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   // Payment Method
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodType>("razorpay");
@@ -176,15 +164,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   const subtotalBeforeDiscounts = baseFare + deliveryFee;
 
-  // Real User Wallet and Loyalty Points values
-  const userWalletBalance = user?.walletBalance !== undefined ? Number(user.walletBalance) : 0;
-  const userRewardPoints = user?.loyaltyPoints !== undefined ? Number(user.loyaltyPoints) : Number(user?.rewardPoints || 0);
+  const couponDiscount = appliedCoupon
+    ? Math.round((subtotalBeforeDiscounts * appliedCoupon.percent) / 100)
+    : 0;
 
-  const walletDeduction = useWallet ? Math.min(userWalletBalance, Math.round(subtotalBeforeDiscounts * 0.5)) : 0;
-  const rewardDeduction = useRewards ? Math.min(userRewardPoints, 100) : 0;
-  const couponDiscount = appliedCoupon ? Math.round((subtotalBeforeDiscounts * appliedCoupon.percent) / 100) : 0;
-
-  const totalDiscounts = walletDeduction + rewardDeduction + couponDiscount + referralDiscount;
+  const totalDiscounts = couponDiscount;
   const subtotalAfterDiscounts = Math.max(0, subtotalBeforeDiscounts - totalDiscounts);
 
   // Dynamic GST from Admin System Settings
@@ -223,41 +207,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     });
   };
 
-  // Apply Coupon Handler
-  const handleApplyCoupon = async (code: string) => {
-    const cleanCode = code.trim().toUpperCase();
-    if (cleanCode === "PILGRIM10") {
-      setAppliedCoupon({ code: cleanCode, percent: 10, discount: Math.round(subtotalBeforeDiscounts * 0.1) });
-    } else if (cleanCode === "WEEKEND20") {
-      setAppliedCoupon({ code: cleanCode, percent: 20, discount: Math.round(subtotalBeforeDiscounts * 0.2) });
-    } else if (cleanCode === "CORP2026") {
-      setAppliedCoupon({ code: cleanCode, percent: 15, discount: Math.round(subtotalBeforeDiscounts * 0.15) });
-    } else {
-      try {
-        const res = await fetch("/api/admin/coupons");
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          const found = json.data.find((c: any) => c.code === cleanCode && c.status === "Active");
-          if (found) {
-            const pct = Number(found.value) || 10;
-            setAppliedCoupon({ code: cleanCode, percent: pct, discount: Math.round((subtotalBeforeDiscounts * pct) / 100) });
-            return;
-          }
-        }
-      } catch (e) {}
-      alert("Invalid or expired coupon code. Try PILGRIM10 or WEEKEND20.");
-    }
-  };
-
-  // Referral Handler
-  const handleApplyReferral = (code: string) => {
-    if (code.toUpperCase().includes("FRIEND") || code.toUpperCase().includes("TIRUPATI") || code.length >= 6) {
-      setReferralDiscount(250);
-      return true;
-    }
-    return false;
-  };
-
   // Save Booking & Sync User Profile
   const finalizeBooking = async (bookingId: string, transactionId: string) => {
     setIsSubmitting(true);
@@ -293,9 +242,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       driverFee: 0,
       extrasTotal,
       couponDiscount,
-      walletDeduction,
-      rewardDeduction,
-      referralDiscount,
+      walletDeduction: 0,
+      rewardDeduction: 0,
+      referralDiscount: 0,
       discountAmount: totalDiscounts,
       gstRate,
       gstAmount,
@@ -304,7 +253,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       advancePaymentPercent,
       paidAmount: payableNow,
       balanceDue,
-      signatureData: signatureDataUrl || "DIGITAL_SIGNED_ON_CHECKOUT",
+      signatureData: "ONLINE_VERIFIED",
     };
 
     try {
@@ -365,7 +314,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   // Final Payment & Reservation Submission with Razorpay & Strict Form Validation
   const handleConfirmAndPay = async () => {
     // 1. Strict Form Validations
-    const errors: { name?: string; phone?: string; email?: string; dl?: string; terms?: string } = {};
+    const errors: { name?: string; phone?: string; email?: string; dl?: string } = {};
 
     if (!customerName || customerName.trim().length < 3) {
       errors.name = "Full Legal Name is required (minimum 3 characters).";
@@ -383,10 +332,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     if (!drivingLicense || drivingLicense.trim().length < 5) {
       errors.dl = "Driving License Number is required (minimum 5 characters).";
-    }
-
-    if (!hasAcceptedTerms) {
-      errors.terms = "Please accept the Moar Cars Self-Drive Rental Agreement & terms.";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -469,7 +414,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               size="sm"
               onClick={() => {
                 if (currentStep === "payment") setCurrentStep("details");
-                else if (onNavigate) onNavigate(`/car/${car.id || car.name}`);
+                else if (onNavigate) onNavigate(`/car/${car?.id || car?.name}`);
                 else window.history.back();
               }}
               className="text-white hover:text-brand-gold hover:bg-white/10 rounded-xl px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-bold"
@@ -533,7 +478,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               >
                 2
               </div>
-              <span>Agreement & Payment</span>
+              <span>Payment & Gateway</span>
             </div>
 
             <div className="h-0.5 w-8 sm:w-16 bg-border" />
@@ -582,7 +527,59 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         )}
 
-        {currentStep !== "confirmed" && car && (
+        {/* AUTHENTICATION GATE: User must be signed in to book */}
+        {currentStep !== "confirmed" && car && !user && (
+          <div className="rounded-3xl border border-[#c88d18]/40 bg-gradient-to-br from-[#070e1c] to-[#0c192e] text-white p-8 sm:p-12 shadow-2xl space-y-6 max-w-2xl mx-auto text-center animate-in fade-in duration-300">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c88d18]/20 border border-[#c88d18]/40 text-[#c88d18]">
+              <Lock className="h-8 w-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black tracking-tight text-white">
+                Sign In to Reserve {car.name}
+              </h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                To guarantee safe self-drive reservations, Tirumala Ghat road clearances & instant vehicle handover, an authenticated user profile is required.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-left max-w-md mx-auto">
+              <div className="flex items-center gap-3">
+                {car.image ? (
+                  <img src={car.image} alt={car.name} className="h-12 w-16 object-cover rounded-xl bg-slate-900 shrink-0" />
+                ) : (
+                  <div className="h-12 w-16 bg-slate-900 rounded-xl flex items-center justify-center"><Car className="h-6 w-6 text-slate-500" /></div>
+                )}
+                <div>
+                  <h4 className="text-xs font-bold text-white">{car.name}</h4>
+                  <p className="text-[11px] text-[#c88d18] font-semibold">{rentalDays} Days • {startDate} to {endDate}</p>
+                </div>
+              </div>
+              <span className="text-sm font-black text-emerald-400">₹{payableNow.toLocaleString("en-IN")} Adv</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-md mx-auto">
+              <Button
+                onClick={() => openAuthModal("login")}
+                className="h-12 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-transform active:scale-95"
+              >
+                <User className="h-4 w-4 text-[#c88d18]" /> Existing User (Sign In)
+              </Button>
+              <Button
+                onClick={() => openAuthModal("register")}
+                className="h-12 rounded-2xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-[#c88d18]/25 transition-transform active:scale-95"
+              >
+                <Sparkles className="h-4 w-4" /> New User (Create Profile)
+              </Button>
+            </div>
+
+            <p className="text-[11px] text-slate-400">
+              ⚡ Instant 6-digit email OTP verification • No paperwork required
+            </p>
+          </div>
+        )}
+
+        {currentStep !== "confirmed" && car && user && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column (7 cols): Input Forms */}
             <div className="lg:col-span-7 space-y-6">
@@ -731,67 +728,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
               </div>
 
-              {/* 2. DISCOUNTS, WALLET & LOYALTY */}
-              <DiscountsAndWalletSection
-                userWalletBalance={userWalletBalance}
-                userRewardPoints={userRewardPoints}
+              {/* 2. ADMIN PROMO COUPONS ONLY */}
+              <CouponSection
                 subtotal={subtotalBeforeDiscounts}
-                useWallet={useWallet}
-                onToggleWallet={setUseWallet}
-                useRewards={useRewards}
-                onToggleRewards={setUseRewards}
                 appliedCoupon={appliedCoupon}
-                onApplyCoupon={handleApplyCoupon}
+                onApplyCoupon={(cpn) => setAppliedCoupon(cpn)}
                 onRemoveCoupon={() => setAppliedCoupon(null)}
-                referralDiscount={referralDiscount}
-                onApplyReferral={handleApplyReferral}
-                onRemoveReferral={() => setReferralDiscount(0)}
               />
 
-              {/* 3. DIGITAL SIGNATURE & RENTAL AGREEMENT */}
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-5">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <h3 className="text-base font-extrabold text-brand-navy flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-brand-teal" /> Self-Drive Rental Agreement & Signature
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setIsAgreementModalOpen(true)}
-                    className="text-xs font-bold text-brand-teal hover:underline flex items-center gap-1"
-                  >
-                    View Full Agreement <ArrowRight className="h-3 w-3" />
-                  </button>
-                </div>
-
-                <DigitalSignaturePad
-                  onSignatureChange={(dataUrl) => setSignatureDataUrl(dataUrl)}
-                  signerName={customerName || "Primary Renter"}
-                />
-
-                <div className="pt-2">
-                  <label className="flex items-start gap-2.5 text-xs text-brand-navy font-semibold cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={hasAcceptedTerms}
-                      onChange={(e) => {
-                        setHasAcceptedTerms(e.target.checked);
-                        if (fieldErrors.terms) setFieldErrors((prev) => ({ ...prev, terms: undefined }));
-                      }}
-                      className="mt-0.5 rounded text-brand-teal focus:ring-0 accent-brand-teal"
-                    />
-                    <span>
-                      I agree to the Moar Cars Self-Drive Rental Agreement, Tirumala Ghat Road speed bylaws, like-to-like fuel terms, and authorize my digital signature on the rental contract.
-                    </span>
-                  </label>
-                  {fieldErrors.terms && (
-                    <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1 mt-1.5">
-                      <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.terms}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* 4. PAYMENT METHOD SELECTOR */}
+              {/* 3. PAYMENT METHOD SELECTOR */}
               <PaymentMethodsSection
                 grandTotal={grandTotal}
                 payableNow={payableNow}
@@ -856,9 +801,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 selectedExtras={selectedExtras}
                 couponDiscount={couponDiscount}
                 couponCode={appliedCoupon?.code}
-                walletDeduction={walletDeduction}
-                rewardDeduction={rewardDeduction}
-                referralDiscount={referralDiscount}
+                walletDeduction={0}
+                rewardDeduction={0}
+                referralDiscount={0}
                 gstRate={gstRate}
                 gstAmount={gstAmount}
                 securityDeposit={securityDeposit}
@@ -872,21 +817,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         )}
       </div>
-
-      {/* Agreement Modal */}
-      <RentalAgreementModal
-        car={car}
-        renterName={customerName}
-        renterPhone={customerPhone}
-        renterEmail={customerEmail}
-        startDate={startDate}
-        endDate={endDate}
-        pickupLocation={pickupLocation}
-        signatureDataUrl={signatureDataUrl}
-        isOpen={isAgreementModalOpen}
-        onClose={() => setIsAgreementModalOpen(false)}
-        onAccept={() => setHasAcceptedTerms(true)}
-      />
     </main>
   );
 };

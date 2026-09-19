@@ -11,9 +11,9 @@ interface AuthContextType {
   openAuthModal: (tab?: "login" | "register" | "otp" | "forgot" | "reset") => void;
   closeAuthModal: () => void;
   login: (credentials: { identifier: string; password?: string; rememberMe?: boolean }) => Promise<{ success: boolean; message: string }>;
-  register: (data: { name: string; email: string; phone: string; password?: string; referralCode?: string }) => Promise<{ success: boolean; message: string }>;
-  sendRegistrationOtp: (data: { name: string; email: string; phone: string }) => Promise<{ success: boolean; message: string; demoOtp?: string }>;
-  verifyRegistrationOtp: (data: { name: string; email: string; phone: string; password?: string; referralCode?: string; otp: string }) => Promise<{ success: boolean; message: string }>;
+  register: (data: { name: string; email: string; phone: string; dlNumber?: string; password?: string; referralCode?: string }) => Promise<{ success: boolean; message: string }>;
+  sendRegistrationOtp: (data: { name: string; email: string; phone: string; dlNumber?: string }) => Promise<{ success: boolean; message: string; demoOtp?: string }>;
+  verifyRegistrationOtp: (data: { name: string; email: string; phone: string; dlNumber?: string; password?: string; referralCode?: string; otp: string }) => Promise<{ success: boolean; message: string }>;
   sendOtp: (identifier: string, type?: string) => Promise<{ success: boolean; message: string; demoOtp?: string }>;
   verifyOtp: (identifier: string, otp: string, name?: string, referralCode?: string) => Promise<{ success: boolean; message: string }>;
   socialLogin: (provider: "google" | "apple", profile: { name: string; email: string; avatar?: string }) => Promise<{ success: boolean; message: string }>;
@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const sendRegistrationOtp = async (data: { name: string; email: string; phone: string }) => {
+  const sendRegistrationOtp = async (data: { name: string; email: string; phone: string; dlNumber?: string }) => {
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/send-registration-otp", {
@@ -161,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     name: string;
     email: string;
     phone: string;
+    dlNumber?: string;
     password?: string;
     referralCode?: string;
     otp: string;

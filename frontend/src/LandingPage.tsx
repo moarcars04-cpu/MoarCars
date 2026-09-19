@@ -235,16 +235,24 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
   const handleBookCar = (car: CarFleetItem) => {
     addRecentlyViewed(car);
+    const checkoutState = {
+      car,
+      pickup: searchParams.pickup,
+      dropoff: searchParams.dropoff,
+      startDate: searchParams.startDate,
+      startTime: searchParams.startTime,
+      endDate: searchParams.endDate,
+      endTime: searchParams.endTime,
+    };
+
+    if (!user) {
+      sessionStorage.setItem("moar_pending_checkout", JSON.stringify(checkoutState));
+      openAuthModal("login");
+      return;
+    }
+
     if (onNavigate) {
-      onNavigate("/checkout", {
-        car,
-        pickup: searchParams.pickup,
-        dropoff: searchParams.dropoff,
-        startDate: searchParams.startDate,
-        startTime: searchParams.startTime,
-        endDate: searchParams.endDate,
-        endTime: searchParams.endTime,
-      });
+      onNavigate("/checkout", checkoutState);
     } else {
       setBookingTargetCar(car);
     }
@@ -651,14 +659,32 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-8">
           {/* Main Footer 4 Columns Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-            {/* Col 1: Logo & Company Description */}
-            <div className="space-y-4">
+            {/* Col 1: Logo, Company Info & Location */}
+            <div className="space-y-3.5">
               <MoarLogo variant="light" size="lg" showTagline={true} />
               <p className="text-xs text-slate-400 leading-relaxed max-w-xs">
-                Premium car rentals for extraordinary journeys. Drive luxury, Drive MOAR.
+                Premium self-drive car rentals in Tirupati for extraordinary journeys. Ghat road certified fleet & instant 24/7 delivery.
               </p>
+
+              {/* Local Business NAP Details for Google Authority */}
+              <div className="space-y-2 text-xs text-slate-300 pt-1">
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-[#c88d18] shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-snug">
+                    <strong className="text-white">MOAR CARS Headquarters:</strong><br />
+                    Rajeswari Nilayam, 1, Navajeevana Colony, Tirupati, Andhra Pradesh 517507
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <a href="tel:+919666499904" className="text-[11px] font-bold text-white hover:text-[#c88d18]">
+                    +91 96664 99904 / +91 85000 12345
+                  </a>
+                </div>
+              </div>
+
               {/* Social Icons */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-3 pt-1">
                 <a
                   href="https://facebook.com"
                   target="_blank"

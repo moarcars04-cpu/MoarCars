@@ -201,13 +201,14 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       notes: "Standard self-drive booking",
     };
 
-    if (onNavigate) {
-      onNavigate("/checkout", payload);
+    if (!user) {
+      sessionStorage.setItem("moar_pending_checkout", JSON.stringify(payload));
+      openAuthModal("login");
       return;
     }
 
-    if (!user) {
-      openAuthModal("login");
+    if (onNavigate) {
+      onNavigate("/checkout", payload);
       return;
     }
 

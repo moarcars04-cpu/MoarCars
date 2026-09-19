@@ -13,7 +13,23 @@ function AppContent() {
   const [targetCarToBook, setTargetCarToBook] = useState<string>("");
   const [selectedCarForDetails, setSelectedCarForDetails] = useState<string | number>("");
   const [checkoutParams, setCheckoutParams] = useState<any>(null);
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, user } = useAuth();
+
+  // Seamless auto-navigation to /checkout after successful Sign In or Registration OTP verification
+  useEffect(() => {
+    if (user) {
+      const pendingStr = sessionStorage.getItem("moar_pending_checkout");
+      if (pendingStr) {
+        try {
+          const pending = JSON.parse(pendingStr);
+          sessionStorage.removeItem("moar_pending_checkout");
+          setCheckoutParams(pending);
+          window.history.pushState(null, "", "/checkout");
+          setPath("/checkout");
+        } catch {}
+      }
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleLocationChange = () => {

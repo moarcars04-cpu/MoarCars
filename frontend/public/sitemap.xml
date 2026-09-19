@@ -9,7 +9,7 @@
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://moarcars.com/assets/moarcars-logo-DK578w77.png</image:loc>
-      <image:title>Moar Cars - #1 Self-Drive Car Rental in Tirupati</image:title>
+      <image:title>MOAR CARS - #1 Self-Drive Car Rental in Tirupati</image:title>
     </image:image>
   </url>
 
@@ -21,7 +21,7 @@
     <priority>0.95</priority>
   </url>
 
-  <!-- SUV Car Rentals -->
+  <!-- SUV Car Rentals Tirupati -->
   <url>
     <loc>https://moarcars.com/cars?type=SUV</loc>
     <lastmod>2026-09-19</lastmod>
@@ -37,12 +37,12 @@
     <priority>0.90</priority>
   </url>
 
-  <!-- 7-Seater Family Car Rentals -->
+  <!-- 7-Seater Family Car Rentals (Innova Crysta, Fortuner, Ertiga) -->
   <url>
     <loc>https://moarcars.com/cars?seats=7</loc>
     <lastmod>2026-09-19</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
 
   <!-- Automatic Transmission Cars -->
@@ -69,7 +69,7 @@
     <priority>0.90</priority>
   </url>
 
-  <!-- Tirumala Ghat Road Cars -->
+  <!-- Tirumala Ghat Road Guidelines & Hill Certified Fleet -->
   <url>
     <loc>https://moarcars.com/cars?ghatCertified=true</loc>
     <lastmod>2026-09-19</lastmod>
@@ -85,7 +85,7 @@
     <priority>0.80</priority>
   </url>
 
-  <!-- User Account & Trips Dashboard -->
+  <!-- User Account & Trips Portal -->
   <url>
     <loc>https://moarcars.com/dashboard</loc>
     <lastmod>2026-09-19</lastmod>

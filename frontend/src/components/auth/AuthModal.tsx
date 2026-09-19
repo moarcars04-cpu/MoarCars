@@ -49,6 +49,7 @@ export const AuthModal: React.FC = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [dlNumber, setDlNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [referralCode, setReferralCode] = useState("");
@@ -238,19 +239,25 @@ export const AuthModal: React.FC = () => {
 
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim();
+    const cleanPhone = phone.replace(/\D/g, "").slice(0, 10);
+    const cleanDl = dlNumber.trim().toUpperCase();
     const cleanPassword = password.trim();
 
-    if (!cleanName) {
-      setErrorMsg("Full Name is mandatory. Please enter your name.");
+    if (!cleanName || cleanName.length < 3) {
+      setErrorMsg("Full Legal Name is mandatory (minimum 3 characters).");
       return;
     }
-    if (!cleanEmail || !cleanEmail.includes("@")) {
-      setErrorMsg("A valid Email Address is mandatory for verification.");
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setErrorMsg("Mobile number must be exactly 10 digits.");
       return;
     }
-    if (!cleanPhone || cleanPhone.replace(/\D/g, "").length < 10) {
-      setErrorMsg("A valid 10-digit Phone Number is mandatory.");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setErrorMsg("A valid Email Address is mandatory for OTP verification.");
+      return;
+    }
+    if (!cleanDl || cleanDl.length < 5) {
+      setErrorMsg("Driving License (DL) Number is mandatory (minimum 5 characters).");
       return;
     }
     if (!cleanPassword || cleanPassword.length < 6) {
@@ -266,6 +273,7 @@ export const AuthModal: React.FC = () => {
       name: cleanName,
       email: cleanEmail,
       phone: cleanPhone,
+      dlNumber: cleanDl,
     });
 
     if (res.success) {
@@ -297,14 +305,15 @@ export const AuthModal: React.FC = () => {
     const res = await verifyRegistrationOtp({
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      phone: phone.trim(),
+      phone: phone.replace(/\D/g, "").slice(0, 10),
+      dlNumber: dlNumber.trim().toUpperCase(),
       password,
       referralCode: referralCode.trim(),
       otp: otpCode,
     });
 
     if (res.success) {
-      setSuccessMsg(res.message || "Registration verified successfully! ₹250 added to your wallet.");
+      setSuccessMsg(res.message || "Registration verified successfully! Welcome to Moar Cars.");
     } else {
       setErrorMsg(res.message);
     }
@@ -316,7 +325,8 @@ export const AuthModal: React.FC = () => {
     const res = await sendRegistrationOtp({
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      phone: phone.trim(),
+      phone: phone.replace(/\D/g, "").slice(0, 10),
+      dlNumber: dlNumber.trim().toUpperCase(),
     });
     if (res.success) {
       setDemoOtpCode(res.demoOtp || "");
@@ -838,23 +848,38 @@ export const AuthModal: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-0.5">
-                      Phone Number <span className="text-rose-500">*</span>
+                      Phone Number (10 Digits) <span className="text-rose-500">*</span>
                     </label>
                     <div className="relative flex items-center">
-                      <span className="absolute left-2.5 text-xs text-slate-500 font-medium">
+                      <span className="absolute left-2.5 text-xs text-slate-500 font-medium select-none">
                         +91
                       </span>
                       <input
                         type="tel"
                         required
                         maxLength={10}
-                        placeholder="Mobile number"
+                        inputMode="numeric"
+                        placeholder="9876543210"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
                         className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 py-1.5 text-sm text-slate-900 placeholder:text-slate-300 placeholder:font-normal focus:border-[#c88d18] focus:outline-none focus:ring-1 focus:ring-[#c88d18]/20"
                       />
                     </div>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-0.5">
+                    Driving License (DL) Number <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. AP03 20220019281"
+                    value={dlNumber}
+                    onChange={(e) => setDlNumber(e.target.value.toUpperCase())}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-sm uppercase font-semibold text-slate-900 placeholder:text-slate-300 placeholder:font-normal focus:border-[#c88d18] focus:outline-none focus:ring-1 focus:ring-[#c88d18]/20"
+                  />
                 </div>
 
                 <div>

@@ -1673,6 +1673,7 @@ if ($route === 'auth/verify-registration-otp' && $method === 'POST') {
     $name = trim($input['name'] ?? 'Moar Member');
     $phone = trim($input['phone'] ?? '+91 98765 43210');
     $password = trim($input['password'] ?? '');
+    $dlNumber = strtoupper(trim($input['dlNumber'] ?? ($input['drivingLicense'] ?? '')));
     $referralCodeInput = strtoupper(trim($input['referralCode'] ?? ''));
 
     if (empty($email) || empty($otp)) {
@@ -1710,16 +1711,30 @@ if ($route === 'auth/verify-registration-otp' && $method === 'POST') {
             $token = 'usr_' . bin2hex(random_bytes(24));
             if (!$existing) {
                 $userRefCode = 'MOAR' . rand(100, 999);
-                $ins = $pdo->prepare("INSERT INTO Customers (name, email, phone, passwordHash, walletBalance, loyaltyPoints, loyaltyTier, referralCode, kycStatus, joinedDate, token) VALUES (?, ?, ?, ?, 250, 250, 'Gold', ?, 'Pending', CURRENT_DATE, ?)");
-                $ins->execute([$name, $email, $phone, !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null, $userRefCode, $token]);
+                $ins = $pdo->prepare("INSERT INTO Customers (name, email, phone, dlNumber, passwordHash, walletBalance, loyaltyPoints, loyaltyTier, referralCode, kycStatus, joinedDate, token) VALUES (?, ?, ?, ?, ?, 250, 250, 'Gold VIP', ?, 'Pending', CURRENT_DATE, ?)");
+                $ins->execute([$name, $email, $phone, $dlNumber, !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null, $userRefCode, $token]);
                 $userId = $pdo->lastInsertId();
                 $stmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ?");
                 $stmt->execute([$userId]);
                 $customer = $stmt->fetch();
             } else {
-                $pdo->prepare("UPDATE Customers SET token = ? WHERE id = ?")->execute([$token, $existing['id']]);
-                $existing['token'] = $token;
-                $customer = $existing;
+                $updSql = "UPDATE Customers SET token = ?";
+                $updParams = [$token];
+                if (!empty($dlNumber) && empty($existing['dlNumber'])) {
+                    $updSql .= ", dlNumber = ?";
+                    $updParams[] = $dlNumber;
+                }
+                if (!empty($phone) && empty($existing['phone'])) {
+                    $updSql .= ", phone = ?";
+                    $updParams[] = $phone;
+                }
+                $updSql .= " WHERE id = ?";
+                $updParams[] = $existing['id'];
+                $pdo->prepare($updSql)->execute($updParams);
+
+                $stmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ?");
+                $stmt->execute([$existing['id']]);
+                $customer = $stmt->fetch();
             }
 
             echo json_encode([
@@ -3863,7 +3878,7 @@ if (preg_match('#^admin/payments/([^/]+)$#', $route, $matches) && $method === 'D
 // ----------------------------------------------------------------------
 // 7. COUPONS API
 // ----------------------------------------------------------------------
-if ($route === 'admin/coupons' && $method === 'GET') {
+if (($route === 'coupons' || $route === 'admin/coupons') && $method === 'GET') {
     if (isset($pdo)) {
         try {
             $coupons = $pdo->query("SELECT * FROM Coupons ORDER BY id DESC")->fetchAll();
