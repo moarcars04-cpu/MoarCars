@@ -185,8 +185,8 @@ export const CarCard: React.FC<CarCardProps> = ({
               })()}
               <span className="text-xs font-normal text-muted-foreground"> / day</span>
             </p>
-            <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
-              <ShieldCheck className="h-3 w-3" /> Dep: ₹{car.securityDeposit || 3000} (100% Refundable)
+            <p className="text-[10px] text-[#c88d18] font-bold flex items-center gap-0.5">
+              <ShieldCheck className="h-3 w-3 text-emerald-500" /> {car.advancePaymentPercent || 20}% Low Advance Booking
             </p>
           </div>
 

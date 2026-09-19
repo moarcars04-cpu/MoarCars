@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";
 import { CarGallerySection } from "./components/car-details/CarGallerySection";
 import { CarInfoSpecsSection } from "./components/car-details/CarInfoSpecsSection";
-import { PricingTiersCard } from "./components/car-details/PricingTiersCard";
 import { LuxuryBookingPanel } from "./components/car-details/LuxuryBookingPanel";
 import { SimilarAndRecommendedCars } from "./components/car-details/SimilarAndRecommendedCars";
 import { FaqSection } from "./components/home/FaqSection";
@@ -408,10 +407,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                 {/* 2. Comprehensive Specs & Safety Matrix */}
                 <CarInfoSpecsSection car={currentCar} />
 
-                {/* 3. Multi-Duration Pricing Tiers Card */}
-                <PricingTiersCard car={currentCar} />
-
-                {/* 4. Ghat Road Guidelines for this Model */}
+                {/* 3. Ghat Road Guidelines for this Model */}
                 <div className="p-6 rounded-3xl bg-brand-mist/40 border border-border space-y-3">
                   <span className="text-xs font-bold uppercase tracking-widest text-brand-teal flex items-center gap-1.5">
                     <Compass className="h-4 w-4" /> Tirumala Ghat Road Guidelines
@@ -558,7 +554,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
         <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-primary-foreground/60">
           <p>© 2026 Moar Cars. All rights reserved. Self-Drive Car Rental Tirupati.</p>
           <div className="flex items-center gap-4">
-            <span>Zero Deposit Delay Guarantee</span>
+            <span>Instant Online Reservation</span>
             <span>•</span>
             <span>Ghat Road Certified</span>
           </div>

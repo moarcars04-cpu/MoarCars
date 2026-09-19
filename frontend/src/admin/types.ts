@@ -118,6 +118,15 @@ export interface CarItem {
   tyreHealth: "Excellent" | "Good" | "Replace Soon";
   batteryHealth: "Good" | "Check Required";
   isArchived?: boolean;
+  advancePaymentPercent?: number;
+  bootSpace?: string;
+  groundClearance?: string;
+  engine?: string;
+  hasSunroof?: boolean;
+  hasCarPlay?: boolean;
+  hasAC?: boolean;
+  cruiseControl?: boolean;
+  keylessEntry?: boolean;
 }
 
 export interface CategoryItem {

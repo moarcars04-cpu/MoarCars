@@ -35,8 +35,14 @@ export interface CarFleetItem {
   hasSunroof?: boolean;
   hasGPS?: boolean;
   hasAC?: boolean;
+  hasCarPlay?: boolean;
+  cruiseControl?: boolean;
+  keylessEntry?: boolean;
+  bootSpace?: string;
+  groundClearance?: string;
+  engine?: string;
+  advancePaymentPercent?: number;
   instantBooking?: boolean;
-  freeCancellation?: boolean;
   doorstepDelivery?: boolean;
   rating?: number;
   tripsCount?: number;

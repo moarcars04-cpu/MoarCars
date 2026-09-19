@@ -941,12 +941,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                                 return "₹1,699";
                               })()}
                             </span>
-                            <span className="text-[11px] text-slate-500 font-semibold ml-1">/ day</span>
-                            {car.securityDeposit ? (
-                              <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
-                                <ShieldCheck className="h-3 w-3" /> Dep: ₹{Number(car.securityDeposit).toLocaleString("en-IN")}
-                              </p>
-                            ) : null}
+                            <p className="text-[10px] text-[#c88d18] font-bold flex items-center gap-0.5">
+                              <ShieldCheck className="h-3 w-3 text-emerald-500" /> {car.advancePaymentPercent || 20}% Low Advance Booking
+                            </p>
                           </div>
 
                           <div className="flex items-center gap-1.5">

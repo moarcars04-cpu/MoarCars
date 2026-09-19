@@ -502,8 +502,17 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         fuelType: (carData.fuelType as any) || "Petrol",
         transmission: (carData.transmission as any) || "Manual",
         seats: carData.seats || 5,
-        mileage: carData.mileage || "",
-        color: carData.color || "",
+        mileage: carData.mileage || "20 km/l",
+        bootSpace: carData.bootSpace || "350 L Luggage Trunk",
+        groundClearance: carData.groundClearance || "170 mm Ghat Ready",
+        engine: carData.engine || "",
+        advancePaymentPercent: carData.advancePaymentPercent ?? 20,
+        hasSunroof: carData.hasSunroof ?? false,
+        hasCarPlay: carData.hasCarPlay ?? true,
+        hasAC: carData.hasAC ?? true,
+        cruiseControl: carData.cruiseControl ?? true,
+        keylessEntry: carData.keylessEntry ?? true,
+        color: carData.color || "White",
         status: (carData.status as any) || "Available",
         branch: carData.branch || "Tirupati Central Hub",
         location: carData.location || "Tirupati",
@@ -1639,7 +1648,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                           <td className="px-4 py-4">
                             <p className="font-black text-emerald-400 text-sm">{c.pricePerDay ? `₹${Number(c.pricePerDay).toLocaleString("en-IN")}/day` : (c.price?.includes('/day') ? c.price : `${c.price || '₹1,699'}/day`)}</p>
                             <p className="text-[10px] text-slate-400">₹{c.pricePerHour}/hr &bull; ₹{c.pricePerWeek}/wk</p>
-                            <p className="text-[9px] text-[#c88d18]">Dep: ₹{c.securityDeposit}</p>
+                            <p className="text-[9px] text-[#c88d18] font-bold">Online Adv: {c.advancePaymentPercent || 20}%</p>
                           </td>
                           <td className="px-4 py-4">
                             <p className="font-bold text-white flex items-center gap-1">
@@ -2348,6 +2357,18 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   galleryImagesList = [primaryImage, ...galleryImagesList];
                 }
 
+                const mileage = form.mileage?.value?.trim() || "20 km/l";
+                const bootSpace = form.bootSpace?.value?.trim() || "";
+                const groundClearance = form.groundClearance?.value?.trim() || "";
+                const color = form.color?.value?.trim() || "White";
+                const engine = form.engine?.value?.trim() || "";
+                const detail = form.detail?.value?.trim() || "";
+                const hasSunroof = Boolean(form.hasSunroof?.checked);
+                const hasCarPlay = Boolean(form.hasCarPlay?.checked);
+                const hasAC = Boolean(form.hasAC?.checked);
+                const cruiseControl = Boolean(form.cruiseControl?.checked);
+                const keylessEntry = Boolean(form.keylessEntry?.checked);
+
                 handleSaveCar({
                   brand: finalBrand,
                   model: finalModel,
@@ -2359,8 +2380,17 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   fuelType: form.fuelType?.value || "Petrol",
                   transmission: form.transmission?.value || "Manual",
                   seats: parseInt(form.seats?.value) || 5,
-                  mileage: form.mileage?.value?.trim() || "20 km/l",
-                  color: form.color?.value?.trim() || "White",
+                  mileage,
+                  bootSpace,
+                  groundClearance,
+                  color,
+                  engine,
+                  detail,
+                  hasSunroof,
+                  hasCarPlay,
+                  hasAC,
+                  cruiseControl,
+                  keylessEntry,
                   category: form.category?.value || (categories[0]?.name || "Hatchback"),
                   pricePerHour: parseInt(form.pricePerHour?.value) || (pricePerDay > 0 ? Math.round(pricePerDay / 10) : 199),
                   pricePerDay,
@@ -2536,6 +2566,128 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     />
                   </div>
                 </div>
+
+                {/* DYNAMIC VEHICLE SPECIFICATIONS (ADMIN EDITABLE) */}
+                <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#c88d18] uppercase tracking-wider flex items-center gap-1.5">
+                      ⚙️ Dynamic Vehicle Specifications & Metrics
+                    </span>
+                    <span className="text-[10px] text-slate-500">Rendered in Customer Specs Cards</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Mileage / Range</label>
+                      <input
+                        name="mileage"
+                        defaultValue={editingCar?.mileage || "20 km/l"}
+                        placeholder="e.g. 22 km/l or 465 km"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Boot Space</label>
+                      <input
+                        name="bootSpace"
+                        defaultValue={editingCar?.bootSpace || ""}
+                        placeholder="e.g. 378 L / Spacious Trunk"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Ground Clearance</label>
+                      <input
+                        name="groundClearance"
+                        defaultValue={editingCar?.groundClearance || ""}
+                        placeholder="e.g. 190 mm / Ghat Ready"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Exterior Color</label>
+                      <input
+                        name="color"
+                        defaultValue={editingCar?.color || "Pearl Arctic White"}
+                        placeholder="e.g. Pearl Arctic White"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Engine / Powertrain Specs</label>
+                      <input
+                        name="engine"
+                        defaultValue={editingCar?.engine || ""}
+                        placeholder="e.g. 1.2L DualJet Petrol (90 PS) / 2.2L mHawk Diesel"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Vehicle Bio / Highlights</label>
+                      <input
+                        name="detail"
+                        defaultValue={editingCar?.detail || ""}
+                        placeholder="e.g. Certified for Tirumala ghat roads with cruise control & clean cabin"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* EQUIPMENT & COMFORT FEATURE TOGGLES */}
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-2">Comfort & Technology Inclusions:</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#070e1c] border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                        <input
+                          type="checkbox"
+                          name="hasSunroof"
+                          defaultChecked={editingCar?.hasSunroof ?? false}
+                          className="rounded text-[#c88d18] focus:ring-0"
+                        />
+                        <span className="text-slate-300 font-semibold text-[11px]">Panoramic Sunroof</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#070e1c] border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                        <input
+                          type="checkbox"
+                          name="hasCarPlay"
+                          defaultChecked={editingCar?.hasCarPlay !== false}
+                          className="rounded text-[#c88d18] focus:ring-0"
+                        />
+                        <span className="text-slate-300 font-semibold text-[11px]">CarPlay / Android Auto</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#070e1c] border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                        <input
+                          type="checkbox"
+                          name="hasAC"
+                          defaultChecked={editingCar?.hasAC !== false}
+                          className="rounded text-[#c88d18] focus:ring-0"
+                        />
+                        <span className="text-slate-300 font-semibold text-[11px]">Dual AC / Rear Vents</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#070e1c] border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                        <input
+                          type="checkbox"
+                          name="keylessEntry"
+                          defaultChecked={editingCar?.keylessEntry !== false}
+                          className="rounded text-[#c88d18] focus:ring-0"
+                        />
+                        <span className="text-slate-300 font-semibold text-[11px]">Keyless Push Start</span>
+                      </label>
+                      <label className="flex items-center gap-2 p-2 rounded-xl bg-[#070e1c] border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                        <input
+                          type="checkbox"
+                          name="cruiseControl"
+                          defaultChecked={editingCar?.cruiseControl !== false}
+                          className="rounded text-[#c88d18] focus:ring-0"
+                        />
+                        <span className="text-slate-300 font-semibold text-[11px]">Cruise Control</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* TAB 2: PRICING */}
@@ -2576,12 +2728,16 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-slate-400 font-bold mb-1">Security Deposit (₹)</label>
+                    <label className="block text-slate-400 font-bold mb-1">
+                      Online Advance (%) <span className="text-[#c88d18]">*</span>
+                    </label>
                     <input
-                      name="securityDeposit"
+                      name="advancePaymentPercent"
                       type="number"
-                      defaultValue={editingCar?.securityDeposit !== undefined ? editingCar.securityDeposit : ""}
-                      placeholder="e.g. 3000"
+                      min="0"
+                      max="100"
+                      defaultValue={editingCar?.advancePaymentPercent !== undefined ? editingCar.advancePaymentPercent : "20"}
+                      placeholder="e.g. 20 (% charged online)"
                       className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-bold placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
                     />
                   </div>
@@ -2607,20 +2763,11 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="block text-slate-400 font-bold mb-1">Online Advance Payment (%)</label>
-                    <input
-                      name="advancePaymentPercent"
-                      type="number"
-                      min="0"
-                      max="100"
-                      defaultValue={editingCar?.advancePaymentPercent !== undefined ? editingCar.advancePaymentPercent : ""}
-                      placeholder="e.g. 30 (Leave blank for global setting)"
-                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                    />
-                    <p className="text-[10px] text-slate-500 mt-1">Overrides global advance % setting for this vehicle.</p>
-                  </div>
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-0.5">
+                  <p className="font-bold flex items-center gap-1.5">⚡ Daily Calculation & Advance Pay Model:</p>
+                  <p className="text-[11px] text-slate-400">
+                    Total fare is dynamically calculated as (Price Per Day × Days) + GST. Customers pay the exact <strong>Online Advance %</strong> to reserve, and the remaining balance is collected upon vehicle handover.
+                  </p>
                 </div>
               </div>
 

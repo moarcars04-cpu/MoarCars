@@ -184,15 +184,6 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
           </div>
         )}
 
-        {extrasTotal > 0 && (
-          <div className="flex justify-between text-muted-foreground">
-            <span>
-              Trip Add-ons ({selectedExtras.join(", ") || "Selected Extras"})
-            </span>
-            <span className="font-semibold text-brand-navy">₹{extrasTotal.toLocaleString("en-IN")}</span>
-          </div>
-        )}
-
         {/* Discounts */}
         {couponDiscount > 0 && (
           <div className="flex justify-between text-emerald-600 font-bold bg-emerald-500/10 p-1.5 rounded-lg">
@@ -235,13 +226,6 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
           <span className="font-semibold text-brand-navy">₹{gstAmount.toLocaleString("en-IN")}</span>
         </div>
 
-        <div className="flex justify-between text-brand-teal font-semibold">
-          <span className="flex items-center gap-1">
-            <ShieldCheck className="h-3.5 w-3.5" /> Refundable Security Deposit
-          </span>
-          <span>₹{securityDeposit.toLocaleString("en-IN")}</span>
-        </div>
-
         {/* Grand Total */}
         <div className="pt-3 border-t border-border flex items-center justify-between text-base font-black text-brand-navy">
           <span>Total Booking Amount</span>
@@ -268,11 +252,11 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         )}
       </div>
 
-      {/* 2-Hour Refund Guarantee Note */}
+      {/* Verified Reservation Note */}
       <div className="p-3 rounded-2xl bg-brand-mist/60 border border-border flex items-center gap-2.5 text-xs text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
         <span>
-          Security deposit is 100% refunded to your original payment method / UPI within 2 hours after return.
+          Instant booking confirmed with {displayAdvancePercent}% advance payment. Balance collected at vehicle handover.
         </span>
       </div>
     </div>

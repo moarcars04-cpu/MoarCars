@@ -30,7 +30,7 @@ export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car })
     {
       label: "Fuel Type",
       value: car.fuelType || (isEV ? "Electric" : "Petrol"),
-      sub: isEV ? "Zero Emission" : "Verified Engine",
+      sub: car.engine || (isEV ? "Zero Emission" : "Verified Engine"),
       icon: Fuel,
     },
     {
@@ -47,7 +47,7 @@ export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car })
     },
     {
       label: "Mileage / Range",
-      value: car.mileage || (isEV ? "Electric Range" : "Real-world Tested"),
+      value: car.mileage || (isEV ? "450 km/charge" : "20 km/l"),
       sub: "Certified Efficiency",
       icon: Zap,
     },

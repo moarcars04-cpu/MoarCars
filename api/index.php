@@ -93,6 +93,34 @@ function formatCustomerResponse($c) {
     return $c;
 }
 
+function formatCarResponse($c) {
+    if (!$c) return null;
+    $c['id'] = (int)$c['id'];
+    $c['rating'] = isset($c['rating']) ? (float)$c['rating'] : 4.8;
+    $c['reviewCount'] = isset($c['reviewCount']) ? (int)$c['reviewCount'] : 0;
+    $c['totalTrips'] = isset($c['totalTrips']) ? (int)$c['totalTrips'] : 0;
+    $c['seats'] = isset($c['seats']) ? (int)$c['seats'] : 5;
+    $c['year'] = isset($c['year']) ? (int)$c['year'] : 2024;
+    $c['pricePerDay'] = isset($c['pricePerDay']) ? (int)$c['pricePerDay'] : 1699;
+    $c['pricePerHour'] = isset($c['pricePerHour']) ? (int)$c['pricePerHour'] : (int)round($c['pricePerDay'] / 10);
+    $c['pricePerWeek'] = isset($c['pricePerWeek']) ? (int)$c['pricePerWeek'] : ($c['pricePerDay'] * 6);
+    $c['pricePerMonth'] = isset($c['pricePerMonth']) ? (int)$c['pricePerMonth'] : ($c['pricePerDay'] * 22);
+    $c['securityDeposit'] = isset($c['securityDeposit']) ? (int)$c['securityDeposit'] : 3000;
+    $c['lateFeePerHour'] = isset($c['lateFeePerHour']) ? (int)$c['lateFeePerHour'] : 150;
+    $c['advancePaymentPercent'] = (isset($c['advancePaymentPercent']) && $c['advancePaymentPercent'] !== null && $c['advancePaymentPercent'] !== '') ? (int)$c['advancePaymentPercent'] : 20;
+    $c['hasSunroof'] = isset($c['hasSunroof']) ? (bool)$c['hasSunroof'] : false;
+    $c['hasCarPlay'] = isset($c['hasCarPlay']) ? (bool)$c['hasCarPlay'] : true;
+    $c['hasAC'] = isset($c['hasAC']) ? (bool)$c['hasAC'] : true;
+    $c['cruiseControl'] = isset($c['cruiseControl']) ? (bool)$c['cruiseControl'] : true;
+    $c['keylessEntry'] = isset($c['keylessEntry']) ? (bool)$c['keylessEntry'] : true;
+    $c['bootSpace'] = !empty($c['bootSpace']) ? $c['bootSpace'] : ($c['seats'] >= 7 ? "460 Litres (Spacious Foldable)" : "350 Litres (Luggage Storage)");
+    $c['groundClearance'] = !empty($c['groundClearance']) ? $c['groundClearance'] : (($c['category'] ?? '') === 'SUV' ? "190 mm (Ghat Road Ready)" : "170 mm (Tirumala Ready)");
+    $c['mileage'] = !empty($c['mileage']) ? $c['mileage'] : (($c['fuelType'] ?? '') === 'Electric' ? "450 km/charge" : "20 km/l");
+    $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, !empty($c['image']) ? [$c['image']] : []);
+    $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, !empty($c['image']) ? [$c['image']] : []);
+    return $c;
+}
+
 // ----------------------------------------------------------------------
 // DIRECT GMAIL SMTP MAILER (cURL SMTPS 465 + Socket SSL 465 / TLS 587)
 // ----------------------------------------------------------------------
@@ -346,6 +374,7 @@ function getDefaultCars() {
             "pricePerWeek" => 9999,
             "pricePerMonth" => 34999,
             "securityDeposit" => 3000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 150,
             "tag" => "Everyday",
             "category" => "Hatchback",
@@ -353,6 +382,14 @@ function getDefaultCars() {
             "transmission" => "Manual",
             "seats" => 5,
             "mileage" => "22 km/l",
+            "bootSpace" => "268 Litres",
+            "groundClearance" => "163 mm (Ghat Ready)",
+            "engine" => "1.2L Z-Series Petrol (82 PS)",
+            "hasSunroof" => 0,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Pearl Arctic White",
             "status" => "Available",
             "branch" => "Tirupati Central Hub",
@@ -399,6 +436,7 @@ function getDefaultCars() {
             "pricePerWeek" => 12999,
             "pricePerMonth" => 44999,
             "securityDeposit" => 4000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 200,
             "tag" => "Comfort",
             "category" => "Sedan",
@@ -406,6 +444,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 5,
             "mileage" => "18 km/l",
+            "bootSpace" => "506 Litres (Large Trunk)",
+            "groundClearance" => "165 mm (Sedan)",
+            "engine" => "1.5L i-VTEC DOHC (121 PS)",
+            "hasSunroof" => 1,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Platinum White Pearl",
             "status" => "Available",
             "branch" => "Renigunta Airport Hub",
@@ -449,6 +495,7 @@ function getDefaultCars() {
             "pricePerWeek" => 14999,
             "pricePerMonth" => 54999,
             "securityDeposit" => 5000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 250,
             "tag" => "Popular",
             "category" => "SUV",
@@ -456,6 +503,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 7,
             "mileage" => "15 km/l",
+            "bootSpace" => "460 Litres (7-Seater Foldable)",
+            "groundClearance" => "187 mm (High Clearance 4x4)",
+            "engine" => "2.2L mHawk Turbo Diesel (175 PS)",
+            "hasSunroof" => 1,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Napoli Black",
             "status" => "Booked",
             "branch" => "Tirupati Central Hub",
@@ -499,6 +554,7 @@ function getDefaultCars() {
             "pricePerWeek" => 20999,
             "pricePerMonth" => 74999,
             "securityDeposit" => 6000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 300,
             "tag" => "Luxury",
             "category" => "Luxury",
@@ -506,6 +562,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 7,
             "mileage" => "14 km/l",
+            "bootSpace" => "300 - 758 Litres (Expanded)",
+            "groundClearance" => "178 mm (Tirumala Certified)",
+            "engine" => "2.4L GD Turbo Diesel (150 PS)",
+            "hasSunroof" => 0,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Super White",
             "status" => "Available",
             "branch" => "Chandragiri Heritage Point",
@@ -549,6 +613,7 @@ function getDefaultCars() {
             "pricePerWeek" => 13999,
             "pricePerMonth" => 48999,
             "securityDeposit" => 4000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 200,
             "tag" => "Popular",
             "category" => "SUV",
@@ -556,6 +621,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 5,
             "mileage" => "17 km/l",
+            "bootSpace" => "433 Litres",
+            "groundClearance" => "190 mm (Ghat Road Ready)",
+            "engine" => "1.5L Turbo GDi (160 PS)",
+            "hasSunroof" => 1,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Ranger Khaki",
             "status" => "Available",
             "branch" => "Tirupati Central Hub",
@@ -599,6 +672,7 @@ function getDefaultCars() {
             "pricePerWeek" => 12999,
             "pricePerMonth" => 44999,
             "securityDeposit" => 4000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 200,
             "tag" => "Electric",
             "category" => "Electric",
@@ -606,6 +680,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 5,
             "mileage" => "465 km/charge",
+            "bootSpace" => "350 Litres",
+            "groundClearance" => "190 mm (SUV Clearance)",
+            "engine" => "Permanent Magnet AC Synchronous (143 PS)",
+            "hasSunroof" => 1,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Empowered Oxide",
             "status" => "Available",
             "branch" => "Renigunta Airport Hub",
@@ -649,6 +731,7 @@ function getDefaultCars() {
             "pricePerWeek" => 35999,
             "pricePerMonth" => 129999,
             "securityDeposit" => 10000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 500,
             "tag" => "Luxury",
             "category" => "Luxury",
@@ -656,6 +739,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 5,
             "mileage" => "15 km/l",
+            "bootSpace" => "480 Litres Executive Trunk",
+            "groundClearance" => "145 mm (Sport Stance)",
+            "engine" => "2.0L TwinPower Turbo Petrol (258 PS)",
+            "hasSunroof" => 1,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Portimao Blue",
             "status" => "Available",
             "branch" => "Tirupati Central Hub",
@@ -699,6 +790,7 @@ function getDefaultCars() {
             "pricePerWeek" => 10499,
             "pricePerMonth" => 36999,
             "securityDeposit" => 3000,
+            "advancePaymentPercent" => 20,
             "lateFeePerHour" => 150,
             "tag" => "Everyday",
             "category" => "Hatchback",
@@ -706,6 +798,14 @@ function getDefaultCars() {
             "transmission" => "Automatic",
             "seats" => 5,
             "mileage" => "23 km/l",
+            "bootSpace" => "318 Litres",
+            "groundClearance" => "170 mm (City & Ghats)",
+            "engine" => "1.2L DualJet Dual VVT (90 PS)",
+            "hasSunroof" => 0,
+            "hasCarPlay" => 1,
+            "hasAC" => 1,
+            "cruiseControl" => 1,
+            "keylessEntry" => 1,
             "color" => "Nexa Blue",
             "status" => "Available",
             "branch" => "Tirupati Central Hub",
@@ -912,6 +1012,14 @@ function ensureTablesExist($pdo, $force = false) {
                 'transmission' => "VARCHAR(50) DEFAULT 'Manual'",
                 'seats' => "INT DEFAULT 5",
                 'mileage' => "VARCHAR(50) DEFAULT '22 km/l'",
+                'bootSpace' => "VARCHAR(100) DEFAULT NULL",
+                'groundClearance' => "VARCHAR(100) DEFAULT NULL",
+                'engine' => "VARCHAR(100) DEFAULT NULL",
+                'hasSunroof' => "TINYINT DEFAULT 0",
+                'hasCarPlay' => "TINYINT DEFAULT 1",
+                'hasAC' => "TINYINT DEFAULT 1",
+                'cruiseControl' => "TINYINT DEFAULT 1",
+                'keylessEntry' => "TINYINT DEFAULT 1",
                 'color' => "VARCHAR(50) DEFAULT 'Pearl White'",
                 'status' => "VARCHAR(50) DEFAULT 'Available'",
                 'location' => "VARCHAR(100) DEFAULT 'Tirupati'",
@@ -2804,15 +2912,11 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
                     ORDER BY Cars.id ASC";
             $cars = $pdo->query($sql)->fetchAll();
             if ($cars !== false) {
-                foreach ($cars as &$c) {
-                    $c['id'] = (int)$c['id'];
-                    $c['rating'] = (float)$c['rating'];
-                    $c['reviewCount'] = (int)$c['reviewCount'];
-                    $c['totalTrips'] = (int)$c['totalTrips'];
-                    $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, !empty($c['image']) ? [$c['image']] : []);
-                    $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, !empty($c['image']) ? [$c['image']] : []);
+                $formattedCars = [];
+                foreach ($cars as $c) {
+                    $formattedCars[] = formatCarResponse($c);
                 }
-                echo json_encode(["success" => true, "data" => $cars]);
+                echo json_encode(["success" => true, "data" => $formattedCars]);
                 exit();
             }
         } catch (Exception $e) {}
@@ -2846,13 +2950,7 @@ if (preg_match('#^(cars|admin/cars)/([0-9]+)$#', $route, $matches) && $method ==
             $stmt->execute([$carId]);
             $car = $stmt->fetch();
             if ($car) {
-                $car['id'] = (int)$car['id'];
-                $car['rating'] = (float)$car['rating'];
-                $car['reviewCount'] = (int)$car['reviewCount'];
-                $car['totalTrips'] = (int)$car['totalTrips'];
-                $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, !empty($car['image']) ? [$car['image']] : []);
-                $car['angle360Images'] = safeJsonDecode($car['angle360Images'] ?? null, !empty($car['image']) ? [$car['image']] : []);
-                echo json_encode(["success" => true, "data" => $car]);
+                echo json_encode(["success" => true, "data" => formatCarResponse($car)]);
                 exit();
             }
         } catch (Exception $e) {}

@@ -54,12 +54,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   // Chauffeur option
   const [withDriver, setWithDriver] = useState(false);
 
-  // Extras checkboxes
-  const [extraBabySeat, setExtraBabySeat] = useState(false);
-  const [extraLuggageCarrier, setExtraLuggageCarrier] = useState(false);
-  const [extraZeroDepWaiver, setExtraZeroDepWaiver] = useState(true);
-  const [extraFastCharger, setExtraFastCharger] = useState(false);
-
   // Promo code engine
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number; discount: number } | null>(null);
@@ -119,15 +113,9 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
   const driverFee = withDriver ? 699 * rentalDays : 0;
+  const extrasTotal = 0;
 
-  // Add-ons total
-  const extrasTotal =
-    (extraBabySeat ? 199 : 0) +
-    (extraLuggageCarrier ? 399 : 0) +
-    (extraZeroDepWaiver ? 299 * rentalDays : 0) +
-    (extraFastCharger ? 99 : 0);
-
-  const subtotalBeforeDiscount = baseFare + deliveryFee + driverFee + extrasTotal;
+  const subtotalBeforeDiscount = baseFare + deliveryFee + driverFee;
 
   // Promo discount calculation
   const discountAmount = appliedPromo ? Math.round((subtotalBeforeDiscount * appliedPromo.percent) / 100) : 0;
@@ -137,29 +125,22 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   const gstRate = Number(systemSettings.gstRate ?? 18);
   const gstAmount = Math.round(subtotalAfterDiscount * (gstRate / 100));
 
-  // Refundable Security Deposit (uses car setting or global setting, 0 if vehicle has 0 base fare)
-  const securityDeposit =
-    car.securityDeposit !== undefined && car.securityDeposit !== null && car.securityDeposit !== ""
-      ? Number(car.securityDeposit)
-      : dailyRate > 0
-      ? Number(systemSettings.defaultSecurityDeposit ?? 3000)
-      : 0;
-
-  // Total Payable
-  const grandTotal = subtotalAfterDiscount + gstAmount + securityDeposit;
+  // Grand Total based strictly on Base Fare + Add-ons + GST - Discounts
+  const grandTotal = subtotalAfterDiscount + gstAmount;
 
   // Dynamic Advance Payment % from Car or Admin System Policy
   const advancePaymentPercent =
     car.advancePaymentPercent !== undefined && car.advancePaymentPercent !== null && car.advancePaymentPercent !== ""
       ? Number(car.advancePaymentPercent)
-      : Number(systemSettings.advancePaymentPercent ?? 30);
+      : Number(systemSettings.advancePaymentPercent ?? 20);
 
   const advancePayableNow =
     advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0
-      ? Math.round((subtotalAfterDiscount + gstAmount) * (advancePaymentPercent / 100)) + securityDeposit
+      ? Math.round(grandTotal * (advancePaymentPercent / 100))
       : grandTotal;
 
   const balanceDueAtPickup = Math.max(0, grandTotal - advancePayableNow);
+  const securityDeposit = 0;
 
   // Promo Apply Handler
   const handleApplyPromo = () => {
@@ -214,20 +195,13 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       discountAmount,
       gstRate,
       gstAmount,
-      securityDeposit,
+      securityDeposit: 0,
       grandTotal,
       advancePaymentPercent,
       paidAmount: advancePayableNow,
       balanceDue: balanceDueAtPickup,
       promoCode: appliedPromo?.code || null,
-      notes: `Extras: ${[
-        extraBabySeat && "Baby Seat",
-        extraLuggageCarrier && "Rooftop Carrier",
-        extraZeroDepWaiver && "Zero-Dep Waiver",
-        extraFastCharger && "EV Rapid Cable",
-      ]
-        .filter(Boolean)
-        .join(", ")}`,
+      notes: "Standard self-drive booking",
     };
 
     if (onNavigate) {
@@ -423,52 +397,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         </button>
       </div>
 
-      {/* Add-ons & Extras */}
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-brand-navy block">Trip Add-ons & Protection</label>
-
-        <div className="space-y-1.5 text-xs">
-          <label className="flex items-center justify-between p-2 rounded-xl bg-card border border-border hover:border-brand-teal/40 cursor-pointer">
-            <span className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={extraZeroDepWaiver}
-                onChange={(e) => setExtraZeroDepWaiver(e.target.checked)}
-                className="rounded accent-brand-teal"
-              />
-              <span>Zero-Dep Damage Protection</span>
-            </span>
-            <span className="font-bold text-brand-navy">₹299/day</span>
-          </label>
-
-          <label className="flex items-center justify-between p-2 rounded-xl bg-card border border-border hover:border-brand-teal/40 cursor-pointer">
-            <span className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={extraBabySeat}
-                onChange={(e) => setExtraBabySeat(e.target.checked)}
-                className="rounded accent-brand-teal"
-              />
-              <span>Child / Infant Safety Seat</span>
-            </span>
-            <span className="font-bold text-brand-navy">₹199</span>
-          </label>
-
-          <label className="flex items-center justify-between p-2 rounded-xl bg-card border border-border hover:border-brand-teal/40 cursor-pointer">
-            <span className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={extraLuggageCarrier}
-                onChange={(e) => setExtraLuggageCarrier(e.target.checked)}
-                className="rounded accent-brand-teal"
-              />
-              <span>Rooftop Heavy Luggage Rack</span>
-            </span>
-            <span className="font-bold text-brand-navy">₹399</span>
-          </label>
-        </div>
-      </div>
-
       {/* Promo Code Engine */}
       <div className="space-y-2">
         <div className="flex gap-2">
@@ -519,13 +447,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
           </div>
         )}
 
-        {extrasTotal > 0 && (
-          <div className="flex justify-between text-muted-foreground">
-            <span>Trip Add-ons & Protection</span>
-            <span>₹{extrasTotal.toLocaleString("en-IN")}</span>
-          </div>
-        )}
-
         {discountAmount > 0 && (
           <div className="flex justify-between text-emerald-600 font-bold">
             <span>Promo Code Discount</span>
@@ -538,11 +459,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
           <span>₹{gstAmount.toLocaleString("en-IN")}</span>
         </div>
 
-        <div className="flex justify-between text-brand-teal font-medium">
-          <span>Refundable Security Deposit</span>
-          <span>₹{securityDeposit.toLocaleString("en-IN")}</span>
-        </div>
-
         <div className="flex justify-between text-base font-black text-brand-navy pt-2 border-t border-border">
           <span>Total Booking Amount</span>
           <span className="text-brand-teal">₹{grandTotal.toLocaleString("en-IN")}</span>
@@ -551,7 +467,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         {advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0 && (
           <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1 text-xs">
             <div className="flex justify-between font-extrabold text-brand-navy">
-              <span>Pay Online Now ({advancePaymentPercent}% Advance + Deposit):</span>
+              <span>Pay Online Now ({advancePaymentPercent}% Advance):</span>
               <span className="text-brand-teal font-black text-sm">₹{advancePayableNow.toLocaleString("en-IN")}</span>
             </div>
             <div className="flex justify-between text-amber-800 font-bold text-[11px]">
@@ -591,7 +507,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       {/* Trust reassurance */}
       <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
         <ShieldCheck className="h-4 w-4 text-emerald-500" />
-        <span>Free Cancellation up to 6 hrs before trip</span>
+        <span>Instant Booking Confirmation • Verified Fleet</span>
       </div>
     </div>
   );

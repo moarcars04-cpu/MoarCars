@@ -115,10 +115,10 @@ export const PricingTiersCard: React.FC<PricingTiersCardProps> = ({ car }) => {
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-xs font-bold text-brand-navy">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
-            <span>Refundable Security Deposit</span>
+            <span>Online Advance Booking</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {deposit > 0 ? `₹${deposit.toLocaleString("en-IN")} • Credited back via UPI upon return.` : "₹0 Security Deposit"}
+            {car.advancePaymentPercent ? `${car.advancePaymentPercent}% Advance online • Balance due at vehicle handover.` : "Instant reservation with partial advance booking."}
           </p>
         </div>
 

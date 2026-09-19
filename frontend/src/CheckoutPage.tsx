@@ -81,7 +81,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [deliveryMode, setDeliveryMode] = useState<"hub" | "doorstep">(
     initialParams?.deliveryMode || "hub"
   );
-  const [selectedExtras, setSelectedExtras] = useState<string[]>(["Zero-Dep Waiver"]);
+  const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
   // Discounts & Wallet
   const [useWallet, setUseWallet] = useState(false);
@@ -162,9 +162,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
   const driverFee = withDriver ? 699 * rentalDays : 0;
-  const extrasTotal = (selectedExtras.includes("Zero-Dep Waiver") ? 299 * rentalDays : 0);
+  const extrasTotal = 0;
 
-  const subtotalBeforeDiscounts = baseFare + deliveryFee + driverFee + extrasTotal;
+  const subtotalBeforeDiscounts = baseFare + deliveryFee + driverFee;
 
   // Real User Wallet and Loyalty Points values
   const userWalletBalance = user?.walletBalance !== undefined ? Number(user.walletBalance) : 0;
@@ -181,29 +181,22 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const gstRate = Number(systemSettings.gstRate ?? 18);
   const gstAmount = Math.round(subtotalAfterDiscounts * (gstRate / 100));
 
-  // Security Deposit (uses car configuration or dynamic global default, 0 if vehicle has 0 base fare)
-  const securityDeposit =
-    car?.securityDeposit !== undefined && car?.securityDeposit !== null && car?.securityDeposit !== ""
-      ? Number(car.securityDeposit)
-      : dailyRate > 0
-      ? Number(systemSettings.defaultSecurityDeposit ?? 3000)
-      : 0;
+  // Grand Total based strictly on Daily Rental Days + Extras + GST - Discounts
+  const grandTotal = subtotalAfterDiscounts + gstAmount;
 
-  // Grand Total
-  const grandTotal = subtotalAfterDiscounts + gstAmount + securityDeposit;
-
-  // Dynamic Advance Payment Calculation
+  // Dynamic Advance Payment Calculation (Customer pays admin configured % online)
   const advancePaymentPercent =
     car?.advancePaymentPercent !== undefined && car?.advancePaymentPercent !== null && car?.advancePaymentPercent !== ""
       ? Number(car.advancePaymentPercent)
-      : Number(systemSettings.advancePaymentPercent ?? 30);
+      : Number(systemSettings.advancePaymentPercent ?? 20);
 
   const payableNow =
     advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0
-      ? Math.round((subtotalAfterDiscounts + gstAmount) * (advancePaymentPercent / 100)) + securityDeposit
+      ? Math.round(grandTotal * (advancePaymentPercent / 100))
       : grandTotal;
 
   const balanceDue = Math.max(0, grandTotal - payableNow);
+  const securityDeposit = 0;
 
   // Apply Coupon Handler
   const handleApplyCoupon = async (code: string) => {
@@ -617,7 +610,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <p className="text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                   <span>
-                    100% Free Cancellation up to 6 hours before trip • 2-Hour Security Deposit Refund Guarantee
+                    Instant Booking Confirmation • Flexible Trip Dates • Zero Hidden Charges
                   </span>
                 </p>
               </div>
