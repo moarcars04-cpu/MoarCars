@@ -251,14 +251,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>(initialActivityLogs);
 
   // Dynamic Fleet Categories
-  const [categories, setCategories] = useState<CategoryItem[]>([
-    { id: 1, name: "Hatchback", description: "Compact, fuel-efficient everyday city cars", icon: "Car", displayOrder: 1, isActive: true },
-    { id: 2, name: "Sedan", description: "Comfortable executive travel with ample trunk capacity", icon: "Car", displayOrder: 2, isActive: true },
-    { id: 3, name: "SUV", description: "Powerful rugged drives built for Tirumala ghat roads", icon: "Shield", displayOrder: 3, isActive: true },
-    { id: 4, name: "Luxury", description: "Premium executive styling, leather seats & sunroof", icon: "Award", displayOrder: 4, isActive: true },
-    { id: 5, name: "Electric", description: "100% green eco-friendly emission-free mobility", icon: "Zap", displayOrder: 5, isActive: true },
-    { id: 6, name: "MUV", description: "Spacious 7-8 seater multi-utility family vehicles", icon: "Users", displayOrder: 6, isActive: true },
-  ]);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
 
   // Fleet Sub-Tab State
   const [fleetSubTab, setFleetSubTab] = useState<"roster" | "calendar" | "maintenance" | "analytics" | "categories">("roster");
@@ -441,7 +434,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
         if (!isMounted) return;
 
-        if (Array.isArray(dbCategories) && dbCategories.length > 0) setCategories(dbCategories);
+        if (Array.isArray(dbCategories)) setCategories(dbCategories);
         if (Array.isArray(dbCars)) setFleet(dbCars);
         if (Array.isArray(dbBookings)) setBookings(dbBookings);
         if (Array.isArray(dbCustomers)) setCustomers(dbCustomers);
@@ -546,11 +539,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     setEditingCar(null);
   };
 
-  const handleDeleteCar = (id: number) => {
+  const handleDeleteCar = async (id: number) => {
     if (confirm("Are you sure you want to delete this vehicle from the fleet?")) {
       setFleet((prev) => prev.filter((c) => c.id !== id));
       setNotice({ type: "info", text: `Vehicle #${id} removed from fleet.` });
-      adminApi.deleteCar(id);
+      const ok = await adminApi.deleteCar(id);
+      if (!ok) {
+        setNotice({ type: "error", text: `Failed to delete vehicle #${id} from database. Please refresh.` });
+      }
     }
   };
 
@@ -600,13 +596,13 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     setSelectedCarIds([]);
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (confirm(`Delete all ${selectedCarIds.length} selected vehicle(s)?`)) {
       const idsToDelete = [...selectedCarIds];
       setFleet((prev) => prev.filter((c) => !idsToDelete.includes(c.id)));
-      setNotice({ type: "info", text: `Deleted ${idsToDelete.length} vehicle(s).` });
-      idsToDelete.forEach((id) => adminApi.deleteCar(id));
       setSelectedCarIds([]);
+      setNotice({ type: "info", text: `Deleted ${idsToDelete.length} vehicle(s).` });
+      await Promise.all(idsToDelete.map((id) => adminApi.deleteCar(id)));
     }
   };
 
@@ -719,11 +715,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     }
   };
 
-  const handleDeleteBooking = (id: number) => {
+  const handleDeleteBooking = async (id: number) => {
     if (confirm("Are you sure you want to cancel and remove this booking?")) {
       setBookings((prev) => prev.filter((b) => b.id !== id));
       setNotice({ type: "info", text: `Booking #${id} removed.` });
-      adminApi.deleteBooking(id);
+      const ok = await adminApi.deleteBooking(id);
+      if (!ok) {
+        setNotice({ type: "error", text: `Failed to remove booking #${id} from database. Please refresh.` });
+      }
     }
   };
 

@@ -1215,56 +1215,6 @@ function ensureTablesExist($pdo, $force = false) {
         // Clean up legacy placeholders
         $pdo->exec("DELETE FROM Cars WHERE name IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs')");
 
-        // 3. Seed Default 5 Real Cars into MySQL if table has 0 rows
-        $carCount = (int)$pdo->query("SELECT COUNT(*) FROM Cars")->fetchColumn();
-        if ($carCount === 0) {
-            $defaultCars = getDefaultCars();
-            $validCarCols = getTableColumns($pdo, 'Cars');
-
-            foreach ($defaultCars as $c) {
-                $fields = [];
-                $placeholders = [];
-                $values = [];
-
-                foreach ($c as $k => $v) {
-                    if ($k !== 'id' && in_array(strtolower($k), $validCarCols)) {
-                        $fields[] = "`$k`";
-                        $placeholders[] = '?';
-                        if ($k === 'galleryImages' || $k === 'angle360Images') {
-                            $values[] = safeJsonEncode($v);
-                        } else {
-                            $values[] = is_array($v) ? json_encode($v) : $v;
-                        }
-                    }
-                }
-
-                if (!empty($fields)) {
-                    $sql = "INSERT INTO Cars (" . implode(", ", $fields) . ") VALUES (" . implode(", ", $placeholders) . ")";
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->execute($values);
-                }
-            }
-        }
-
-        // 4. Seed default Categories if table has 0 rows
-        try {
-            $catCount = (int)$pdo->query("SELECT COUNT(*) FROM Categories")->fetchColumn();
-            if ($catCount === 0) {
-                $defaultCategories = [
-                    ['name' => 'Hatchback', 'description' => 'Compact, fuel-efficient everyday city cars', 'icon' => 'Car', 'displayOrder' => 1, 'isActive' => 1],
-                    ['name' => 'Sedan', 'description' => 'Comfortable executive travel with ample trunk capacity', 'icon' => 'Car', 'displayOrder' => 2, 'isActive' => 1],
-                    ['name' => 'SUV', 'description' => 'Powerful rugged drives built for Tirumala ghat roads', 'icon' => 'Shield', 'displayOrder' => 3, 'isActive' => 1],
-                    ['name' => 'Luxury', 'description' => 'Premium executive styling, leather seats & sunroof', 'icon' => 'Award', 'displayOrder' => 4, 'isActive' => 1],
-                    ['name' => 'Electric', 'description' => '100% green eco-friendly emission-free mobility', 'icon' => 'Zap', 'displayOrder' => 5, 'isActive' => 1],
-                    ['name' => 'MUV', 'description' => 'Spacious 7-8 seater multi-utility family vehicles', 'icon' => 'Users', 'displayOrder' => 6, 'isActive' => 1],
-                ];
-                foreach ($defaultCategories as $cat) {
-                    $pdo->prepare("INSERT INTO Categories (name, description, icon, displayOrder, isActive) VALUES (?, ?, ?, ?, ?)")
-                        ->execute([$cat['name'], $cat['description'], $cat['icon'], $cat['displayOrder'], $cat['isActive']]);
-                }
-            }
-        } catch (Exception $e) {}
-
         // 5. Seed default Admin if table has 0 rows
         try {
             $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM Admins")->fetchColumn();
@@ -2826,7 +2776,7 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
     if (isset($pdo)) {
         try {
             $cars = $pdo->query("SELECT * FROM Cars WHERE isArchived = 0 AND name NOT IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs') ORDER BY id ASC")->fetchAll();
-            if (!empty($cars)) {
+            if ($cars !== false) {
                 foreach ($cars as &$c) {
                     $c['id'] = (int)$c['id'];
                     $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, [$c['image'] ?? '']);
@@ -2837,7 +2787,7 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
             }
         } catch (Exception $e) {}
     }
-    echo json_encode(["success" => true, "data" => getDefaultCars()]);
+    echo json_encode(["success" => true, "data" => []]);
     exit();
 }
 
@@ -2968,7 +2918,7 @@ if (($route === 'categories' || $route === 'admin/categories') && $method === 'G
     if (isset($pdo)) {
         try {
             $categories = $pdo->query("SELECT * FROM Categories ORDER BY displayOrder ASC, name ASC")->fetchAll();
-            if (!empty($categories)) {
+            if ($categories !== false) {
                 foreach ($categories as &$cat) {
                     $cat['id'] = (int)$cat['id'];
                     $cat['displayOrder'] = (int)($cat['displayOrder'] ?? 0);
@@ -2979,15 +2929,7 @@ if (($route === 'categories' || $route === 'admin/categories') && $method === 'G
             }
         } catch (Exception $e) {}
     }
-    $defaultCats = [
-        ["id" => 1, "name" => "Hatchback", "description" => "Compact, fuel-efficient everyday city cars", "icon" => "Car", "displayOrder" => 1, "isActive" => true],
-        ["id" => 2, "name" => "Sedan", "description" => "Comfortable executive travel with ample trunk capacity", "icon" => "Car", "displayOrder" => 2, "isActive" => true],
-        ["id" => 3, "name" => "SUV", "description" => "Powerful rugged drives built for Tirumala ghat roads", "icon" => "Shield", "displayOrder" => 3, "isActive" => true],
-        ["id" => 4, "name" => "Luxury", "description" => "Premium executive styling, leather seats & sunroof", "icon" => "Award", "displayOrder" => 4, "isActive" => true],
-        ["id" => 5, "name" => "Electric", "description" => "100% green eco-friendly emission-free mobility", "icon" => "Zap", "displayOrder" => 5, "isActive" => true],
-        ["id" => 6, "name" => "MUV", "description" => "Spacious 7-8 seater multi-utility family vehicles", "icon" => "Users", "displayOrder" => 6, "isActive" => true],
-    ];
-    echo json_encode(["success" => true, "data" => $defaultCats]);
+    echo json_encode(["success" => true, "data" => []]);
     exit();
 }
 
