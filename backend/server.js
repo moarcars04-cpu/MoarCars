@@ -1785,6 +1785,25 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 // Sync database and seed tables asynchronously in the background
 (async () => {
   try {
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS Categories (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          name VARCHAR(100) NOT NULL UNIQUE,
+          description TEXT NULL,
+          icon VARCHAR(100) DEFAULT 'Car',
+          image TEXT NULL,
+          displayOrder INT DEFAULT 0,
+          isActive TINYINT DEFAULT 1,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        );
+      `);
+      console.log("Database Setup: Categories table verified via direct query.");
+    } catch (sqlErr) {
+      console.warn("Categories direct SQL warning:", sqlErr.message);
+    }
+
     const models = [Car, Booking, Customer, Driver, Branch, Payment, Coupon, Review, SupportTicket, ActivityLog, Setting, Admin, AdminOtp, Category];
     const queryInterface = sequelize.getQueryInterface();
 
