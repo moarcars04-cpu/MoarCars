@@ -46,6 +46,7 @@ import { RecentlyViewedSection } from "./components/home/RecentlyViewedSection";
 import { Viewer360Modal } from "./components/home/360ViewerModal";
 import { CompareModal } from "./components/home/CompareModal";
 import { QuickBookingModal } from "./components/home/QuickBookingModal";
+import { DEFAULT_DATABASE_CARS } from "./data/defaultCars";
 
 export interface CarFleetItem {
   id?: number | string;
@@ -66,7 +67,11 @@ export interface CarFleetItem {
   status?: string;
   branch?: string;
   location?: string;
+  gpsEnabled?: boolean | number;
+  fastagNumber?: string;
   image?: string;
+  galleryImages?: string[];
+  angle360Images?: string[];
   imagePosition?: string;
   hasSunroof?: boolean;
   hasGPS?: boolean;
@@ -75,6 +80,7 @@ export interface CarFleetItem {
   freeCancellation?: boolean;
   doorstepDelivery?: boolean;
   rating?: number;
+  tripsCount?: number;
 }
 
 interface LandingPageProps {
@@ -86,7 +92,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [fleet, setFleet] = useState<CarFleetItem[]>([]);
+  const [fleet, setFleet] = useState<CarFleetItem[]>(DEFAULT_DATABASE_CARS);
   const [isLoading, setIsLoading] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");

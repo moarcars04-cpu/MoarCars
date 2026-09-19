@@ -20,6 +20,8 @@ import { Setting } from "./models/Setting.js";
 import { Admin } from "./models/Admin.js";
 import { AdminOtp } from "./models/AdminOtp.js";
 import { Category } from "./models/Category.js";
+import { UserOtp } from "./models/UserOtp.js";
+import { Notification } from "./models/Notification.js";
 
 dotenv.config();
 
@@ -1804,7 +1806,7 @@ const server = app.listen(PORT, "0.0.0.0", () => {
       console.warn("Categories direct SQL warning:", sqlErr.message);
     }
 
-    const models = [Car, Booking, Customer, Driver, Branch, Payment, Coupon, Review, SupportTicket, ActivityLog, Setting, Admin, AdminOtp, Category];
+    const models = [Car, Booking, Customer, Driver, Branch, Payment, Coupon, Review, SupportTicket, ActivityLog, Setting, Admin, AdminOtp, Category, UserOtp, Notification];
     const queryInterface = sequelize.getQueryInterface();
 
     for (const model of models) {

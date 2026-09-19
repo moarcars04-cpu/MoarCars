@@ -32,8 +32,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "./context/AuthContext";
-import { MoarLogo } from "@/components/common/MoarLogo";
-import { CarFleetItem } from "@/data/defaultCars";
+import { CarFleetItem, DEFAULT_DATABASE_CARS } from "@/data/defaultCars";
 import { Viewer360Modal } from "@/components/home/360ViewerModal";
 import { QuickBookingModal } from "@/components/home/QuickBookingModal";
 import { getTodayDateStr, getFutureDateStr } from "@/lib/dateUtils";
@@ -45,8 +44,8 @@ interface CarsPageProps {
 export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
-  // Fleet state initialized with live database cars
-  const [fleet, setFleet] = useState<CarFleetItem[]>([]);
+  // Fleet state initialized with default cars for instant zero-lag rendering
+  const [fleet, setFleet] = useState<CarFleetItem[]>(DEFAULT_DATABASE_CARS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Search & Filter State
@@ -56,8 +55,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedTransmissions, setSelectedTransmissions] = useState<string[]>([]);
   const [selectedFuels, setSelectedFuels] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(10000);
-  const [minPrice] = useState<number>(1000);
+  const [maxPrice, setMaxPrice] = useState<number>(25000);
+  const [minPrice, setMinPrice] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>("popular");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
