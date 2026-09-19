@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Rotate3d, ChevronLeft, ChevronRight, Eye, Sparkles } from "lucide-react";
+import { X, Rotate3d, ChevronLeft, ChevronRight, Eye, Sparkles, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Viewer360ModalProps {
@@ -19,9 +19,7 @@ export const Viewer360Modal: React.FC<Viewer360ModalProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
 
-  const displayImages = images.length > 0 ? images : [
-    "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"
-  ];
+  const displayImages = images.filter(Boolean);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % displayImages.length);
@@ -81,32 +79,44 @@ export const Viewer360Modal: React.FC<Viewer360ModalProps> = ({
           onMouseLeave={handleMouseUp}
           className="relative h-72 sm:h-96 rounded-2xl bg-black border border-white/10 overflow-hidden cursor-grab active:cursor-grabbing flex items-center justify-center select-none"
         >
-          <img
-            src={displayImages[currentIndex]}
-            alt={`${carName} angle ${currentIndex + 1}`}
-            className="h-full w-full object-cover pointer-events-none"
-          />
+          {displayImages.length > 0 ? (
+            <>
+              <img
+                src={displayImages[currentIndex]}
+                alt={`${carName} angle ${currentIndex + 1}`}
+                className="h-full w-full object-cover pointer-events-none"
+              />
 
-          <div className="absolute top-4 left-4 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-xs font-bold text-brand-gold border border-white/10 flex items-center gap-1.5">
-            <Rotate3d className="h-3.5 w-3.5" /> 360° Interactive Angle
-          </div>
+              <div className="absolute top-4 left-4 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-xs font-bold text-brand-gold border border-white/10 flex items-center gap-1.5">
+                <Rotate3d className="h-3.5 w-3.5" /> 360° Interactive Angle ({currentIndex + 1}/{displayImages.length})
+              </div>
 
-          {/* Left / Right Nav Arrows */}
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black border border-white/20"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
+              {displayImages.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black border border-white/20"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
 
-          <button
-            type="button"
-            onClick={handleNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black border border-white/20"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black border border-white/20"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-slate-500 py-12">
+              <Car className="h-16 w-16 mb-2 text-slate-600" />
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">360° Gallery Not Configured</p>
+            </div>
+          )}
         </div>
 
         {/* Bottom Actions */}

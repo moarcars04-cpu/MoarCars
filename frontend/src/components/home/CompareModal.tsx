@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Check, Minus, ArrowRight, ShieldCheck, Fuel, Gauge, Users, Zap, Scale } from "lucide-react";
+import { X, Check, Minus, ArrowRight, ShieldCheck, Fuel, Gauge, Users, Zap, Scale, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CompareModalProps {
@@ -71,8 +71,12 @@ export const CompareModal: React.FC<CompareModalProps> = ({
 
                 {/* Car Photo & Title */}
                 <div className="h-36 flex flex-col justify-between">
-                  <div className="h-24 rounded-xl overflow-hidden bg-slate-900 border border-white/10">
-                    <img src={car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"} alt={car.name} className="h-full w-full object-cover" />
+                  <div className="h-24 rounded-xl overflow-hidden bg-slate-900 border border-white/10 flex items-center justify-center">
+                    {car.image ? (
+                      <img src={car.image} alt={car.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Car className="h-10 w-10 text-slate-600" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-bold text-sm text-white truncate">{car.name}</h4>

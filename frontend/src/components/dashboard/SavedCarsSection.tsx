@@ -56,12 +56,16 @@ export const SavedCarsSection: React.FC<SavedCarsSectionProps> = ({
               key={car.id}
               className="rounded-2xl border border-white/10 bg-slate-900/80 overflow-hidden shadow-lg hover:border-brand-gold/40 transition-all flex flex-col justify-between"
             >
-              <div className="relative h-48 bg-slate-950">
-                <img
-                  src={car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"}
-                  alt={car.name}
-                  className="h-full w-full object-cover"
-                />
+              <div className="relative h-48 bg-slate-950 flex items-center justify-center">
+                {car.image ? (
+                  <img
+                    src={car.image}
+                    alt={car.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Car className="h-12 w-12 text-slate-700" />
+                )}
                 <span className="absolute left-3 top-3 rounded-full bg-brand-gold px-2.5 py-0.5 text-[10px] font-bold text-brand-navy uppercase">
                   {car.category || "Hatchback"}
                 </span>

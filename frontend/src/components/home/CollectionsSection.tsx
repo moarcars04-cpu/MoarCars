@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { ArrowRight, ChevronRight, Heart, User, Gauge, Fuel, Star, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronRight, Heart, User, Gauge, Fuel, Star, Sparkles, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CollectionsSectionProps {
@@ -133,12 +133,19 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                   className="group rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col justify-between"
                 >
                   {/* Photo Container */}
-                  <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"}
-                      alt={car.name}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                  <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-900 flex items-center justify-center">
+                    {car.image ? (
+                      <img
+                        src={car.image}
+                        alt={car.name}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900 text-slate-500 py-6">
+                        <Car className="h-12 w-12 mb-1 text-slate-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Photo Pending</span>
+                      </div>
+                    )}
 
                     {/* Top-Left Tag Badge */}
                     <div className="absolute top-3 left-3">

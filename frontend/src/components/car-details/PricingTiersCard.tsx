@@ -8,21 +8,26 @@ interface PricingTiersCardProps {
 export const PricingTiersCard: React.FC<PricingTiersCardProps> = ({ car }) => {
   const [selectedTier, setSelectedTier] = useState<"daily" | "hourly" | "weekly" | "monthly">("daily");
 
-  const dailyPrice = car.pricePerDay || parseInt(String(car.price || "2499").replace(/[^0-9]/g, ""), 10) || 2499;
-  const hourlyPrice = Math.round(dailyPrice / 16);
-  const weeklyPrice = Math.round(dailyPrice * 7 * 0.85); // 15% discount
-  const monthlyPrice = Math.round(dailyPrice * 30 * 0.65); // 35% discount
-  const deposit = dailyPrice > 3000 ? 5000 : 3000;
+  const dailyPrice = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0;
+  const hourlyPrice = Number(car.pricePerHour) || (dailyPrice > 0 ? Math.round(dailyPrice / 10) : 0);
+  const weeklyPrice = Number(car.pricePerWeek) || (dailyPrice > 0 ? dailyPrice * 7 : 0);
+  const monthlyPrice = Number(car.pricePerMonth) || (dailyPrice > 0 ? dailyPrice * 30 : 0);
+  const deposit = Number(car.securityDeposit) || 0;
+  const lateFee = Number(car.lateFeePerHour) || 0;
+
+  if (dailyPrice === 0) {
+    return null;
+  }
 
   const tiers = [
     {
       id: "hourly",
       title: "Hourly Rental",
-      duration: "Min 4 Hours",
+      duration: "Flexible Hours",
       price: `₹${hourlyPrice.toLocaleString("en-IN")}`,
       unit: "per hour",
-      badge: "Quick Trips",
-      savings: "Flexible",
+      badge: "Hourly",
+      savings: "Short Trips",
     },
     {
       id: "daily",
@@ -30,26 +35,26 @@ export const PricingTiersCard: React.FC<PricingTiersCardProps> = ({ car }) => {
       duration: "24 Hours (Standard)",
       price: `₹${dailyPrice.toLocaleString("en-IN")}`,
       unit: "per day",
-      badge: "Most Popular",
-      savings: "Unlimited KM option",
+      badge: "Standard",
+      savings: "24-Hour Rental",
     },
     {
       id: "weekly",
       title: "Weekly Pass",
-      duration: "7 Days Continuous",
+      duration: "7 Days",
       price: `₹${weeklyPrice.toLocaleString("en-IN")}`,
       unit: "per week",
-      badge: "Save 15%",
-      savings: `Save ₹${Math.round(dailyPrice * 7 * 0.15).toLocaleString("en-IN")}`,
+      badge: "Weekly",
+      savings: "7 Days Fleet",
     },
     {
       id: "monthly",
       title: "Monthly Flexi",
-      duration: "30 Days Subscription",
+      duration: "30 Days",
       price: `₹${monthlyPrice.toLocaleString("en-IN")}`,
       unit: "per month",
-      badge: "Save 35%",
-      savings: `Save ₹${Math.round(dailyPrice * 30 * 0.35).toLocaleString("en-IN")}`,
+      badge: "Monthly",
+      savings: "30 Days Fleet",
     },
   ];
 
@@ -106,34 +111,24 @@ export const PricingTiersCard: React.FC<PricingTiersCardProps> = ({ car }) => {
       </div>
 
       {/* Pricing Transparency Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5 rounded-2xl bg-card border border-border">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-2xl bg-card border border-border">
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-xs font-bold text-brand-navy">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
             <span>Refundable Security Deposit</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            ₹{deposit.toLocaleString("en-IN")} • Credited back via UPI in 2 hours upon return.
+            {deposit > 0 ? `₹${deposit.toLocaleString("en-IN")} • Credited back via UPI upon return.` : "₹0 Security Deposit"}
           </p>
         </div>
 
         <div className="space-y-1 sm:border-l sm:border-border sm:pl-4">
           <div className="flex items-center gap-1.5 text-xs font-bold text-brand-navy">
             <Clock className="h-4 w-4 text-brand-gold" />
-            <span>Grace Period & Late Fee</span>
+            <span>Late Return Policy</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            1-hour free grace buffer. Nominal ₹200/hr for additional delay.
-          </p>
-        </div>
-
-        <div className="space-y-1 sm:border-l sm:border-border sm:pl-4">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-brand-navy">
-            <Zap className="h-4 w-4 text-brand-teal" />
-            <span>Weekend Dynamic Pricing</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            +10% peak weekend rate on Sat & Sun for high demand temple rush.
+            {lateFee > 0 ? `₹${lateFee}/hr for delay beyond scheduled dropoff.` : "No extra hourly late penalty configured."}
           </p>
         </div>
       </div>

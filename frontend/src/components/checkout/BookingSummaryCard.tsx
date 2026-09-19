@@ -76,12 +76,16 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
     <div className="rounded-3xl border border-border bg-card p-6 shadow-xl space-y-6">
       {/* Card Header: Vehicle Snapshot */}
       <div className="flex gap-4 items-start border-b border-border pb-5">
-        <div className="relative h-20 w-28 rounded-2xl overflow-hidden bg-brand-navy shrink-0 border border-border">
-          <img
-            src={car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80"}
-            alt={car.name}
-            className="h-full w-full object-cover"
-          />
+        <div className="relative h-20 w-28 rounded-2xl overflow-hidden bg-slate-900 shrink-0 border border-border flex items-center justify-center">
+          {car.image ? (
+            <img
+              src={car.image}
+              alt={car.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <Car className="h-8 w-8 text-slate-600" />
+          )}
         </div>
         <div className="flex-1 space-y-1">
           <div className="flex items-center gap-1.5">

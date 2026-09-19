@@ -119,16 +119,19 @@ export const TripCard: React.FC<TripCardProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
         {/* Car Photo & Specs */}
         <div className="md:col-span-4 flex items-center gap-3.5">
-          <img
-            src={
-              booking.car?.image ||
-              "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80"
-            }
-            alt={booking.carName}
-            className="h-20 w-28 rounded-2xl object-cover border border-border bg-brand-navy shrink-0"
-          />
+          {booking.car?.image ? (
+            <img
+              src={booking.car.image}
+              alt={booking.carName}
+              className="h-20 w-28 rounded-2xl object-cover border border-border bg-slate-900 shrink-0"
+            />
+          ) : (
+            <div className="h-20 w-28 rounded-2xl border border-border bg-slate-900 shrink-0 flex items-center justify-center">
+              <Car className="h-8 w-8 text-slate-600" />
+            </div>
+          )}
           <div>
-            <h4 className="text-base font-black text-brand-navy">{booking.carName || "Toyota Innova Crysta"}</h4>
+            <h4 className="text-base font-black text-brand-navy">{booking.carName || "Fleet Vehicle"}</h4>
             <p className="text-xs text-muted-foreground">{booking.bookingType || "Self Drive (Unlimited KM)"}</p>
             <span className="text-[10px] text-emerald-600 font-bold block mt-1">
               ✓ Verified & Ghat Ready

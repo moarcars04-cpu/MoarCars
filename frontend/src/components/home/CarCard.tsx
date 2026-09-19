@@ -12,6 +12,7 @@ import {
   Plus,
   Star,
   Zap,
+  Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -47,13 +48,20 @@ export const CarCard: React.FC<CarCardProps> = ({
       } justify-between`}
     >
       {/* Photo Container */}
-      <div className={`relative ${isList ? "w-full md:w-80 h-56 md:h-auto" : "h-60"} overflow-hidden bg-brand-navy shrink-0`}>
-        <img
-          src={car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"}
-          alt={car.name}
-          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-70" />
+      <div className={`relative ${isList ? "w-full md:w-80 h-56 md:h-auto" : "h-60"} overflow-hidden bg-[#070e1c] shrink-0 flex items-center justify-center`}>
+        {car.image ? (
+          <img
+            src={car.image}
+            alt={car.name}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900/90 text-slate-500 py-8">
+            <Car className="h-14 w-14 mb-2 text-slate-600" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Photo Pending</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-70 pointer-events-none" />
 
         {/* Category Tag */}
         <span className="absolute left-4 top-4 rounded-full bg-brand-gold px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand-navy shadow-md">

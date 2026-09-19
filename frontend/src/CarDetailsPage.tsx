@@ -342,8 +342,8 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                       ★
                     </div>
                     <div>
-                      <span className="text-sm font-black text-brand-navy">{currentCar.rating || "4.9"}</span>
-                      <span className="text-[10px] text-muted-foreground block">140+ Trips</span>
+                      <span className="text-sm font-black text-brand-navy">{currentCar.rating ? Number(currentCar.rating).toFixed(1) : "5.0"}</span>
+                      <span className="text-[10px] text-muted-foreground block">{currentCar.totalTrips ? `${currentCar.totalTrips} Trips` : "New Fleet Addition"}</span>
                     </div>
                   </div>
                   <div className="h-8 w-px bg-border" />

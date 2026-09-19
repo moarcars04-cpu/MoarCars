@@ -837,12 +837,13 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {selected360Car && (
         <Viewer360Modal
           carName={selected360Car.name}
-          images={[
-            selected360Car.image || "https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&q=80",
-            "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?auto=format&fit=crop&w=800&q=80",
-          ]}
+          images={
+            [
+              selected360Car.image,
+              ...(Array.isArray(selected360Car.galleryImages) ? selected360Car.galleryImages : []),
+              ...(Array.isArray(selected360Car.angle360Images) ? selected360Car.angle360Images : []),
+            ].filter((img): img is string => typeof img === "string" && img.trim().length > 0)
+          }
           onClose={() => setSelected360Car(null)}
           onBookNow={() => {
             const c = selected360Car;

@@ -14,6 +14,7 @@ import {
   Luggage,
   X,
   Layers,
+  Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -49,15 +50,11 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
       list = [car.image.trim()];
     }
 
-    if (list.length === 0) {
-      list = ["https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"];
-    }
-
     return list;
   }, [car.galleryImages, car.image]);
 
-  const mainImage = currentPhotoList[0];
-  const rotationImages = currentPhotoList.length > 1 ? currentPhotoList : [mainImage];
+  const mainImage = currentPhotoList[0] || "";
+  const rotationImages = currentPhotoList.length > 0 ? currentPhotoList : [];
 
   // 360 Rotation Mouse / Touch Drag Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -126,11 +123,18 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
         {/* 1. Standard HD Gallery View */}
         {activeTab !== "360" && activeTab !== "video" && (
           <>
-            <img
-              src={currentPhotoList[activeImageIndex] || mainImage}
-              alt={`${car.name} display view`}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
+            {currentPhotoList.length > 0 ? (
+              <img
+                src={currentPhotoList[activeImageIndex] || mainImage}
+                alt={`${car.name} display view`}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <div className="h-full w-full flex flex-col items-center justify-center bg-slate-900 text-slate-500 py-16">
+                <Car className="h-20 w-20 mb-3 text-slate-600" />
+                <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Photo Pending</span>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
 
             {/* Left / Right Nav Arrows */}
