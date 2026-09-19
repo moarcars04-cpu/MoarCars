@@ -186,10 +186,14 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                         <span className="text-[11px] font-bold uppercase tracking-wider text-[#c88d18]">
                           {car.brand || "Luxury"}
                         </span>
-                        <div className="flex items-center gap-1 text-xs font-black text-slate-800">
-                          <Star className="h-3.5 w-3.5 fill-[#c88d18] text-[#c88d18]" />
-                          <span>{car.rating || "4.9"}</span>
-                        </div>
+                        {car.rating && Number(car.rating) > 0 ? (
+                          <div className="flex items-center gap-1 text-xs font-black text-slate-800">
+                            <Star className="h-3.5 w-3.5 fill-[#c88d18] text-[#c88d18]" />
+                            <span>{Number(car.rating).toFixed(1)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-400">New Fleet</span>
+                        )}
                       </div>
 
                       <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 leading-tight group-hover:text-[#c88d18] transition-colors">

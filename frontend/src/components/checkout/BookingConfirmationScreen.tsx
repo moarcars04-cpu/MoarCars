@@ -155,13 +155,25 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
               </div>
 
               <div className="flex justify-between text-muted-foreground">
-                <span>Total Paid Amount:</span>
-                <span className="font-bold text-brand-navy">₹{bookingData.grandTotal?.toLocaleString("en-IN")}</span>
+                <span>Total Booking Amount:</span>
+                <span className="font-bold text-brand-navy">₹{Number(bookingData.grandTotal || bookingData.amount || 0).toLocaleString("en-IN")}</span>
               </div>
 
-              <div className="flex justify-between text-emerald-600 font-bold bg-emerald-500/10 p-2 rounded-xl">
-                <span>Refundable Deposit:</span>
-                <span>₹{bookingData.securityDeposit?.toLocaleString("en-IN")} (2-Hr Return)</span>
+              <div className="flex justify-between text-emerald-700 font-bold bg-emerald-500/10 p-2 rounded-xl">
+                <span>Advance Paid Online:</span>
+                <span>₹{Number(bookingData.paidAmount !== undefined ? bookingData.paidAmount : (bookingData.grandTotal || bookingData.amount || 0)).toLocaleString("en-IN")}</span>
+              </div>
+
+              {Number(bookingData.balanceDue || 0) > 0 && (
+                <div className="flex justify-between text-amber-800 font-bold bg-amber-500/15 p-2 rounded-xl border border-amber-500/30">
+                  <span>Balance Due at Car Pickup:</span>
+                  <span>₹{Number(bookingData.balanceDue).toLocaleString("en-IN")}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-brand-teal font-semibold bg-brand-teal/5 p-2 rounded-xl border border-brand-teal/20">
+                <span>Refundable Security Deposit:</span>
+                <span>₹{Number(bookingData.securityDeposit || 0).toLocaleString("en-IN")} (2-Hr Return)</span>
               </div>
             </div>
 
@@ -277,48 +289,75 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
                 </thead>
                 <tbody className="divide-y text-slate-600">
                   <tr>
-                    <td className="p-3">Self-Drive Car Rental Service ({bookingData.car?.name})</td>
+                    <td className="p-3">Self-Drive Car Rental Service ({bookingData.car?.name || bookingData.carName})</td>
                     <td className="p-3 text-center font-mono">996601</td>
                     <td className="p-3 text-right font-bold text-slate-900">
-                      ₹{bookingData.baseFare?.toLocaleString("en-IN") || "2,499"}
+                      ₹{Number(bookingData.baseFare || 0).toLocaleString("en-IN")}
                     </td>
                   </tr>
-                  {bookingData.deliveryFee > 0 && (
+                  {Number(bookingData.deliveryFee || 0) > 0 && (
                     <tr>
                       <td className="p-3">Express Doorstep Delivery Service</td>
                       <td className="p-3 text-center font-mono">996601</td>
                       <td className="p-3 text-right font-bold text-slate-900">₹{bookingData.deliveryFee}</td>
                     </tr>
                   )}
-                  {bookingData.discountAmount > 0 && (
+                  {Number(bookingData.driverFee || 0) > 0 && (
+                    <tr>
+                      <td className="p-3">VIP Temple Chauffeur Driver Service</td>
+                      <td className="p-3 text-center font-mono">996601</td>
+                      <td className="p-3 text-right font-bold text-slate-900">₹{Number(bookingData.driverFee).toLocaleString("en-IN")}</td>
+                    </tr>
+                  )}
+                  {Number(bookingData.discountAmount || 0) > 0 && (
                     <tr className="text-emerald-700 font-semibold bg-emerald-50">
                       <td className="p-3">Promo & Referral Discount Applied</td>
                       <td className="p-3 text-center">-</td>
-                      <td className="p-3 text-right">-₹{bookingData.discountAmount?.toLocaleString("en-IN")}</td>
+                      <td className="p-3 text-right">-₹{Number(bookingData.discountAmount).toLocaleString("en-IN")}</td>
                     </tr>
                   )}
                   <tr>
-                    <td className="p-3">CGST (9%) + SGST (9%)</td>
-                    <td className="p-3 text-center font-mono">18%</td>
+                    <td className="p-3">GST Tax ({bookingData.gstRate || 18}%)</td>
+                    <td className="p-3 text-center font-mono">{bookingData.gstRate || 18}%</td>
                     <td className="p-3 text-right font-bold text-slate-900">
-                      ₹{bookingData.gstAmount?.toLocaleString("en-IN")}
+                      ₹{Number(bookingData.gstAmount || 0).toLocaleString("en-IN")}
                     </td>
                   </tr>
                   <tr className="bg-teal-50 font-bold text-teal-900">
                     <td className="p-3">Refundable Security Deposit (Exempt from GST)</td>
                     <td className="p-3 text-center">-</td>
-                    <td className="p-3 text-right">₹{bookingData.securityDeposit?.toLocaleString("en-IN")}</td>
+                    <td className="p-3 text-right">₹{Number(bookingData.securityDeposit || 0).toLocaleString("en-IN")}</td>
                   </tr>
                 </tbody>
                 <tfoot className="border-t bg-slate-900 text-white font-bold">
                   <tr>
                     <td colSpan={2} className="p-3 text-right uppercase">
-                      Total Invoice Amount (INR):
+                      Total Booking Value (INR):
                     </td>
                     <td className="p-3 text-right text-base text-amber-400">
-                      ₹{bookingData.grandTotal?.toLocaleString("en-IN")}
+                      ₹{Number(bookingData.grandTotal || bookingData.amount || 0).toLocaleString("en-IN")}
                     </td>
                   </tr>
+                  {Number(bookingData.balanceDue || 0) > 0 && (
+                    <>
+                      <tr className="bg-slate-800 text-emerald-400 text-xs">
+                        <td colSpan={2} className="p-2.5 text-right font-semibold">
+                          Advance Paid Online:
+                        </td>
+                        <td className="p-2.5 text-right font-black">
+                          ₹{Number(bookingData.paidAmount !== undefined ? bookingData.paidAmount : (bookingData.grandTotal || 0)).toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                      <tr className="bg-slate-800/80 text-amber-300 text-xs">
+                        <td colSpan={2} className="p-2.5 text-right font-semibold">
+                          Balance Payable at Vehicle Handover:
+                        </td>
+                        <td className="p-2.5 text-right font-black">
+                          ₹{Number(bookingData.balanceDue).toLocaleString("en-IN")}
+                        </td>
+                      </tr>
+                    </>
+                  )}
                 </tfoot>
               </table>
             </div>

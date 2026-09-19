@@ -904,6 +904,7 @@ function ensureTablesExist($pdo, $force = false) {
                 'pricePerWeek' => "INT DEFAULT 9999",
                 'pricePerMonth' => "INT DEFAULT 34999",
                 'securityDeposit' => "INT DEFAULT 3000",
+                'advancePaymentPercent' => "INT DEFAULT NULL",
                 'lateFeePerHour' => "INT DEFAULT 150",
                 'tag' => "VARCHAR(100) DEFAULT 'Everyday'",
                 'category' => "VARCHAR(100) DEFAULT 'Hatchback'",
@@ -970,8 +971,12 @@ function ensureTablesExist($pdo, $force = false) {
                 'walletDeduction' => "INT DEFAULT 0",
                 'rewardDeduction' => "INT DEFAULT 0",
                 'referralDiscount' => "INT DEFAULT 0",
+                'gstRate' => "INT DEFAULT 18",
                 'gstAmount' => "INT DEFAULT 0",
                 'grandTotal' => "INT DEFAULT 0",
+                'advancePaymentPercent' => "INT DEFAULT 30",
+                'paidAmount' => "INT DEFAULT 0",
+                'balanceDue' => "INT DEFAULT 0",
                 'drivingLicense' => "VARCHAR(100) DEFAULT NULL",
                 'emergencyContact' => "VARCHAR(100) DEFAULT NULL",
                 'signatureData' => "LONGTEXT DEFAULT NULL",
@@ -1136,6 +1141,7 @@ function ensureTablesExist($pdo, $force = false) {
                 'description' => "TEXT DEFAULT NULL",
             ],
             'Reviews' => [
+                'carId' => "INT DEFAULT NULL",
                 'customerName' => "VARCHAR(255) NOT NULL DEFAULT 'Customer'",
                 'customerPhone' => "VARCHAR(50) DEFAULT NULL",
                 'customerEmail' => "VARCHAR(255) DEFAULT NULL",
@@ -1240,6 +1246,9 @@ function ensureTablesExist($pdo, $force = false) {
                     'smtpHost' => 'smtp.gmail.com',
                     'smtpPort' => '465',
                     'smtpUser' => 'moarcars04@gmail.com',
+                    'gstRate' => '18',
+                    'advancePaymentPercent' => '30',
+                    'defaultSecurityDeposit' => '3000',
                     'currency' => 'INR (₹)',
                     'timezone' => 'Asia/Kolkata (IST +5:30)',
                     'language' => 'English / Telugu',
@@ -2775,10 +2784,31 @@ if ($route === 'user/delete-account' && $method === 'POST') {
 if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
     if (isset($pdo)) {
         try {
-            $cars = $pdo->query("SELECT * FROM Cars WHERE isArchived = 0 AND name NOT IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs') ORDER BY id ASC")->fetchAll();
+            $sql = "SELECT Cars.*, 
+                           COALESCE(r.avgRating, 0) as rating, 
+                           COALESCE(r.reviewCount, 0) as reviewCount,
+                           COALESCE(r.totalTrips, 0) as totalTrips
+                    FROM Cars 
+                    LEFT JOIN (
+                        SELECT 
+                            carId,
+                            carName,
+                            ROUND(AVG(rating), 1) as avgRating, 
+                            COUNT(*) as reviewCount,
+                            COUNT(DISTINCT bookingId) as totalTrips
+                        FROM Reviews 
+                        WHERE status = 'Approved' OR status IS NULL OR status = ''
+                        GROUP BY carId, carName
+                    ) r ON (Cars.id = r.carId OR (r.carName IS NOT NULL AND r.carName != '' AND Cars.name = r.carName))
+                    WHERE Cars.isArchived = 0 AND Cars.name NOT IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs') 
+                    ORDER BY Cars.id ASC";
+            $cars = $pdo->query($sql)->fetchAll();
             if ($cars !== false) {
                 foreach ($cars as &$c) {
                     $c['id'] = (int)$c['id'];
+                    $c['rating'] = (float)$c['rating'];
+                    $c['reviewCount'] = (int)$c['reviewCount'];
+                    $c['totalTrips'] = (int)$c['totalTrips'];
                     $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, !empty($c['image']) ? [$c['image']] : []);
                     $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, !empty($c['image']) ? [$c['image']] : []);
                 }
@@ -2796,11 +2826,30 @@ if (preg_match('#^(cars|admin/cars)/([0-9]+)$#', $route, $matches) && $method ==
     $carId = (int)$matches[2];
     if (isset($pdo)) {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM Cars WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT Cars.*, 
+                                          COALESCE(r.avgRating, 0) as rating, 
+                                          COALESCE(r.reviewCount, 0) as reviewCount,
+                                          COALESCE(r.totalTrips, 0) as totalTrips
+                                   FROM Cars 
+                                   LEFT JOIN (
+                                       SELECT 
+                                           carId,
+                                           carName,
+                                           ROUND(AVG(rating), 1) as avgRating, 
+                                           COUNT(*) as reviewCount,
+                                           COUNT(DISTINCT bookingId) as totalTrips
+                                       FROM Reviews 
+                                       WHERE status = 'Approved' OR status IS NULL OR status = ''
+                                       GROUP BY carId, carName
+                                   ) r ON (Cars.id = r.carId OR (r.carName IS NOT NULL AND r.carName != '' AND Cars.name = r.carName))
+                                   WHERE Cars.id = ?");
             $stmt->execute([$carId]);
             $car = $stmt->fetch();
             if ($car) {
                 $car['id'] = (int)$car['id'];
+                $car['rating'] = (float)$car['rating'];
+                $car['reviewCount'] = (int)$car['reviewCount'];
+                $car['totalTrips'] = (int)$car['totalTrips'];
                 $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, !empty($car['image']) ? [$car['image']] : []);
                 $car['angle360Images'] = safeJsonDecode($car['angle360Images'] ?? null, !empty($car['image']) ? [$car['image']] : []);
                 echo json_encode(["success" => true, "data" => $car]);
@@ -3760,12 +3809,40 @@ if (preg_match('#^admin/coupons/([0-9]+)$#', $route, $matches) && $method === 'D
 if (($route === 'reviews' || $route === 'admin/reviews') && $method === 'GET') {
     if (isset($pdo)) {
         try {
-            $reviews = $pdo->query("SELECT * FROM Reviews ORDER BY id DESC")->fetchAll();
-            foreach ($reviews as &$r) {
-                $r['id'] = (int)$r['id'];
+            $carId = isset($_GET['carId']) ? (int)$_GET['carId'] : 0;
+            $carName = isset($_GET['carName']) ? trim($_GET['carName']) : '';
+            
+            if ($carId > 0 && !empty($carName)) {
+                $stmt = $pdo->prepare("SELECT * FROM Reviews WHERE carId = ? OR carName = ? ORDER BY id DESC");
+                $stmt->execute([$carId, $carName]);
+                $reviews = $stmt->fetchAll();
+            } else if ($carId > 0) {
+                $stmt = $pdo->prepare("SELECT * FROM Reviews WHERE carId = ? ORDER BY id DESC");
+                $stmt->execute([$carId]);
+                $reviews = $stmt->fetchAll();
+            } else if (!empty($carName)) {
+                $stmt = $pdo->prepare("SELECT * FROM Reviews WHERE carName = ? ORDER BY id DESC");
+                $stmt->execute([$carName]);
+                $reviews = $stmt->fetchAll();
+            } else {
+                $reviews = $pdo->query("SELECT * FROM Reviews ORDER BY id DESC")->fetchAll();
             }
-            echo json_encode(["success" => true, "data" => $reviews]);
-            exit();
+            if ($reviews !== false) {
+                foreach ($reviews as &$r) {
+                    $r['id'] = (int)$r['id'];
+                    $r['rating'] = (int)($r['rating'] ?? 5);
+                    $r['cleanlinessRating'] = (int)($r['cleanlinessRating'] ?? 5);
+                    $r['performanceRating'] = (int)($r['performanceRating'] ?? 5);
+                    $r['handoverRating'] = (int)($r['handoverRating'] ?? 5);
+                    $r['valueRating'] = (int)($r['valueRating'] ?? 5);
+                    $r['likesCount'] = (int)($r['likesCount'] ?? 0);
+                    $r['isReported'] = (int)($r['isReported'] ?? 0);
+                    $r['isFeatured'] = (int)($r['isFeatured'] ?? 0);
+                    $r['photoUrls'] = safeJsonDecode($r['photoUrls'] ?? null, []);
+                }
+                echo json_encode(["success" => true, "data" => $reviews]);
+                exit();
+            }
         } catch (Exception $e) {}
     }
     echo json_encode(["success" => true, "data" => []]);
@@ -3776,6 +3853,32 @@ if (($route === 'reviews' || $route === 'admin/reviews') && $method === 'POST') 
     if (isset($pdo)) {
         try {
             $validCols = getTableColumns($pdo, 'Reviews');
+
+            // Ensure carId is populated if carName is given and carId is missing
+            if (empty($input['carId']) && !empty($input['carName'])) {
+                $cStmt = $pdo->prepare("SELECT id FROM Cars WHERE name = ? LIMIT 1");
+                $cStmt->execute([$input['carName']]);
+                $foundCar = $cStmt->fetch();
+                if ($foundCar) {
+                    $input['carId'] = (int)$foundCar['id'];
+                }
+            }
+            // Ensure carName is populated if carId is given and carName is missing
+            if (!empty($input['carId']) && empty($input['carName'])) {
+                $cStmt = $pdo->prepare("SELECT name FROM Cars WHERE id = ? LIMIT 1");
+                $cStmt->execute([(int)$input['carId']]);
+                $foundCar = $cStmt->fetch();
+                if ($foundCar) {
+                    $input['carName'] = $foundCar['name'];
+                }
+            }
+            if (empty($input['date'])) {
+                $input['date'] = date('F Y');
+            }
+            if (!isset($input['status'])) {
+                $input['status'] = 'Approved';
+            }
+
             $fields = [];
             $placeholders = [];
             $values = [];

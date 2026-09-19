@@ -110,12 +110,6 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
             );
           })}
         </div>
-
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20">
-            <ShieldCheck className="h-4 w-4" /> 100% Ghat-Road Certified
-          </span>
-        </div>
       </div>
 
       {/* Main Media Showcase Window */}

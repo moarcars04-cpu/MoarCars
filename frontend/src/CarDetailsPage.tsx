@@ -50,6 +50,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
   const [selected360Car, setSelected360Car] = useState<any | null>(null);
   const [compareList, setCompareList] = useState<any[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
+  const [carReviews, setCarReviews] = useState<any[]>([]);
 
   // Fetch live fleet data
   useEffect(() => {
@@ -83,6 +84,41 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
     );
     if (found) setCurrentCar(found);
   }, [carIdOrName, fleet]);
+
+  // Fetch verified reviews specifically for this vehicle from database
+  useEffect(() => {
+    if (!currentCar?.id && !currentCar?.name) return;
+    const params = new URLSearchParams();
+    if (currentCar.id) params.set("carId", String(currentCar.id));
+    if (currentCar.name) params.set("carName", currentCar.name);
+
+    fetch(`/api/reviews?${params.toString()}`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setCarReviews(res.data);
+        } else {
+          setCarReviews([]);
+        }
+      })
+      .catch(() => setCarReviews([]));
+  }, [currentCar?.id, currentCar?.name]);
+
+  // Dynamic rating derived strictly from database reviews
+  const dynamicRating = useMemo(() => {
+    if (carReviews.length > 0) {
+      const sum = carReviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0);
+      return (sum / carReviews.length).toFixed(1);
+    }
+    if (currentCar?.rating && Number(currentCar.rating) > 0 && currentCar?.reviewCount > 0) {
+      return Number(currentCar.rating).toFixed(1);
+    }
+    return null;
+  }, [carReviews, currentCar]);
+
+  const dynamicReviewCount = useMemo(() => {
+    return carReviews.length > 0 ? carReviews.length : (Number(currentCar?.reviewCount) || 0);
+  }, [carReviews, currentCar]);
 
   // Wishlist state
   const wishlistIds = useMemo(() => {
@@ -336,22 +372,27 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-8 w-8 rounded-xl bg-brand-gold text-brand-navy flex items-center justify-center font-black text-sm">
+                {dynamicRating && dynamicReviewCount > 0 ? (
+                  <div className="flex items-center gap-3 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
+                    <div className="h-8 w-8 rounded-xl bg-brand-gold text-brand-navy flex items-center justify-center font-black text-sm shadow">
                       ★
                     </div>
                     <div>
-                      <span className="text-sm font-black text-brand-navy">{currentCar.rating ? Number(currentCar.rating).toFixed(1) : "5.0"}</span>
-                      <span className="text-[10px] text-muted-foreground block">{currentCar.totalTrips ? `${currentCar.totalTrips} Trips` : "New Fleet Addition"}</span>
+                      <span className="text-sm font-black text-brand-navy">{dynamicRating} / 5.0</span>
+                      <span className="text-[10px] text-muted-foreground block">
+                        {dynamicReviewCount} Verified {dynamicReviewCount === 1 ? "Review" : "Reviews"}
+                      </span>
                     </div>
                   </div>
-                  <div className="h-8 w-px bg-border" />
-                  <div className="text-right">
-                    <span className="text-[10px] text-emerald-600 font-black uppercase tracking-wider block">Ghat Ready</span>
-                    <span className="text-xs font-bold text-brand-navy">TTD Certified</span>
+                ) : (
+                  <div className="flex items-center gap-2.5 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
+                    <Sparkles className="h-4 w-4 text-brand-gold" />
+                    <div>
+                      <span className="text-xs font-black text-brand-navy">New Fleet Addition</span>
+                      <span className="text-[10px] text-muted-foreground block">No reviews yet</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -359,7 +400,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
           {/* Main 2-Column Details & Booking Grid */}
           <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              {/* Left Column (8 cols): HD Gallery, Specs, Pricing Tiers, Ghat Advice */}
+              {/* Left Column (8 cols): HD Gallery, Specs, Pricing Tiers, Ghat Advice, Real Reviews */}
               <div className="lg:col-span-8 space-y-12">
                 {/* 1. HD Gallery */}
                 <CarGallerySection car={currentCar} />
@@ -381,6 +422,96 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     This vehicle is equipped with Hill-Hold Assist and automated braking sensors. Please observe TTD's minimum travel duration rule (28 mins Up-Ghat, 40 mins Down-Ghat). All required toll passes & FASTag are pre-calibrated.
                   </p>
+                </div>
+
+                {/* 5. Verified Customer Reviews for this specific car */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border space-y-6 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-brand-teal flex items-center gap-1.5">
+                        <Star className="h-4 w-4 text-brand-gold fill-brand-gold" /> Customer Experiences
+                      </span>
+                      <h4 className="text-xl font-black text-brand-navy mt-1">
+                        Verified Reviews for {currentCar.name}
+                      </h4>
+                    </div>
+                    {dynamicRating && dynamicReviewCount > 0 && (
+                      <div className="flex items-center gap-2 bg-brand-mist/50 px-4 py-2 rounded-2xl border border-border">
+                        <span className="text-2xl font-black text-brand-navy">{dynamicRating}</span>
+                        <div className="text-xs">
+                          <div className="flex text-amber-400">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star
+                                key={s}
+                                className={`h-3.5 w-3.5 ${
+                                  s <= Math.round(Number(dynamicRating))
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "text-slate-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-semibold">
+                            {dynamicReviewCount} {dynamicReviewCount === 1 ? "trip review" : "trip reviews"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {carReviews.length > 0 ? (
+                    <div className="space-y-4">
+                      {carReviews.map((rev) => (
+                        <div
+                          key={rev.id}
+                          className="p-4 rounded-2xl bg-brand-mist/30 border border-border space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-8 w-8 rounded-full bg-brand-navy text-brand-gold flex items-center justify-center font-bold text-xs">
+                                {(rev.customerName || "V").charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="text-xs font-bold text-brand-navy block">
+                                  {rev.customerName || "Verified Traveler"}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {rev.date || "Verified Trip"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`h-3.5 w-3.5 ${
+                                    star <= (Number(rev.rating) || 5)
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "text-slate-300"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          {rev.comment && (
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              "{rev.comment}"
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 rounded-2xl bg-brand-mist/20 border border-dashed border-border text-center space-y-2">
+                      <p className="text-xs font-bold text-brand-navy">
+                        No customer reviews yet for this vehicle
+                      </p>
+                      <p className="text-[11px] text-muted-foreground max-w-md mx-auto">
+                        Ratings and feedback are collected exclusively from verified customers after their vehicle pickup and return completion.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -438,12 +569,15 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
       {selected360Car && (
         <Viewer360Modal
           carName={selected360Car.name}
-          images={[
-            selected360Car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1200&q=80",
-            "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80",
-            "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80",
-            "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
-          ]}
+          images={
+            selected360Car.angle360Images && selected360Car.angle360Images.length > 0
+              ? selected360Car.angle360Images
+              : selected360Car.galleryImages && selected360Car.galleryImages.length > 0
+              ? selected360Car.galleryImages
+              : selected360Car.image
+              ? [selected360Car.image]
+              : []
+          }
           onClose={() => setSelected360Car(null)}
           onBookNow={() => {
             const c = selected360Car;

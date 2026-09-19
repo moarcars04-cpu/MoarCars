@@ -128,11 +128,37 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
   }, [startDate, startTime, endDate, endTime]);
 
+  // Live System Financial Settings
+  const [systemSettings, setSystemSettings] = useState<{
+    gstRate?: number;
+    advancePaymentPercent?: number;
+    defaultSecurityDeposit?: number;
+  }>({
+    gstRate: 18,
+    advancePaymentPercent: 30,
+    defaultSecurityDeposit: 3000,
+  });
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setSystemSettings({
+            gstRate: res.data.gstRate !== undefined ? Number(res.data.gstRate) : 18,
+            advancePaymentPercent: res.data.advancePaymentPercent !== undefined ? Number(res.data.advancePaymentPercent) : 30,
+            defaultSecurityDeposit: res.data.defaultSecurityDeposit !== undefined ? Number(res.data.defaultSecurityDeposit) : 3000,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Calculations
   const dailyRate =
-    car?.pricePerDay ||
-    parseInt(String(car?.price || "2499").replace(/[^0-9]/g, ""), 10) ||
-    2499;
+    Number(car?.pricePerDay) ||
+    parseInt(String(car?.price || "0").replace(/[^0-9]/g, ""), 10) ||
+    0;
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
   const driverFee = withDriver ? 699 * rentalDays : 0;
@@ -151,14 +177,33 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const totalDiscounts = walletDeduction + rewardDeduction + couponDiscount + referralDiscount;
   const subtotalAfterDiscounts = Math.max(0, subtotalBeforeDiscounts - totalDiscounts);
 
-  // GST 18%
-  const gstAmount = Math.round(subtotalAfterDiscounts * 0.18);
+  // Dynamic GST from Admin System Settings
+  const gstRate = Number(systemSettings.gstRate ?? 18);
+  const gstAmount = Math.round(subtotalAfterDiscounts * (gstRate / 100));
 
-  // Security Deposit
-  const securityDeposit = dailyRate > 3000 ? 5000 : 3000;
+  // Security Deposit (uses car configuration or dynamic global default, 0 if vehicle has 0 base fare)
+  const securityDeposit =
+    car?.securityDeposit !== undefined && car?.securityDeposit !== null && car?.securityDeposit !== ""
+      ? Number(car.securityDeposit)
+      : dailyRate > 0
+      ? Number(systemSettings.defaultSecurityDeposit ?? 3000)
+      : 0;
 
   // Grand Total
   const grandTotal = subtotalAfterDiscounts + gstAmount + securityDeposit;
+
+  // Dynamic Advance Payment Calculation
+  const advancePaymentPercent =
+    car?.advancePaymentPercent !== undefined && car?.advancePaymentPercent !== null && car?.advancePaymentPercent !== ""
+      ? Number(car.advancePaymentPercent)
+      : Number(systemSettings.advancePaymentPercent ?? 30);
+
+  const payableNow =
+    advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0
+      ? Math.round((subtotalAfterDiscounts + gstAmount) * (advancePaymentPercent / 100)) + securityDeposit
+      : grandTotal;
+
+  const balanceDue = Math.max(0, grandTotal - payableNow);
 
   // Apply Coupon Handler
   const handleApplyCoupon = async (code: string) => {
@@ -231,7 +276,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       drivingLicense: drivingLicense || user?.dlNumber || "DL-AP03-2024-XXXX",
       emergencyContact,
       status: "Confirmed",
-      paymentStatus: selectedPaymentMethod === "cash" ? "Pending_At_Pickup" : "Paid",
+      paymentStatus:
+        balanceDue > 0
+          ? "Advance Paid"
+          : selectedPaymentMethod === "cash"
+          ? "Pending_At_Pickup"
+          : "Paid",
       paymentMethod: selectedPaymentMethod,
       bookingSource: "Web Checkout Gateway",
       totalDays: rentalDays,
@@ -245,9 +295,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       rewardDeduction,
       referralDiscount,
       discountAmount: totalDiscounts,
+      gstRate,
       gstAmount,
       securityDeposit,
       grandTotal,
+      advancePaymentPercent,
+      paidAmount: payableNow,
+      balanceDue,
       signatureData: signatureDataUrl || "DIGITAL_SIGNED_ON_CHECKOUT",
     };
 
@@ -547,13 +601,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   ) : (
                     <>
                       <span>
-                        Authorize ₹
-                        {(selectedPaymentMethod === "split" ? Math.round(grandTotal * 0.2) : grandTotal).toLocaleString("en-IN")} & Complete Booking
+                        Authorize ₹{payableNow.toLocaleString("en-IN")} & Complete Booking
                       </span>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
+
+                {balanceDue > 0 && (
+                  <p className="text-center text-xs font-bold text-amber-700 bg-amber-500/10 py-1.5 px-3 rounded-xl border border-amber-500/20">
+                    ℹ️ Advance of ₹{payableNow.toLocaleString("en-IN")} charged now. Remaining balance ₹{balanceDue.toLocaleString("en-IN")} payable at car handover.
+                  </p>
+                )}
 
                 <p className="text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
@@ -587,10 +646,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 walletDeduction={walletDeduction}
                 rewardDeduction={rewardDeduction}
                 referralDiscount={referralDiscount}
+                gstRate={gstRate}
                 gstAmount={gstAmount}
                 securityDeposit={securityDeposit}
                 grandTotal={grandTotal}
                 paymentMode={selectedPaymentMethod}
+                advancePaymentPercent={advancePaymentPercent}
+                payableNow={payableNow}
+                balanceDue={balanceDue}
               />
             </div>
           </div>

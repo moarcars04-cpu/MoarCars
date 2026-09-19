@@ -96,8 +96,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             instantBooking: car.instantBooking ?? true,
             freeCancellation: car.freeCancellation ?? true,
             doorstepDelivery: car.doorstepDelivery ?? true,
-            rating: car.rating || 5.0,
-            tripsCount: car.totalTrips || car.tripsCount || 0,
+            rating: Number(car.rating) || 0,
+            reviewCount: Number(car.reviewCount) || 0,
+            tripsCount: Number(car.totalTrips) || Number(car.tripsCount) || 0,
           }));
           setFleet(mapped);
         }

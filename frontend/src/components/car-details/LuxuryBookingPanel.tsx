@@ -75,6 +75,32 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   const [submitError, setSubmitError] = useState("");
   const [bookingSuccessNotice, setBookingSuccessNotice] = useState("");
 
+  // Live System Financial Settings (from MySQL Settings table)
+  const [systemSettings, setSystemSettings] = useState<{
+    gstRate?: number;
+    advancePaymentPercent?: number;
+    defaultSecurityDeposit?: number;
+  }>({
+    gstRate: 18,
+    advancePaymentPercent: 30,
+    defaultSecurityDeposit: 3000,
+  });
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && res.data) {
+          setSystemSettings({
+            gstRate: res.data.gstRate !== undefined ? Number(res.data.gstRate) : 18,
+            advancePaymentPercent: res.data.advancePaymentPercent !== undefined ? Number(res.data.advancePaymentPercent) : 30,
+            defaultSecurityDeposit: res.data.defaultSecurityDeposit !== undefined ? Number(res.data.defaultSecurityDeposit) : 3000,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Calculate rental duration in days
   const rentalDays = useMemo(() => {
     try {
@@ -88,7 +114,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
     }
   }, [startDate, startTime, endDate, endTime]);
 
-  // Price calculations
+  // Dynamic Price calculations
   const dailyRate = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0;
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
@@ -107,14 +133,33 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   const discountAmount = appliedPromo ? Math.round((subtotalBeforeDiscount * appliedPromo.percent) / 100) : 0;
   const subtotalAfterDiscount = subtotalBeforeDiscount - discountAmount;
 
-  // GST 18%
-  const gstAmount = Math.round(subtotalAfterDiscount * 0.18);
+  // Dynamic GST from Admin Settings
+  const gstRate = Number(systemSettings.gstRate ?? 18);
+  const gstAmount = Math.round(subtotalAfterDiscount * (gstRate / 100));
 
-  // Refundable Security Deposit
-  const securityDeposit = dailyRate > 3000 ? 5000 : 3000;
+  // Refundable Security Deposit (uses car setting or global setting, 0 if vehicle has 0 base fare)
+  const securityDeposit =
+    car.securityDeposit !== undefined && car.securityDeposit !== null && car.securityDeposit !== ""
+      ? Number(car.securityDeposit)
+      : dailyRate > 0
+      ? Number(systemSettings.defaultSecurityDeposit ?? 3000)
+      : 0;
 
   // Total Payable
   const grandTotal = subtotalAfterDiscount + gstAmount + securityDeposit;
+
+  // Dynamic Advance Payment % from Car or Admin System Policy
+  const advancePaymentPercent =
+    car.advancePaymentPercent !== undefined && car.advancePaymentPercent !== null && car.advancePaymentPercent !== ""
+      ? Number(car.advancePaymentPercent)
+      : Number(systemSettings.advancePaymentPercent ?? 30);
+
+  const advancePayableNow =
+    advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0
+      ? Math.round((subtotalAfterDiscount + gstAmount) * (advancePaymentPercent / 100)) + securityDeposit
+      : grandTotal;
+
+  const balanceDueAtPickup = Math.max(0, grandTotal - advancePayableNow);
 
   // Promo Apply Handler
   const handleApplyPromo = () => {
@@ -150,6 +195,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       endTime,
       carName: car.name,
       car,
+      carId: car.id,
       withDriver,
       deliveryMode,
       bookingType: withDriver ? "Chauffeur Driven" : "Self Drive",
@@ -157,6 +203,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       customerPhone: customerPhone || user?.phone || "+91 98765 43210",
       customerEmail: customerEmail || user?.email || "guest@moarcars.com",
       status: "Confirmed",
+      paymentStatus: balanceDueAtPickup > 0 ? "Advance Paid" : "Paid",
       bookingSource: "Car Details Portal",
       totalDays: rentalDays,
       rentalDays,
@@ -165,9 +212,13 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       driverFee,
       extrasTotal,
       discountAmount,
+      gstRate,
       gstAmount,
       securityDeposit,
       grandTotal,
+      advancePaymentPercent,
+      paidAmount: advancePayableNow,
+      balanceDue: balanceDueAtPickup,
       promoCode: appliedPromo?.code || null,
       notes: `Extras: ${[
         extraBabySeat && "Baby Seat",
@@ -483,7 +534,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         )}
 
         <div className="flex justify-between text-muted-foreground">
-          <span>GST (18%)</span>
+          <span>GST ({gstRate}%)</span>
           <span>₹{gstAmount.toLocaleString("en-IN")}</span>
         </div>
 
@@ -493,9 +544,22 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         </div>
 
         <div className="flex justify-between text-base font-black text-brand-navy pt-2 border-t border-border">
-          <span>Total Amount</span>
+          <span>Total Booking Amount</span>
           <span className="text-brand-teal">₹{grandTotal.toLocaleString("en-IN")}</span>
         </div>
+
+        {advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0 && (
+          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1 text-xs">
+            <div className="flex justify-between font-extrabold text-brand-navy">
+              <span>Pay Online Now ({advancePaymentPercent}% Advance + Deposit):</span>
+              <span className="text-brand-teal font-black text-sm">₹{advancePayableNow.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="flex justify-between text-amber-800 font-bold text-[11px]">
+              <span>Pay Balance at Car Pickup / Handover:</span>
+              <span>₹{balanceDueAtPickup.toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Notices */}

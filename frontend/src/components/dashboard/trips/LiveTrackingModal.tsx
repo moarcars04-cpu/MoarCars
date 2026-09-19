@@ -135,7 +135,7 @@ export const LiveTrackingModal: React.FC<LiveTrackingModalProps> = ({
                   <h4 className="text-sm font-extrabold text-brand-navy flex items-center gap-1.5">
                     {driverName}
                     <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                      ★ 4.9 (420+ Trips)
+                      ✓ Verified Executive
                     </span>
                   </h4>
                   <p className="text-xs text-muted-foreground mt-0.5">

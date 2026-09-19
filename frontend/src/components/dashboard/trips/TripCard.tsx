@@ -40,6 +40,7 @@ interface TripCardProps {
   onOpenPickupInspection?: (booking: any) => void;
   onOpenTripSupport?: (booking: any) => void;
   onOpenReturnInspection?: (booking: any) => void;
+  onOpenReview?: (booking: any) => void;
   onBookAgain?: (carName: string) => void;
 }
 
@@ -55,6 +56,7 @@ export const TripCard: React.FC<TripCardProps> = ({
   onOpenPickupInspection,
   onOpenTripSupport,
   onOpenReturnInspection,
+  onOpenReview,
   onBookAgain,
 }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -103,15 +105,59 @@ export const TripCard: React.FC<TripCardProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Total Booking Value */}
           <div className="text-right">
             <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-              {isCancelled ? "Refunded Amount" : "Total Amount"}
+              {isCancelled ? "Refunded Amount" : "Total Fare"}
             </span>
-            <span className="text-lg font-black text-brand-teal">
-              ₹{(booking.grandTotal || booking.amount || 2499).toLocaleString("en-IN")}
+            <span className="text-base font-black text-brand-navy">
+              ₹{Number(booking.grandTotal || booking.amount || 0).toLocaleString("en-IN")}
             </span>
           </div>
+
+          {/* Paid Online Badge */}
+          <div className="text-right pl-3 border-l border-border">
+            <span className="text-[10px] uppercase font-bold text-emerald-600 block">
+              Paid Online
+            </span>
+            <span className="text-sm font-black text-emerald-600">
+              ₹{Number(booking.paidAmount !== undefined ? booking.paidAmount : (booking.grandTotal || booking.amount || 0)).toLocaleString("en-IN")}
+            </span>
+          </div>
+
+          {/* Balance Due Badge */}
+          {Number(booking.balanceDue || 0) > 0 ? (
+            <div className="text-right pl-3 border-l border-border">
+              <span className="text-[10px] uppercase font-bold text-amber-600 block">
+                Due at Pickup
+              </span>
+              <span className="text-xs font-black text-amber-700 bg-amber-500/15 px-2 py-0.5 rounded-lg border border-amber-500/30 inline-block">
+                ₹{Number(booking.balanceDue).toLocaleString("en-IN")}
+              </span>
+            </div>
+          ) : (
+            <div className="text-right pl-3 border-l border-border hidden sm:block">
+              <span className="text-[10px] uppercase font-bold text-emerald-600 block">
+                Payment
+              </span>
+              <span className="text-xs font-bold text-emerald-600">
+                Full Paid
+              </span>
+            </div>
+          )}
+
+          {/* Security Deposit */}
+          {Number(booking.securityDeposit || 0) > 0 && (
+            <div className="text-right pl-3 border-l border-border hidden md:block">
+              <span className="text-[10px] uppercase font-bold text-brand-teal block">
+                Deposit (Refundable)
+              </span>
+              <span className="text-xs font-bold text-brand-teal">
+                ₹{Number(booking.securityDeposit).toLocaleString("en-IN")}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -134,7 +180,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             <h4 className="text-base font-black text-brand-navy">{booking.carName || "Fleet Vehicle"}</h4>
             <p className="text-xs text-muted-foreground">{booking.bookingType || "Self Drive (Unlimited KM)"}</p>
             <span className="text-[10px] text-emerald-600 font-bold block mt-1">
-              ✓ Verified & Ghat Ready
+              ✓ Verified & Safety Inspected
             </span>
           </div>
         </div>
@@ -303,6 +349,16 @@ export const TripCard: React.FC<TripCardProps> = ({
           {/* Completed Trip Actions */}
           {isCompleted && (
             <>
+              {onOpenReview && (
+                <Button
+                  size="sm"
+                  onClick={() => onOpenReview(booking)}
+                  className="rounded-xl bg-brand-gold hover:bg-brand-gold-soft text-brand-navy text-xs font-black flex items-center gap-1.5 shadow-md animate-pulse"
+                >
+                  <Star className="h-3.5 w-3.5 fill-brand-navy" /> Rate & Review Trip ★
+                </Button>
+              )}
+
               {onOpenReturnInspection && (
                 <Button
                   size="sm"

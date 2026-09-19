@@ -163,7 +163,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             instantBooking: car.instantBooking ?? true,
             freeCancellation: car.freeCancellation ?? true,
             doorstepDelivery: car.doorstepDelivery ?? true,
-            rating: car.rating || 5.0,
+            rating: Number(car.rating) || 0,
+            reviewCount: Number(car.reviewCount) || 0,
+            totalTrips: Number(car.totalTrips) || 0,
           }));
           setFleet(mapped);
         }

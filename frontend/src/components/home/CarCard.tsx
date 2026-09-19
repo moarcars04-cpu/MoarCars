@@ -101,14 +101,20 @@ export const CarCard: React.FC<CarCardProps> = ({
           </button>
         </div>
 
-        {/* Location & Rating at bottom of image */}
+        {/* Location & Dynamic Rating at bottom of image */}
         <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-white/90 drop-shadow">
           <span className="flex items-center gap-1 font-semibold text-[11px]">
             <MapPin className="h-3.5 w-3.5 text-brand-gold" /> {car.location || "Tirupati"}
           </span>
-          <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full font-bold text-amber-300 text-[11px]">
-            <Star className="h-3 w-3 fill-current" /> 4.9 ({car.totalTrips || 35}+ trips)
-          </span>
+          {car.reviewCount && Number(car.reviewCount) > 0 && car.rating && Number(car.rating) > 0 ? (
+            <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full font-bold text-amber-300 text-[11px]">
+              <Star className="h-3 w-3 fill-current" /> {Number(car.rating).toFixed(1)} ({car.reviewCount})
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full font-semibold text-white/80 text-[10px]">
+              New Fleet
+            </span>
+          )}
         </div>
       </div>
 

@@ -39,6 +39,7 @@ import {
 import { PickupInspectionModal } from "./trips/PickupInspectionModal";
 import { TripSupportModal } from "./trips/TripSupportModal";
 import { ReturnInspectionModal } from "./trips/ReturnInspectionModal";
+import { ReviewModal } from "./ReviewModal";
 
 interface BookingsSectionProps {
   upcomingBookings: BookingItem[];
@@ -68,6 +69,7 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
   const [selectedBookingForPickup, setSelectedBookingForPickup] = useState<BookingItem | null>(null);
   const [selectedBookingForSupport, setSelectedBookingForSupport] = useState<BookingItem | null>(null);
   const [selectedBookingForReturn, setSelectedBookingForReturn] = useState<BookingItem | null>(null);
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState<BookingItem | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<BookingItem | null>(null);
   const [selectedAgreement, setSelectedAgreement] = useState<BookingItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -149,6 +151,9 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
   const handleReturnSuccess = (updated: any) => {
     handleUpdateBooking(updated);
     showToast(`🏁 Vehicle return certified! Instant refund of ₹${updated.refundAmount || 3000} initiated.`);
+    setTimeout(() => {
+      setSelectedBookingForReview(updated);
+    }, 1200);
   };
 
   const handleTripSupportExtend = (hours: number, amount: number) => {
@@ -327,6 +332,7 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
               onOpenPickupInspection={(b) => setSelectedBookingForPickup(b)}
               onOpenTripSupport={(b) => setSelectedBookingForSupport(b)}
               onOpenReturnInspection={(b) => setSelectedBookingForReturn(b)}
+              onOpenReview={(b) => setSelectedBookingForReview(b)}
               onBookAgain={() => onBrowseFleet()}
             />
           ))}
@@ -436,19 +442,52 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
               <div className="space-y-2 pt-2 border-t border-white/10">
                 <div className="flex justify-between text-white/70">
                   <span>Base Vehicle Rental (Unlimited KM)</span>
-                  <span>₹{((selectedInvoice.amount || 3499) - (selectedInvoice.taxAmount || 360)).toLocaleString("en-IN")}</span>
+                  <span>₹{Number(selectedInvoice.baseFare !== undefined ? selectedInvoice.baseFare : (Number(selectedInvoice.grandTotal || selectedInvoice.amount || 0) - Number(selectedInvoice.gstAmount || selectedInvoice.taxAmount || 0) - Number(selectedInvoice.securityDeposit || 0))).toLocaleString("en-IN")}</span>
                 </div>
+                {Number(selectedInvoice.deliveryFee || 0) > 0 && (
+                  <div className="flex justify-between text-white/70">
+                    <span>Doorstep Delivery Service</span>
+                    <span>₹{Number(selectedInvoice.deliveryFee).toLocaleString("en-IN")}</span>
+                  </div>
+                )}
+                {Number(selectedInvoice.discountAmount || 0) > 0 && (
+                  <div className="flex justify-between text-emerald-400">
+                    <span>Discounts & Promo Applied</span>
+                    <span>-₹{Number(selectedInvoice.discountAmount).toLocaleString("en-IN")}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-white/70">
-                  <span>CGST (9%) + SGST (9%)</span>
-                  <span>₹{(selectedInvoice.taxAmount || 360).toLocaleString("en-IN")}</span>
+                  <span>GST Tax ({selectedInvoice.gstRate || 18}%)</span>
+                  <span>₹{Number(selectedInvoice.gstAmount !== undefined ? selectedInvoice.gstAmount : (selectedInvoice.taxAmount || 0)).toLocaleString("en-IN")}</span>
                 </div>
-                <div className="flex justify-between text-emerald-400">
-                  <span>Security Deposit (100% Refunded)</span>
-                  <span>₹{(selectedInvoice.securityDeposit || 3000).toLocaleString("en-IN")}</span>
-                </div>
+                {Number(selectedInvoice.securityDeposit || 0) > 0 && (
+                  <div className="flex justify-between text-emerald-400">
+                    <span>Security Deposit (Refundable)</span>
+                    <span>₹{Number(selectedInvoice.securityDeposit).toLocaleString("en-IN")}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-black text-base text-brand-gold pt-2 border-t border-white/10">
-                  <span>Total Amount Paid</span>
-                  <span>₹{(selectedInvoice.amount || 3499).toLocaleString("en-IN")}</span>
+                  <span>Total Booking Value</span>
+                  <span>₹{Number(selectedInvoice.grandTotal || selectedInvoice.amount || 0).toLocaleString("en-IN")}</span>
+                </div>
+
+                {/* Advance Paid vs Balance Due */}
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 space-y-1 mt-1 text-[11px]">
+                  <div className="flex justify-between text-emerald-400 font-bold">
+                    <span>Advance Paid Online:</span>
+                    <span>₹{Number(selectedInvoice.paidAmount !== undefined ? selectedInvoice.paidAmount : (selectedInvoice.grandTotal || selectedInvoice.amount || 0)).toLocaleString("en-IN")}</span>
+                  </div>
+                  {Number(selectedInvoice.balanceDue || 0) > 0 ? (
+                    <div className="flex justify-between text-amber-400 font-bold">
+                      <span>Balance Due at Car Handover:</span>
+                      <span>₹{Number(selectedInvoice.balanceDue).toLocaleString("en-IN")}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-white/50">
+                      <span>Balance Due:</span>
+                      <span>₹0 (Fully Paid)</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -525,7 +564,7 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
                 <h4 className="text-xs font-black text-brand-gold uppercase">Terms & Indemnity:</h4>
                 <ul className="list-disc list-inside space-y-1 text-white/70">
                   <li><strong>Ghat Road Safety:</strong> Speed limit on Tirumala first & second ghat roads strictly capped at 40 km/h with mandatory seatbelt enforcement.</li>
-                  <li><strong>Security Deposit:</strong> ₹{(selectedAgreement.securityDeposit || 3000).toLocaleString("en-IN")} shall be released within 2 hours post vehicle check-in.</li>
+                  <li><strong>Security Deposit:</strong> ₹{Number(selectedAgreement.securityDeposit || 0).toLocaleString("en-IN")} shall be released within 2 hours post vehicle check-in.</li>
                   <li><strong>Fuel Policy:</strong> Vehicle provided at 85%+ fuel; customer to return at equivalent level or fuel charges apply.</li>
                   <li><strong>Comprehensive Insurance:</strong> Bumper-to-bumper zero dep coverage active during rental window.</li>
                 </ul>
@@ -591,6 +630,19 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
           isOpen={!!selectedBookingForReturn}
           onClose={() => setSelectedBookingForReturn(null)}
           onSuccess={handleReturnSuccess}
+        />
+      )}
+
+      {/* 11. VERIFIED TRIP RATING & REVIEW MODAL */}
+      {selectedBookingForReview && (
+        <ReviewModal
+          booking={selectedBookingForReview}
+          isOpen={!!selectedBookingForReview}
+          onClose={() => setSelectedBookingForReview(null)}
+          onSuccess={() => {
+            showToast("★ Thank you! Your verified rating and review have been submitted to the database.");
+            setSelectedBookingForReview(null);
+          }}
         />
       )}
     </div>

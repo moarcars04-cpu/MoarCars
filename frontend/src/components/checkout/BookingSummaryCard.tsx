@@ -36,10 +36,14 @@ interface BookingSummaryCardProps {
   walletDeduction: number;
   rewardDeduction: number;
   referralDiscount: number;
+  gstRate?: number;
   gstAmount: number;
   securityDeposit: number;
   grandTotal: number;
   paymentMode?: string;
+  advancePaymentPercent?: number;
+  payableNow?: number;
+  balanceDue?: number;
 }
 
 export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
@@ -63,14 +67,19 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
   walletDeduction,
   rewardDeduction,
   referralDiscount,
+  gstRate = 18,
   gstAmount,
   securityDeposit,
   grandTotal,
   paymentMode,
+  advancePaymentPercent,
+  payableNow,
+  balanceDue,
 }) => {
-  const isSplit = paymentMode === "split";
-  const advanceAmount = isSplit ? Math.round(grandTotal * 0.2) : grandTotal;
-  const balanceAmount = isSplit ? grandTotal - advanceAmount : 0;
+  const isSplit = paymentMode === "split" || (balanceDue !== undefined && balanceDue > 0);
+  const finalPayableNow = payableNow !== undefined ? payableNow : (isSplit ? Math.round(grandTotal * 0.3) : grandTotal);
+  const finalBalanceDue = balanceDue !== undefined ? balanceDue : Math.max(0, grandTotal - finalPayableNow);
+  const displayAdvancePercent = advancePaymentPercent || (isSplit ? 30 : 100);
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6 shadow-xl space-y-6">
@@ -222,7 +231,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         )}
 
         <div className="flex justify-between text-muted-foreground">
-          <span>Taxes & GST (18%)</span>
+          <span>Taxes & GST ({gstRate}%)</span>
           <span className="font-semibold text-brand-navy">₹{gstAmount.toLocaleString("en-IN")}</span>
         </div>
 
@@ -239,17 +248,22 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
           <span className="text-xl text-brand-teal">₹{grandTotal.toLocaleString("en-IN")}</span>
         </div>
 
-        {/* Split Payment Highlights (if selected) */}
-        {isSplit && (
-          <div className="p-3 rounded-2xl bg-brand-teal/10 border border-brand-teal/30 space-y-1 text-xs">
-            <div className="flex justify-between font-bold text-brand-teal">
-              <span>Pay 20% Advance Now:</span>
-              <span>₹{advanceAmount.toLocaleString("en-IN")}</span>
+        {/* Dynamic Advance Payment & Balance Breakdown */}
+        {finalBalanceDue > 0 ? (
+          <div className="p-3.5 rounded-2xl bg-brand-gold/10 border border-brand-gold/30 space-y-1.5 text-xs">
+            <div className="flex justify-between font-extrabold text-brand-navy">
+              <span>Pay {displayAdvancePercent}% Advance Online Now:</span>
+              <span className="text-brand-teal font-black">₹{finalPayableNow.toLocaleString("en-IN")}</span>
             </div>
-            <div className="flex justify-between text-muted-foreground text-[11px]">
-              <span>Pay 80% Balance at Car Pickup:</span>
-              <span>₹{balanceAmount.toLocaleString("en-IN")}</span>
+            <div className="flex justify-between text-amber-700 font-bold text-[11px] pt-1 border-t border-brand-gold/20">
+              <span>Remaining Balance Payable at Handover:</span>
+              <span>₹{finalBalanceDue.toLocaleString("en-IN")}</span>
             </div>
+          </div>
+        ) : (
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-bold flex items-center justify-between">
+            <span>Payment Mode:</span>
+            <span>100% Full Payment Online</span>
           </div>
         )}
       </div>

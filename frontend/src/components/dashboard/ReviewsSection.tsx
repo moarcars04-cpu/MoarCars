@@ -87,6 +87,22 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
     showToast("🚩 Review reported to moderation team for verification.");
   };
 
+  useEffect(() => {
+    fetch("/api/reviews")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          setReviews(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const realReviewCount = reviews.length;
+  const avgRating = realReviewCount > 0
+    ? (reviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / realReviewCount).toFixed(1)
+    : null;
+
   // Filtered reviews
   const filteredReviews = reviews.filter((r) => {
     if (filterRating === "5") return r.rating === 5;
@@ -107,7 +123,7 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
         </div>
       )}
 
-      {/* Header Banner & Rating Highlights */}
+      {/* Header Banner & Dynamic Rating Highlights */}
       <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
@@ -117,14 +133,23 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
             <h2 className="text-xl font-extrabold text-white">Community Reviews & Ratings</h2>
           </div>
           <p className="text-xs text-white/60">
-            Real feedback from verified travelers across Tirupati, Tirumala ghats, and AP tourism destinations.
+            Real feedback from verified travelers across Tirupati and Tirumala after completing their rides.
           </p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <span className="text-3xl font-black text-brand-gold">4.92 / 5.0</span>
-            <span className="text-[10px] text-white/50 block">Based on 1,420+ Verified Trips</span>
+            {avgRating ? (
+              <>
+                <span className="text-3xl font-black text-brand-gold">{avgRating} / 5.0</span>
+                <span className="text-[10px] text-white/50 block">Based on {realReviewCount} Verified {realReviewCount === 1 ? "Review" : "Reviews"}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-xl font-black text-white/80">No Reviews Yet</span>
+                <span className="text-[10px] text-white/50 block">Reviews appear after completed trips</span>
+              </>
+            )}
           </div>
 
           <Button

@@ -12,9 +12,10 @@ import {
 } from "lucide-react";
 import { ReviewItem, BookingItem } from "../../types/user";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "../../context/AuthContext";
 
 interface ReviewModalProps {
-  booking?: BookingItem | null;
+  booking?: any | null;
   existingReview?: ReviewItem | null;
   isOpen: boolean;
   onClose: () => void;
@@ -28,23 +29,17 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { user } = useAuth();
   const [rating, setRating] = useState<number>(existingReview?.rating || 5);
   const [cleanlinessRating, setCleanlinessRating] = useState<number>(existingReview?.cleanlinessRating || 5);
   const [performanceRating, setPerformanceRating] = useState<number>(existingReview?.performanceRating || 5);
   const [handoverRating, setHandoverRating] = useState<number>(existingReview?.handoverRating || 5);
   const [valueRating, setValueRating] = useState<number>(existingReview?.valueRating || 5);
-  const [comment, setComment] = useState<string>(
-    existingReview?.comment ||
-      "Pristine vehicle condition and smooth ghat road climb to Tirumala! Zero deposit deduction and super fast handover."
-  );
+  const [comment, setComment] = useState<string>(existingReview?.comment || "");
   const [carName, setCarName] = useState<string>(
-    existingReview?.carName || booking?.carName || "Toyota Innova Crysta ZX"
+    existingReview?.carName || booking?.carName || booking?.car?.name || "Self Drive Vehicle"
   );
-  const [photoUrls, setPhotoUrls] = useState<string[]>(
-    existingReview?.photoUrls || [
-      "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=600&q=80",
-    ]
-  );
+  const [photoUrls, setPhotoUrls] = useState<string[]>(existingReview?.photoUrls || []);
   const [videoUrl, setVideoUrl] = useState<string>(existingReview?.videoUrl || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -54,11 +49,14 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    const reviewData: ReviewItem = {
-      id: existingReview?.id || Math.floor(1000 + Math.random() * 9000),
-      customerName: existingReview?.customerName || booking?.customerName || "Verified Pilgrim",
-      customerAvatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+    const reviewData: any = {
+      id: existingReview?.id || undefined,
+      carId: booking?.carId || booking?.car?.id || (existingReview as any)?.carId || undefined,
       carName,
+      customerName: user?.name || existingReview?.customerName || booking?.customerName || "Verified Customer",
+      customerEmail: user?.email || undefined,
+      customerPhone: user?.phone || undefined,
+      customerAvatar: user?.avatar || undefined,
       rating,
       cleanlinessRating,
       performanceRating,
@@ -67,9 +65,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       comment,
       photoUrls,
       videoUrl: videoUrl || undefined,
-      date: existingReview?.date || "September 2026",
+      date: existingReview?.date || new Date().toLocaleString("en-US", { month: "long", year: "numeric" }),
       status: "Approved",
-      bookingId: booking?.id || existingReview?.bookingId || 1018,
+      bookingId: booking?.id || existingReview?.bookingId || undefined,
       likesCount: existingReview?.likesCount || 0,
     };
 

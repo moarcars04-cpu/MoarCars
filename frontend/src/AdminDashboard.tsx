@@ -1988,8 +1988,20 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                         <p className="text-[10px] text-slate-400 truncate max-w-[180px]">{b.pickupAddress}</p>
                       </td>
                       <td className="px-4 py-4">
-                        <p className="font-black text-emerald-400 text-sm">₹{b.amount.toLocaleString()}</p>
-                        <p className="text-[10px] text-slate-400 font-bold">Dep: ₹{b.securityDeposit}</p>
+                        <p className="font-black text-emerald-400 text-sm">₹{Number(b.grandTotal || b.amount || 0).toLocaleString()}</p>
+                        <div className="text-[10px] space-y-0.5 mt-0.5">
+                          <p className="text-emerald-400/90 font-medium">
+                            Paid: ₹{Number(b.paidAmount !== undefined ? b.paidAmount : (b.grandTotal || b.amount || 0)).toLocaleString()}
+                          </p>
+                          {Number(b.balanceDue || 0) > 0 ? (
+                            <p className="text-amber-400 font-bold">
+                              Due: ₹{Number(b.balanceDue).toLocaleString()}
+                            </p>
+                          ) : (
+                            <p className="text-slate-500 font-medium">Full Paid</p>
+                          )}
+                          <p className="text-slate-500">Dep: ₹{b.securityDeposit || 0}</p>
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <select
@@ -2342,6 +2354,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   pricePerWeek: parseInt(form.pricePerWeek?.value) || (pricePerDay * 6),
                   pricePerMonth: parseInt(form.pricePerMonth?.value) || (pricePerDay * 22),
                   securityDeposit: parseInt(form.securityDeposit?.value) || 0,
+                  advancePaymentPercent: form.advancePaymentPercent?.value ? parseInt(form.advancePaymentPercent.value) : undefined,
                   lateFeePerHour: parseInt(form.lateFeePerHour?.value) || 0,
                   status: form.status?.value || "Available",
                   branch: form.branch?.value || "Tirupati Central Hub",
@@ -2565,6 +2578,22 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                         <option value="Inactive">Inactive</option>
                         <option value="Reserved">Reserved</option>
                       </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-slate-400 font-bold mb-1">Online Advance Payment (%)</label>
+                      <input
+                        name="advancePaymentPercent"
+                        type="number"
+                        min="0"
+                        max="100"
+                        defaultValue={editingCar?.advancePaymentPercent || ""}
+                        placeholder="e.g. 30 (Leave blank for global setting)"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
+                      <p className="text-[10px] text-slate-500 mt-1">Overrides global advance % setting for this vehicle.</p>
                     </div>
                   </div>
                 </div>
@@ -3142,25 +3171,42 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
             <div className="p-4 rounded-2xl bg-[#070e1c] border border-slate-800 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span>Vehicle Rental ({selectedBooking.carName})</span>
-                <span className="font-bold">₹{selectedBooking.amount}</span>
+                <span className="font-bold">₹{Number(selectedBooking.baseFare !== undefined ? selectedBooking.baseFare : selectedBooking.amount).toLocaleString()}</span>
               </div>
               {selectedBooking.discountAmount > 0 && (
                 <div className="flex justify-between text-emerald-400">
-                  <span>Coupon Discount ({selectedBooking.couponCode})</span>
-                  <span>-₹{selectedBooking.discountAmount}</span>
+                  <span>Discount Applied ({selectedBooking.couponCode || "Promo"})</span>
+                  <span>-₹{Number(selectedBooking.discountAmount).toLocaleString()}</span>
                 </div>
               )}
               <div className="flex justify-between text-slate-400">
-                <span>GST Tax (18% inclusive)</span>
-                <span>₹{selectedBooking.taxAmount}</span>
+                <span>GST Tax ({selectedBooking.gstRate || 18}%)</span>
+                <span>₹{Number(selectedBooking.gstAmount !== undefined ? selectedBooking.gstAmount : (selectedBooking.taxAmount || 0)).toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Refundable Security Deposit</span>
-                <span>₹{selectedBooking.securityDeposit}</span>
+                <span>₹{Number(selectedBooking.securityDeposit || 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between font-black text-sm text-[#c88d18] pt-2 border-t border-slate-800">
-                <span>Grand Total Paid</span>
-                <span>₹{(selectedBooking.amount + selectedBooking.securityDeposit).toLocaleString()}</span>
+                <span>Total Booking Value</span>
+                <span>₹{Number(selectedBooking.grandTotal || (selectedBooking.amount + (selectedBooking.securityDeposit || 0))).toLocaleString()}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1 mt-1 text-[11px]">
+                <div className="flex justify-between text-emerald-400 font-bold">
+                  <span>Advance Paid Online:</span>
+                  <span>₹{Number(selectedBooking.paidAmount !== undefined ? selectedBooking.paidAmount : (selectedBooking.grandTotal || selectedBooking.amount || 0)).toLocaleString()}</span>
+                </div>
+                {Number(selectedBooking.balanceDue || 0) > 0 ? (
+                  <div className="flex justify-between text-amber-400 font-bold">
+                    <span>Remaining Balance Due at Pickup:</span>
+                    <span>₹{Number(selectedBooking.balanceDue).toLocaleString()}</span>
+                  </div>
+                ) : (
+                  <div className="flex justify-between text-slate-400">
+                    <span>Balance Due:</span>
+                    <span>₹0 (Full Paid)</span>
+                  </div>
+                )}
               </div>
             </div>
 

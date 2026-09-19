@@ -47,6 +47,9 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
     razorpayKeyId: "rzp_live_9918273645",
     razorpayKeySecret: "••••••••••••••••",
     stripeKey: "pk_live_881928471029384756",
+    gstRate: "18",
+    advancePaymentPercent: "30",
+    defaultSecurityDeposit: "3000",
     currency: "INR (₹)",
     timezone: "Asia/Kolkata (IST +5:30)",
     language: "English / Telugu",
@@ -315,6 +318,50 @@ export default function SettingsManagement({ setNotice }: SettingsManagementProp
                 onChange={(e) => setSettings({ ...settings, stripeKey: e.target.value })}
                 className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono"
               />
+            </div>
+
+            <div className="pt-4 border-t border-slate-800 space-y-4">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-[#c88d18] flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5" /> Dynamic Pricing, GST Tax & Online Advance Policy
+              </h4>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">GST Tax Rate (%)</label>
+                  <input
+                    type="number"
+                    value={settings.gstRate || "18"}
+                    onChange={(e) => setSettings({ ...settings, gstRate: e.target.value })}
+                    placeholder="e.g. 18"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold"
+                  />
+                  <span className="text-[10px] text-slate-500 block mt-1">Applicable on vehicle rental & add-ons</span>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Online Advance Payment (%)</label>
+                  <input
+                    type="number"
+                    value={settings.advancePaymentPercent || "30"}
+                    onChange={(e) => setSettings({ ...settings, advancePaymentPercent: e.target.value })}
+                    placeholder="e.g. 30"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-bold"
+                  />
+                  <span className="text-[10px] text-slate-500 block mt-1">% customer pays online; balance at pickup</span>
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Default Security Deposit (₹)</label>
+                  <input
+                    type="number"
+                    value={settings.defaultSecurityDeposit || "3000"}
+                    onChange={(e) => setSettings({ ...settings, defaultSecurityDeposit: e.target.value })}
+                    placeholder="e.g. 3000"
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-bold"
+                  />
+                  <span className="text-[10px] text-slate-500 block mt-1">Refunded after vehicle return inspection</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
