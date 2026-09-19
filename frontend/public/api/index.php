@@ -1263,6 +1263,8 @@ function ensureTablesExist($pdo, $force = false) {
                         ->execute([$cat['name'], $cat['description'], $cat['icon'], $cat['displayOrder'], $cat['isActive']]);
                 }
             }
+        } catch (Exception $e) {}
+
         // 5. Seed default Admin if table has 0 rows
         try {
             $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM Admins")->fetchColumn();
