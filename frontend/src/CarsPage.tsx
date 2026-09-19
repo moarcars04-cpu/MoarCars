@@ -31,6 +31,7 @@ import {
   Rotate3d,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MoarLogo } from "@/components/common/MoarLogo";
 import { useAuth } from "./context/AuthContext";
 import { CarFleetItem, DEFAULT_DATABASE_CARS } from "@/data/defaultCars";
 import { Viewer360Modal } from "@/components/home/360ViewerModal";
