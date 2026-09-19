@@ -1785,7 +1785,7 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 // Sync database and seed tables asynchronously in the background
 (async () => {
   try {
-    const models = [Car, Booking, Customer, Driver, Branch, Payment, Coupon, Review, SupportTicket, ActivityLog, Setting, Admin, AdminOtp];
+    const models = [Car, Booking, Customer, Driver, Branch, Payment, Coupon, Review, SupportTicket, ActivityLog, Setting, Admin, AdminOtp, Category];
     const queryInterface = sequelize.getQueryInterface();
 
     for (const model of models) {

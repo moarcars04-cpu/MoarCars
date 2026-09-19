@@ -742,17 +742,6 @@ function ensureTablesExist($pdo, $force = false) {
     if ($checked || !$pdo) return;
     $checked = true;
 
-    if (!$force) {
-        try {
-            $test = $pdo->query("SELECT 1 FROM AdminOtps LIMIT 1");
-            if ($test !== false) {
-                return; // Tables already exist and migrated
-            }
-        } catch (Exception $e) {
-            // Table doesn't exist yet, proceed with migration below
-        }
-    }
-
     try {
         // 1. Create Base Tables
         $pdo->exec("
@@ -884,6 +873,17 @@ function ensureTablesExist($pdo, $force = false) {
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX (userEmail),
                 INDEX (userId)
+            );
+
+            CREATE TABLE IF NOT EXISTS Admins (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                name VARCHAR(255) DEFAULT 'Super Admin',
+                email VARCHAR(255) DEFAULT 'moarcars04@gmail.com',
+                role VARCHAR(50) DEFAULT 'SuperAdmin',
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
         ");
 
@@ -1189,6 +1189,14 @@ function ensureTablesExist($pdo, $force = false) {
                 'ipAddress' => "VARCHAR(50) DEFAULT '122.179.88.14'",
                 'timestamp' => "VARCHAR(50) DEFAULT NULL",
             ],
+            'Categories' => [
+                'name' => "VARCHAR(100) NOT NULL UNIQUE",
+                'description' => "TEXT NULL",
+                'icon' => "VARCHAR(100) DEFAULT 'Car'",
+                'image' => "TEXT NULL",
+                'displayOrder' => "INT DEFAULT 0",
+                'isActive' => "TINYINT DEFAULT 1",
+            ],
         ];
 
         foreach ($allTableColumns as $tableName => $cols) {
@@ -1253,6 +1261,40 @@ function ensureTablesExist($pdo, $force = false) {
                 foreach ($defaultCategories as $cat) {
                     $pdo->prepare("INSERT INTO Categories (name, description, icon, displayOrder, isActive) VALUES (?, ?, ?, ?, ?)")
                         ->execute([$cat['name'], $cat['description'], $cat['icon'], $cat['displayOrder'], $cat['isActive']]);
+                }
+            }
+        // 5. Seed default Admin if table has 0 rows
+        try {
+            $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM Admins")->fetchColumn();
+            if ($adminCount === 0) {
+                $hash = password_hash('adminpassword', PASSWORD_BCRYPT);
+                $pdo->prepare("INSERT INTO Admins (username, password, name, email, role) VALUES (?, ?, ?, ?, ?)")
+                    ->execute(['admin', $hash, 'Super Admin', 'moarcars04@gmail.com', 'SuperAdmin']);
+            }
+        } catch (Exception $e) {}
+
+        // 6. Seed default Settings if table has 0 rows
+        try {
+            $settingCount = (int)$pdo->query("SELECT COUNT(*) FROM Settings")->fetchColumn();
+            if ($settingCount === 0) {
+                $defaultSettings = [
+                    'companyName' => 'Moar Cars Private Limited',
+                    'cin' => 'U50100AP2026PTC012345',
+                    'gstin' => '37AAAAA0000A1Z5',
+                    'supportPhone' => '+91 98765 43210',
+                    'supportEmail' => 'moarcars04@gmail.com',
+                    'address' => 'Opposite Main Bus Stand, Railway Station Road, Tirupati, Andhra Pradesh - 517501',
+                    'logoUrl' => 'https://moarcars.com/assets/logo.png',
+                    'smtpHost' => 'smtp.gmail.com',
+                    'smtpPort' => '465',
+                    'smtpUser' => 'moarcars04@gmail.com',
+                    'currency' => 'INR (₹)',
+                    'timezone' => 'Asia/Kolkata (IST +5:30)',
+                    'language' => 'English / Telugu',
+                ];
+                $stmt = $pdo->prepare("INSERT INTO Settings (`key`, `value`) VALUES (?, ?)");
+                foreach ($defaultSettings as $k => $v) {
+                    $stmt->execute([$k, $v]);
                 }
             }
         } catch (Exception $e) {}
