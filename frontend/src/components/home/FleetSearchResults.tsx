@@ -13,6 +13,7 @@ import {
   Car,
   Star,
   Zap,
+  Filter,
 } from "lucide-react";
 import { CarCard } from "./CarCard";
 import { Button } from "@/components/ui/button";
