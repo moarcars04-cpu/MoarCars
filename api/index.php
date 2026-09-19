@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
 // ----------------------------------------------------------------------
 // Moar Cars - Enterprise Full-Stack Backend API for Hostinger & Production
 // Supports Live Fleet, Zoomcar/Revv Style Booking Lifecycle,
@@ -739,153 +741,162 @@ function getDefaultCars() {
 // Complete Schema Auto-Migration for MySQL on Hostinger
 function ensureTablesExist($pdo, $force = false) {
     static $checked = false;
-    if ($checked || !$pdo) return;
+    if (!$force && $checked) return;
+    if (!$pdo) return;
     $checked = true;
 
     try {
-        // 1. Create Base Tables
-        $pdo->exec("
-            CREATE TABLE IF NOT EXISTS Cars (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL DEFAULT 'Fleet Vehicle',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+        // 1. Create Base Tables individually for guaranteed MySQL PDO compatibility
+        $tableSchemas = [
+            "Categories" => "CREATE TABLE IF NOT EXISTS `Categories` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(100) NOT NULL UNIQUE,
+                `description` TEXT NULL,
+                `icon` VARCHAR(100) DEFAULT 'Car',
+                `image` TEXT NULL,
+                `displayOrder` INT DEFAULT 0,
+                `isActive` TINYINT DEFAULT 1,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Bookings (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                bookingType VARCHAR(100) DEFAULT 'Self Drive',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Cars" => "CREATE TABLE IF NOT EXISTS `Cars` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(255) NOT NULL DEFAULT 'Fleet Vehicle',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Customers (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL DEFAULT 'Valued Customer',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Bookings" => "CREATE TABLE IF NOT EXISTS `Bookings` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `bookingType` VARCHAR(100) DEFAULT 'Self Drive',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Drivers (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL DEFAULT 'Driver',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Customers" => "CREATE TABLE IF NOT EXISTS `Customers` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(255) NOT NULL DEFAULT 'Valued Customer',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Branches (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL DEFAULT 'Branch Hub',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Drivers" => "CREATE TABLE IF NOT EXISTS `Drivers` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(255) NOT NULL DEFAULT 'Driver',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Payments (
-                id VARCHAR(100) PRIMARY KEY,
-                customerName VARCHAR(255) DEFAULT 'Valued Customer',
-                amount INT DEFAULT 0,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Branches" => "CREATE TABLE IF NOT EXISTS `Branches` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(255) NOT NULL DEFAULT 'Branch Hub',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Coupons (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                code VARCHAR(50) NOT NULL UNIQUE,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Payments" => "CREATE TABLE IF NOT EXISTS `Payments` (
+                `id` VARCHAR(100) PRIMARY KEY,
+                `customerName` VARCHAR(255) DEFAULT 'Valued Customer',
+                `amount` INT DEFAULT 0,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Reviews (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                customerName VARCHAR(255) NOT NULL,
-                comment TEXT NULL,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Coupons" => "CREATE TABLE IF NOT EXISTS `Coupons` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `code` VARCHAR(50) NOT NULL UNIQUE,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS SupportTickets (
-                id VARCHAR(100) PRIMARY KEY,
-                customerName VARCHAR(255) DEFAULT 'Valued Customer',
-                subject VARCHAR(255) DEFAULT 'Support Inquiry',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "Reviews" => "CREATE TABLE IF NOT EXISTS `Reviews` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `customerName` VARCHAR(255) NOT NULL,
+                `comment` TEXT NULL,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS ActivityLogs (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                adminName VARCHAR(255) DEFAULT 'Executive Super Admin',
-                action VARCHAR(255) DEFAULT 'UPDATE',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+            "SupportTickets" => "CREATE TABLE IF NOT EXISTS `SupportTickets` (
+                `id` VARCHAR(100) PRIMARY KEY,
+                `customerName` VARCHAR(255) DEFAULT 'Valued Customer',
+                `subject` VARCHAR(255) DEFAULT 'Support Inquiry',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Settings (
+            "ActivityLogs" => "CREATE TABLE IF NOT EXISTS `ActivityLogs` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `adminName` VARCHAR(255) DEFAULT 'Executive Super Admin',
+                `action` VARCHAR(255) DEFAULT 'UPDATE',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+            "Settings" => "CREATE TABLE IF NOT EXISTS `Settings` (
                 `key` VARCHAR(255) PRIMARY KEY,
                 `value` LONGTEXT NOT NULL,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Categories (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(100) NOT NULL UNIQUE,
-                description TEXT NULL,
-                icon VARCHAR(100) DEFAULT 'Car',
-                image TEXT NULL,
-                displayOrder INT DEFAULT 0,
-                isActive TINYINT DEFAULT 1,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS AdminOtps (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                email VARCHAR(255) NOT NULL,
-                otp VARCHAR(10) NOT NULL,
-                expiresAt BIGINT NOT NULL,
-                attempts INT DEFAULT 0,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            "AdminOtps" => "CREATE TABLE IF NOT EXISTS `AdminOtps` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `email` VARCHAR(255) NOT NULL,
+                `otp` VARCHAR(10) NOT NULL,
+                `expiresAt` BIGINT NOT NULL,
+                `attempts` INT DEFAULT 0,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
                 INDEX (email)
-            );
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS UserOtps (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                identifier VARCHAR(255) NOT NULL,
-                otp VARCHAR(10) NOT NULL,
-                type VARCHAR(50) DEFAULT 'SMS',
-                expiresAt BIGINT NOT NULL,
-                attempts INT DEFAULT 0,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+            "UserOtps" => "CREATE TABLE IF NOT EXISTS `UserOtps` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `identifier` VARCHAR(255) NOT NULL,
+                `otp` VARCHAR(10) NOT NULL,
+                `type` VARCHAR(50) DEFAULT 'SMS',
+                `expiresAt` BIGINT NOT NULL,
+                `attempts` INT DEFAULT 0,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
                 INDEX (identifier)
-            );
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Notifications (
-                id VARCHAR(100) PRIMARY KEY,
-                userId INT DEFAULT NULL,
-                userEmail VARCHAR(255) DEFAULT NULL,
-                title VARCHAR(255) NOT NULL,
-                message TEXT NOT NULL,
-                type VARCHAR(50) DEFAULT 'system',
-                channel VARCHAR(50) DEFAULT 'push',
-                isRead TINYINT DEFAULT 0,
-                link VARCHAR(255) DEFAULT NULL,
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            "Notifications" => "CREATE TABLE IF NOT EXISTS `Notifications` (
+                `id` VARCHAR(100) PRIMARY KEY,
+                `userId` INT DEFAULT NULL,
+                `userEmail` VARCHAR(255) DEFAULT NULL,
+                `title` VARCHAR(255) NOT NULL,
+                `message` TEXT NOT NULL,
+                `type` VARCHAR(50) DEFAULT 'system',
+                `channel` VARCHAR(50) DEFAULT 'push',
+                `isRead` TINYINT DEFAULT 0,
+                `link` VARCHAR(255) DEFAULT NULL,
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 INDEX (userEmail),
                 INDEX (userId)
-            );
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
-            CREATE TABLE IF NOT EXISTS Admins (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(100) NOT NULL UNIQUE,
-                password VARCHAR(255) NOT NULL,
-                name VARCHAR(255) DEFAULT 'Super Admin',
-                email VARCHAR(255) DEFAULT 'moarcars04@gmail.com',
-                role VARCHAR(50) DEFAULT 'SuperAdmin',
-                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            );
-        ");
+            "Admins" => "CREATE TABLE IF NOT EXISTS `Admins` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `username` VARCHAR(100) NOT NULL UNIQUE,
+                `password` VARCHAR(255) NOT NULL,
+                `name` VARCHAR(255) DEFAULT 'Super Admin',
+                `email` VARCHAR(255) DEFAULT 'moarcars04@gmail.com',
+                `role` VARCHAR(50) DEFAULT 'SuperAdmin',
+                `createdAt` DATETIME DEFAULT CURRENT_TIMESTAMP,
+                `updatedAt` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        ];
+
+        foreach ($tableSchemas as $tName => $tSql) {
+            try {
+                $pdo->exec($tSql);
+            } catch (Exception $te) {
+                error_log("Table schema creation error for $tName: " . $te->getMessage());
+            }
+        }
 
         // 2. Comprehensive Column Auto-Migration for Every Table
         $allTableColumns = [
@@ -1263,6 +1274,8 @@ function ensureTablesExist($pdo, $force = false) {
                         ->execute([$cat['name'], $cat['description'], $cat['icon'], $cat['displayOrder'], $cat['isActive']]);
                 }
             }
+        } catch (Exception $e) {}
+
         // 5. Seed default Admin if table has 0 rows
         try {
             $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM Admins")->fetchColumn();
@@ -1316,6 +1329,29 @@ if (isset($pdo)) {
 // Health Check
 if ($route === 'health' || $route === '') {
     echo json_encode(["success" => true, "message" => "Moar Cars API is online", "time" => date('c'), "dbConnected" => isset($pdo)]);
+    exit();
+}
+
+// Dedicated Schema Sync & Table Status Endpoint
+if ($route === 'init-db' || $route === 'admin/init-db') {
+    $report = ["success" => true, "tables" => [], "dbConnected" => isset($pdo)];
+    if (isset($pdo)) {
+        ensureTablesExist($pdo, true);
+        try {
+            $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($tables as $t) {
+                try {
+                    $cnt = (int)$pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
+                    $report['tables'][$t] = $cnt;
+                } catch (Exception $ce) {
+                    $report['tables'][$t] = "Error: " . $ce->getMessage();
+                }
+            }
+        } catch (Exception $te) {
+            $report['error'] = $te->getMessage();
+        }
+    }
+    echo json_encode($report);
     exit();
 }
 
@@ -2823,7 +2859,7 @@ if ($route === 'user/delete-account' && $method === 'POST') {
 if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
     if (isset($pdo)) {
         try {
-            $cars = $pdo->query("SELECT * FROM Cars WHERE isArchived = 0 AND name NOT IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs') ORDER BY id ASC")->fetchAll();
+            $cars = $pdo->query("SELECT * FROM Cars WHERE (isArchived = 0 OR isArchived IS NULL OR isArchived = '0') AND name NOT IN ('City Hatchbacks', 'Executive Sedans', 'Adventure SUVs') ORDER BY id ASC")->fetchAll();
             if (!empty($cars)) {
                 foreach ($cars as &$c) {
                     $c['id'] = (int)$c['id'];
