@@ -184,7 +184,7 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-[#c88d18]">
-                          {car.brand || "Luxury"}
+                          {car.brand || (car.name ? car.name.split(" ")[0] : (car.category || "Car"))}
                         </span>
                         {car.rating && Number(car.rating) > 0 ? (
                           <div className="flex items-center gap-1 text-xs font-black text-slate-800">
@@ -197,7 +197,9 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                       </div>
 
                       <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 leading-tight group-hover:text-[#c88d18] transition-colors">
-                        {car.name}
+                        {car.name && car.name !== "Fleet Vehicle" && car.name !== "Fleet Vehicle 3"
+                          ? car.name
+                          : (`${car.brand || ""} ${car.model || ""}`.trim() || car.name || `${car.category || "Premium"} Vehicle`)}
                       </h3>
 
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">
@@ -225,7 +227,18 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                       <div>
                         <span className="text-lg sm:text-xl font-black text-slate-900">
-                          {car.price || (car.pricePerDay ? `₹${car.pricePerDay.toLocaleString("en-IN")}` : "₹2,499")}
+                          {(() => {
+                            if (car.pricePerDay && Number(car.pricePerDay) > 0) {
+                              return `₹${Number(car.pricePerDay).toLocaleString("en-IN")}`;
+                            }
+                            if (car.price) {
+                              const cleaned = String(car.price).replace(/\/day/gi, "").trim();
+                              if (cleaned && cleaned !== "₹0" && cleaned !== "0") {
+                                return cleaned.startsWith("₹") ? cleaned : `₹${cleaned}`;
+                              }
+                            }
+                            return "₹1,699";
+                          })()}
                         </span>
                         <span className="text-[11px] text-slate-500 font-semibold ml-1">/ day</span>
                       </div>

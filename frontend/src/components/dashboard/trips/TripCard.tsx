@@ -177,7 +177,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             </div>
           )}
           <div>
-            <h4 className="text-base font-black text-brand-navy">{booking.carName || "Fleet Vehicle"}</h4>
+            <h4 className="text-base font-black text-brand-navy">{booking.carName || "Self-Drive Vehicle"}</h4>
             <p className="text-xs text-muted-foreground">{booking.bookingType || "Self Drive (Unlimited KM)"}</p>
             <span className="text-[10px] text-emerald-600 font-bold block mt-1">
               ✓ Verified & Safety Inspected

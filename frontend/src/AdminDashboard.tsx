@@ -479,17 +479,18 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       adminApi.updateCar(editingCar.id, carData);
     } else {
       const primaryImg = carData.image || (Array.isArray(carData.galleryImages) && carData.galleryImages[0] ? carData.galleryImages[0] : "");
+      const derivedName = `${carData.brand || ""} ${carData.model || ""} ${carData.variant || ""}`.trim();
       const newCar: CarItem = {
         id: Math.floor(100 + Math.random() * 900),
-        name: carData.name || "Fleet Vehicle",
-        brand: carData.brand || "",
-        model: carData.model || "",
+        name: carData.name || derivedName || "Premium Vehicle",
+        brand: carData.brand || (carData.name ? carData.name.split(" ")[0] : "Maruti Suzuki"),
+        model: carData.model || (carData.name ? carData.name.split(" ").slice(1).join(" ") : "Vehicle"),
         variant: carData.variant || "",
         year: carData.year || new Date().getFullYear(),
         registrationNumber: carData.registrationNumber || "",
         vinNumber: carData.vinNumber || "",
-        detail: carData.detail || "Self-drive rental vehicle",
-        price: carData.price || `₹${carData.pricePerDay || 0}/day`,
+        detail: carData.detail || "Self-drive rental vehicle with premium comfort",
+        price: carData.price || `₹${carData.pricePerDay || 1699}/day`,
         pricePerHour: carData.pricePerHour || 0,
         pricePerDay: carData.pricePerDay || 0,
         pricePerWeek: carData.pricePerWeek || 0,
@@ -1636,7 +1637,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                             <p className="text-[10px] text-slate-400">{c.seats} Seats &bull; {c.mileage}</p>
                           </td>
                           <td className="px-4 py-4">
-                            <p className="font-black text-emerald-400 text-sm">{c.price}/day</p>
+                            <p className="font-black text-emerald-400 text-sm">{c.pricePerDay ? `₹${Number(c.pricePerDay).toLocaleString("en-IN")}/day` : (c.price?.includes('/day') ? c.price : `${c.price || '₹1,699'}/day`)}</p>
                             <p className="text-[10px] text-slate-400">₹{c.pricePerHour}/hr &bull; ₹{c.pricePerWeek}/wk</p>
                             <p className="text-[9px] text-[#c88d18]">Dep: ₹{c.securityDeposit}</p>
                           </td>
@@ -2327,11 +2328,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.target as any;
+                const directName = form.name?.value?.trim() || "";
                 const brand = form.brand?.value?.trim() || "";
                 const model = form.model?.value?.trim() || "";
                 const variant = form.variant?.value?.trim() || "";
-                const name = `${brand} ${model} ${variant}`.trim() || editingCar?.name || "Fleet Vehicle";
-                const pricePerDay = parseInt(form.pricePerDay?.value) || 0;
+                const derivedName = `${brand} ${model} ${variant}`.trim();
+                const name = directName || derivedName || editingCar?.name || "Premium Vehicle";
+                const finalBrand = brand || (name ? name.split(" ")[0] : "Maruti Suzuki");
+                const finalModel = model || (name ? name.split(" ").slice(1).join(" ") : "Vehicle");
+                const pricePerDay = parseInt(form.pricePerDay?.value) || 1699;
 
                 const primaryImage = form.image?.value?.trim() || "";
                 const galleryRaw = form.galleryImages?.value?.trim() || "";
@@ -2344,8 +2349,8 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 }
 
                 handleSaveCar({
-                  brand,
-                  model,
+                  brand: finalBrand,
+                  model: finalModel,
                   variant,
                   name,
                   year: parseInt(form.year?.value) || new Date().getFullYear(),
@@ -2357,14 +2362,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   mileage: form.mileage?.value?.trim() || "20 km/l",
                   color: form.color?.value?.trim() || "White",
                   category: form.category?.value || (categories[0]?.name || "Hatchback"),
-                  pricePerHour: parseInt(form.pricePerHour?.value) || (pricePerDay > 0 ? Math.round(pricePerDay / 10) : 0),
+                  pricePerHour: parseInt(form.pricePerHour?.value) || (pricePerDay > 0 ? Math.round(pricePerDay / 10) : 199),
                   pricePerDay,
-                  price: pricePerDay > 0 ? `₹${pricePerDay.toLocaleString("en-IN")}/day` : "₹0/day",
+                  price: `₹${pricePerDay.toLocaleString("en-IN")}/day`,
                   pricePerWeek: parseInt(form.pricePerWeek?.value) || (pricePerDay * 6),
                   pricePerMonth: parseInt(form.pricePerMonth?.value) || (pricePerDay * 22),
-                  securityDeposit: parseInt(form.securityDeposit?.value) || 0,
+                  securityDeposit: parseInt(form.securityDeposit?.value) || 3000,
                   advancePaymentPercent: form.advancePaymentPercent?.value ? parseInt(form.advancePaymentPercent.value) : undefined,
-                  lateFeePerHour: parseInt(form.lateFeePerHour?.value) || 0,
+                  lateFeePerHour: parseInt(form.lateFeePerHour?.value) || 150,
                   status: form.status?.value || "Available",
                   branch: form.branch?.value || "Tirupati Central Hub",
                   location: form.location?.value || "Tirupati",
@@ -2381,6 +2386,19 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
             >
               {/* TAB 1: SPECS & IDENTITY */}
               <div className={activeCarModalTab === "specs" ? "space-y-3" : "hidden"}>
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">
+                    Vehicle Full Display Name * <span className="text-[10px] text-[#c88d18] font-normal">(Exact name displayed across customer website & fleet cards)</span>
+                  </label>
+                  <input
+                    name="name"
+                    defaultValue={editingCar?.name || ""}
+                    placeholder="e.g. Maruti Suzuki Swift ZXi / Mahindra Scorpio-N Z8L / Hyundai Creta SX"
+                    required
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18] font-bold text-sm"
+                  />
+                </div>
+
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-slate-400 font-bold mb-1">Brand *</label>

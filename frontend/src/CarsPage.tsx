@@ -899,7 +899,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                         <div>
                           {/* Title & SubCategory */}
                           <h4 className="text-base font-extrabold text-slate-900 group-hover:text-[#c88d18] transition-colors leading-tight">
-                            {car.name}
+                            {car.name && car.name !== "Fleet Vehicle" && car.name !== "Fleet Vehicle 3"
+                              ? car.name
+                              : (`${car.brand || ""} ${car.model || ""}`.trim() || car.name || `${car.category || "Premium"} Vehicle`)}
                           </h4>
                           <p className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-0.5">
                             {car.variant || car.subCategory || car.category}
@@ -926,14 +928,25 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                         <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                           <div>
                             <span className="text-lg sm:text-xl font-black text-slate-900">
-                              ₹{car.pricePerDay.toLocaleString("en-IN")}
+                              {(() => {
+                                if (car.pricePerDay && Number(car.pricePerDay) > 0) {
+                                  return `₹${Number(car.pricePerDay).toLocaleString("en-IN")}`;
+                                }
+                                if (car.price) {
+                                  const cleaned = String(car.price).replace(/\/day/gi, "").trim();
+                                  if (cleaned && cleaned !== "₹0" && cleaned !== "0") {
+                                    return cleaned.startsWith("₹") ? cleaned : `₹${cleaned}`;
+                                  }
+                                }
+                                return "₹1,699";
+                              })()}
                             </span>
                             <span className="text-[11px] text-slate-500 font-semibold ml-1">/ day</span>
-                            {car.securityDeposit && (
+                            {car.securityDeposit ? (
                               <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
-                                <ShieldCheck className="h-3 w-3" /> Dep: ₹{car.securityDeposit.toLocaleString("en-IN")}
+                                <ShieldCheck className="h-3 w-3" /> Dep: ₹{Number(car.securityDeposit).toLocaleString("en-IN")}
                               </p>
-                            )}
+                            ) : null}
                           </div>
 
                           <div className="flex items-center gap-1.5">

@@ -124,7 +124,9 @@ export const CarCard: React.FC<CarCardProps> = ({
           <div className="flex items-start justify-between gap-2">
             <div>
               <h3 className="text-lg font-black text-brand-navy group-hover:text-brand-teal transition-colors">
-                {car.name}
+                {car.name && car.name !== "Fleet Vehicle" && car.name !== "Fleet Vehicle 3"
+                  ? car.name
+                  : (`${car.brand || ""} ${car.model || ""}`.trim() || car.name || `${car.category || "Premium"} Vehicle`)}
               </h3>
               <p className="text-[11px] font-bold text-brand-teal">{car.variant || "Executive Spec"}</p>
             </div>
@@ -169,7 +171,18 @@ export const CarCard: React.FC<CarCardProps> = ({
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tariff Starting</p>
             <p className="text-xl font-black text-brand-teal">
-              {car.price || (car.pricePerDay ? `₹${car.pricePerDay.toLocaleString("en-IN")}` : "₹1,999")}
+              {(() => {
+                if (car.pricePerDay && Number(car.pricePerDay) > 0) {
+                  return `₹${Number(car.pricePerDay).toLocaleString("en-IN")}`;
+                }
+                if (car.price) {
+                  const cleaned = String(car.price).replace(/\/day/gi, "").trim();
+                  if (cleaned && cleaned !== "₹0" && cleaned !== "0") {
+                    return cleaned.startsWith("₹") ? cleaned : `₹${cleaned}`;
+                  }
+                }
+                return "₹1,699";
+              })()}
               <span className="text-xs font-normal text-muted-foreground"> / day</span>
             </p>
             <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
