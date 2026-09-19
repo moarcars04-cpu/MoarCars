@@ -131,6 +131,7 @@ import {
   ReviewItem,
   SupportTicketItem,
   ActivityLogItem,
+  CategoryItem,
 } from "./admin/types";
 
 import {
@@ -150,6 +151,7 @@ import DriverManagement from "./admin/DriverManagement";
 import BranchManagement from "./admin/BranchManagement";
 import PaymentManagement from "./admin/PaymentManagement";
 import CouponEngine from "./admin/CouponEngine";
+import CategoryManagement from "./admin/CategoryManagement";
 import ReportsSuite from "./admin/ReportsSuite";
 import CMSManagement from "./admin/CMSManagement";
 import SettingsManagement from "./admin/SettingsManagement";
@@ -248,8 +250,18 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [tickets, setTickets] = useState<SupportTicketItem[]>(initialSupportTickets);
   const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>(initialActivityLogs);
 
+  // Dynamic Fleet Categories
+  const [categories, setCategories] = useState<CategoryItem[]>([
+    { id: 1, name: "Hatchback", description: "Compact, fuel-efficient everyday city cars", icon: "Car", displayOrder: 1, isActive: true },
+    { id: 2, name: "Sedan", description: "Comfortable executive travel with ample trunk capacity", icon: "Car", displayOrder: 2, isActive: true },
+    { id: 3, name: "SUV", description: "Powerful rugged drives built for Tirumala ghat roads", icon: "Shield", displayOrder: 3, isActive: true },
+    { id: 4, name: "Luxury", description: "Premium executive styling, leather seats & sunroof", icon: "Award", displayOrder: 4, isActive: true },
+    { id: 5, name: "Electric", description: "100% green eco-friendly emission-free mobility", icon: "Zap", displayOrder: 5, isActive: true },
+    { id: 6, name: "MUV", description: "Spacious 7-8 seater multi-utility family vehicles", icon: "Users", displayOrder: 6, isActive: true },
+  ]);
+
   // Fleet Sub-Tab State
-  const [fleetSubTab, setFleetSubTab] = useState<"roster" | "calendar" | "maintenance" | "analytics">("roster");
+  const [fleetSubTab, setFleetSubTab] = useState<"roster" | "calendar" | "maintenance" | "analytics" | "categories">("roster");
   const [fleetFilterStatus, setFleetFilterStatus] = useState<string>("all");
   const [fleetFilterCategory, setFleetFilterCategory] = useState<string>("all");
   const [selectedCarIds, setSelectedCarIds] = useState<number[]>([]);
@@ -400,6 +412,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
     const fetchAllData = async () => {
       try {
         const [
+          dbCategories,
           dbCars,
           dbBookings,
           dbCustomers,
@@ -412,6 +425,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           dbLogs,
           dbSettings,
         ] = await Promise.all([
+          adminApi.getCategories(),
           adminApi.getCars(),
           adminApi.getBookings(),
           adminApi.getCustomers(),
@@ -427,6 +441,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
         if (!isMounted) return;
 
+        if (Array.isArray(dbCategories) && dbCategories.length > 0) setCategories(dbCategories);
         if (Array.isArray(dbCars)) setFleet(dbCars);
         if (Array.isArray(dbBookings)) setBookings(dbBookings);
         if (Array.isArray(dbCustomers)) setCustomers(dbCustomers);
@@ -1446,7 +1461,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 </p>
               </div>
 
-              <div className="flex bg-[#070e1c] p-1.5 rounded-2xl border border-slate-800">
+              <div className="flex flex-wrap bg-[#070e1c] p-1.5 rounded-2xl border border-slate-800 gap-1">
                 <button
                   onClick={() => setFleetSubTab("roster")}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
@@ -1454,6 +1469,14 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   }`}
                 >
                   <Grid className="w-3.5 h-3.5" /> Vehicles Roster ({fleet.length})
+                </button>
+                <button
+                  onClick={() => setFleetSubTab("categories")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                    fleetSubTab === "categories" ? "bg-[#c88d18] text-slate-950 font-black shadow-md" : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Tag className="w-3.5 h-3.5" /> Categories & Filters ({categories.length})
                 </button>
                 <button
                   onClick={() => setFleetSubTab("calendar")}
@@ -1482,6 +1505,15 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               </div>
             </div>
 
+            {fleetSubTab === "categories" && (
+              <CategoryManagement
+                categories={categories}
+                setCategories={setCategories}
+                fleet={fleet}
+                setNotice={setNotice}
+              />
+            )}
+
             {fleetSubTab === "roster" && (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1508,11 +1540,12 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     onChange={(e) => setFleetFilterCategory(e.target.value)}
                     className="px-3.5 py-1.5 rounded-xl bg-[#070e1c] border border-slate-800 text-[#c88d18] text-xs font-bold focus:outline-none"
                   >
-                    <option value="all">All Categories</option>
-                    <option value="Hatchback">Hatchback</option>
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Luxury">Luxury</option>
+                    <option value="all">All Categories ({categories.length})</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -2344,12 +2377,48 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
                   <div className="grid grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-slate-400 font-bold mb-1">Category</label>
-                      <select name="category" defaultValue={editingCar?.category || "Hatchback"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white">
-                        <option value="Hatchback">Hatchback</option>
-                        <option value="Sedan">Sedan</option>
-                        <option value="SUV">SUV</option>
-                        <option value="Luxury">Luxury</option>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-slate-400 font-bold">Category *</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCatName = window.prompt("Enter new category name (e.g. 7-Seater, Convertible, Luxury SUV):");
+                            if (newCatName && newCatName.trim()) {
+                              const trimmed = newCatName.trim();
+                              if (!categories.some((c) => c.name.toLowerCase() === trimmed.toLowerCase())) {
+                                const newCatItem: CategoryItem = {
+                                  id: Math.floor(100 + Math.random() * 900),
+                                  name: trimmed,
+                                  description: `${trimmed} fleet segment`,
+                                  icon: "Car",
+                                  displayOrder: categories.length + 1,
+                                  isActive: true,
+                                };
+                                setCategories((prev) => [...prev, newCatItem]);
+                                adminApi.createCategory(newCatItem);
+                                setNotice({ type: "success", text: `Category "${trimmed}" created & ready!` });
+                              }
+                            }
+                          }}
+                          className="text-[10px] text-[#c88d18] hover:underline font-bold flex items-center gap-0.5"
+                          title="Quick create new category"
+                        >
+                          <Plus className="w-3 h-3" /> New
+                        </button>
+                      </div>
+                      <select
+                        name="category"
+                        defaultValue={editingCar?.category || categories[0]?.name || "Hatchback"}
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                      >
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.name}>
+                            {cat.name}
+                          </option>
+                        ))}
+                        {editingCar?.category && !categories.some((c) => c.name === editingCar.category) && (
+                          <option value={editingCar.category}>{editingCar.category}</option>
+                        )}
                       </select>
                     </div>
                     <div>

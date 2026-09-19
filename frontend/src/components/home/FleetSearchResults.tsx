@@ -45,6 +45,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
 
   // Filter states
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [selectedFuel, setSelectedFuel] = useState<string>("all");
   const [selectedTransmission, setSelectedTransmission] = useState<string>("all");
@@ -56,6 +57,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
   const [filterDoorstep, setFilterDoorstep] = useState(false);
 
   const resetFilters = () => {
+    setSelectedCategory("all");
     setSelectedBrand("all");
     setSelectedFuel("all");
     setSelectedTransmission("all");
@@ -70,6 +72,10 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
   // Filter logic
   const filteredCars = useMemo(() => {
     return fleet.filter((car) => {
+      // Category
+      if (selectedCategory !== "all" && (car.category || "").toLowerCase() !== selectedCategory.toLowerCase()) {
+        return false;
+      }
       // Brand
       if (selectedBrand !== "all" && (car.brand || "").toLowerCase() !== selectedBrand.toLowerCase()) {
         return false;
@@ -101,7 +107,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
       }
       return true;
     });
-  }, [fleet, selectedBrand, selectedFuel, selectedTransmission, selectedSeats, maxPrice, filterSunroof, filterEV]);
+  }, [fleet, selectedCategory, selectedBrand, selectedFuel, selectedTransmission, selectedSeats, maxPrice, filterSunroof, filterEV]);
 
   // Sort logic
   const sortedCars = useMemo(() => {
@@ -117,6 +123,16 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
     }
     return list;
   }, [filteredCars, sortBy]);
+
+  const categoriesList = useMemo(() => {
+    const list: string[] = ["All"];
+    fleet.forEach((c) => {
+      if (c.category && !list.some((item) => item.toLowerCase() === c.category.toLowerCase())) {
+        list.push(c.category);
+      }
+    });
+    return list;
+  }, [fleet]);
 
   const brands = ["All", "Maruti Suzuki", "Honda", "Mahindra", "Toyota", "Hyundai", "Tata", "BMW"];
   const fuels = ["All", "Petrol", "Diesel", "Electric"];
@@ -138,16 +154,23 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
           </p>
         </div>
 
-        {/* View Switchers & Sorters */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Filter Trigger Button */}
+        {/* Top Control Bar: Sort, View Toggle, Filter Button */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Quick Filter Toggle Button */}
           <Button
-            onClick={() => setShowFilterDrawer(!showFilterDrawer)}
             variant="outline"
-            className="h-10 rounded-2xl border-border bg-card text-xs font-bold text-brand-navy hover:bg-brand-mist flex items-center gap-1.5"
+            onClick={() => setShowFilterDrawer(!showFilterDrawer)}
+            className={`h-10 px-4 rounded-2xl border text-xs font-bold flex items-center gap-2 shadow-sm transition-all ${
+              showFilterDrawer || selectedCategory !== "all" || selectedBrand !== "all" || selectedFuel !== "all" || selectedSeats !== "all"
+                ? "bg-brand-navy text-white border-brand-navy shadow-md"
+                : "bg-card text-brand-navy border-border hover:bg-accent"
+            }`}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5 text-brand-teal" />
+            <Filter className="h-3.5 w-3.5" />
             <span>Filters</span>
+            {(selectedCategory !== "all" || selectedBrand !== "all" || selectedFuel !== "all" || selectedSeats !== "all") && (
+              <span className="h-2 w-2 rounded-full bg-[#c88d18]" />
+            )}
           </Button>
 
           {/* Sort Dropdown */}
@@ -218,6 +241,27 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
+            {/* Category Filter */}
+            <div className="space-y-2 sm:col-span-2 lg:col-span-4">
+              <label className="font-bold text-brand-navy uppercase text-[11px]">Vehicle Category</label>
+              <div className="flex flex-wrap gap-1.5">
+                {categoriesList.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.toLowerCase())}
+                    className={`px-3.5 py-1.5 rounded-xl font-semibold border transition-all ${
+                      selectedCategory === cat.toLowerCase()
+                        ? "bg-[#c88d18] text-white border-[#c88d18] shadow-sm font-bold"
+                        : "bg-brand-mist/50 border-border text-muted-foreground hover:border-brand-teal"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Brand Filter */}
             <div className="space-y-2">
               <label className="font-bold text-brand-navy uppercase text-[11px]">Brand Manufacturer</label>

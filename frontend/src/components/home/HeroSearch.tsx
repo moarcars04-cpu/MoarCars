@@ -30,16 +30,8 @@ interface HeroSearchProps {
     serviceType?: string;
   }) => void;
   showBadges?: boolean;
+  categories?: any[];
 }
-
-const carTypes = [
-  "All Types",
-  "Supercars & Luxury",
-  "Premium SUVs",
-  "Executive Sedans",
-  "100% Electric (EV)",
-  "Hatchbacks",
-];
 
 export const TrustBadgesBar: React.FC = () => {
   return (
@@ -106,7 +98,7 @@ export const TrustBadgesBar: React.FC = () => {
   );
 };
 
-export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
+export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [] }) => {
   const { locations } = useLocations();
   const [serviceType, setServiceType] = useState<"self" | "chauffeur" | "airport">("self");
   const [pickup, setPickup] = useState(locations[0] || "Tirupati Central Hub (Station)");
@@ -118,6 +110,19 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
   const [carType, setCarType] = useState("All Types");
   const [isLocating, setIsLocating] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
+
+  const dynamicCarTypes = useMemo(() => {
+    const list = ["All Types"];
+    if (categories && categories.length > 0) {
+      categories.forEach((cat: any) => {
+        const name = typeof cat === "string" ? cat : (cat.isActive !== false ? cat.name : null);
+        if (name && !list.includes(name)) list.push(name);
+      });
+    } else {
+      list.push("Hatchback", "Sedan", "SUV", "Luxury", "Electric", "MUV");
+    }
+    return list;
+  }, [categories]);
 
   useEffect(() => {
     if (locations.length > 0) {
@@ -357,7 +362,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch }) => {
                 onChange={(e) => setCarType(e.target.value)}
                 className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer"
               >
-                {carTypes.map((type) => (
+                {dynamicCarTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>

@@ -19,6 +19,7 @@ import { ActivityLog } from "./models/ActivityLog.js";
 import { Setting } from "./models/Setting.js";
 import { Admin } from "./models/Admin.js";
 import { AdminOtp } from "./models/AdminOtp.js";
+import { Category } from "./models/Category.js";
 
 dotenv.config();
 
@@ -87,7 +88,7 @@ app.post(["/api/cars", "/api/admin/cars"], async (req, res) => {
   }
 });
 
-app.put("/api/admin/cars/:id", async (req, res) => {
+app.put(["/api/cars/:id", "/api/admin/cars/:id"], async (req, res) => {
   try {
     const { id } = req.params;
     const car = await Car.findByPk(id);
@@ -100,7 +101,7 @@ app.put("/api/admin/cars/:id", async (req, res) => {
   }
 });
 
-app.delete("/api/admin/cars/:id", async (req, res) => {
+app.delete(["/api/cars/:id", "/api/admin/cars/:id"], async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Car.destroy({ where: { id } });
@@ -109,6 +110,109 @@ app.delete("/api/admin/cars/:id", async (req, res) => {
   } catch (error) {
     console.error("Delete car error:", error);
     res.status(500).json({ success: false, message: "Error deleting vehicle." });
+  }
+});
+
+// ======================================================================
+// 1.1 CATEGORIES API (Dynamic Fleet Categories)
+// ======================================================================
+app.get(["/api/categories", "/api/admin/categories"], async (req, res) => {
+  try {
+    let categories = await Category.findAll({
+      order: [["displayOrder", "ASC"], ["name", "ASC"]],
+    });
+
+    if (categories.length === 0) {
+      await Category.bulkCreate([
+        { name: "Hatchback", description: "Compact, fuel-efficient everyday city cars", icon: "Car", displayOrder: 1, isActive: true },
+        { name: "Sedan", description: "Comfortable executive travel with ample trunk capacity", icon: "Car", displayOrder: 2, isActive: true },
+        { name: "SUV", description: "Powerful rugged drives built for Tirumala ghat roads", icon: "Shield", displayOrder: 3, isActive: true },
+        { name: "Luxury", description: "Premium executive styling, leather seats & sunroof", icon: "Award", displayOrder: 4, isActive: true },
+        { name: "Electric", description: "100% green eco-friendly emission-free mobility", icon: "Zap", displayOrder: 5, isActive: true },
+        { name: "MUV", description: "Spacious 7-8 seater multi-utility family vehicles", icon: "Users", displayOrder: 6, isActive: true },
+      ]);
+      categories = await Category.findAll({
+        order: [["displayOrder", "ASC"], ["name", "ASC"]],
+      });
+    }
+
+    res.json({ success: true, data: categories });
+  } catch (err) {
+    console.error("Fetch categories error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post(["/api/categories", "/api/admin/categories"], async (req, res) => {
+  try {
+    const { name, description, icon, image, displayOrder, isActive } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, error: "Category name is required." });
+    }
+
+    const trimmedName = name.trim();
+    const existing = await Category.findOne({ where: { name: trimmedName } });
+    if (existing) {
+      return res.status(400).json({ success: false, error: `Category "${trimmedName}" already exists.` });
+    }
+
+    const category = await Category.create({
+      name: trimmedName,
+      description: description || "",
+      icon: icon || "Car",
+      image: image || null,
+      displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : 0,
+      isActive: isActive !== undefined ? !!isActive : true,
+    });
+    res.status(201).json({ success: true, data: category, message: "Category created successfully." });
+  } catch (err) {
+    console.error("Create category error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put(["/api/categories/:id", "/api/admin/categories/:id"], async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await Category.findByPk(id);
+    if (!category) return res.status(404).json({ success: false, error: "Category not found." });
+
+    const { name, description, icon, image, displayOrder, isActive } = req.body;
+    const oldName = category.name;
+    const newName = name ? name.trim() : oldName;
+
+    if (newName && newName !== oldName) {
+      // Also update any existing fleet cars with old category name
+      await Car.update({ category: newName }, { where: { category: oldName } });
+    }
+
+    await category.update({
+      name: newName,
+      description: description !== undefined ? description : category.description,
+      icon: icon !== undefined ? icon : category.icon,
+      image: image !== undefined ? image : category.image,
+      displayOrder: displayOrder !== undefined ? parseInt(displayOrder) : category.displayOrder,
+      isActive: isActive !== undefined ? !!isActive : category.isActive,
+    });
+
+    res.json({ success: true, data: category, message: "Category updated successfully." });
+  } catch (err) {
+    console.error("Update category error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete(["/api/categories/:id", "/api/admin/categories/:id"], async (req, res) => {
+  try {
+    const { id } = req.params;
+    const category = await Category.findByPk(id);
+    if (!category) return res.status(404).json({ success: false, error: "Category not found." });
+
+    await category.destroy();
+    res.json({ success: true, message: `Category "${category.name}" removed successfully.` });
+  } catch (err) {
+    console.error("Delete category error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -2109,6 +2213,19 @@ const server = app.listen(PORT, "0.0.0.0", () => {
         { key: "currency", value: "INR (₹)" },
         { key: "timezone", value: "Asia/Kolkata (IST +5:30)" },
         { key: "language", value: "English / Telugu" },
+      ]);
+    }
+
+    // Seed default categories if empty
+    const categoryCount = await Category.count();
+    if (categoryCount === 0) {
+      await Category.bulkCreate([
+        { name: "Hatchback", description: "Compact, fuel-efficient everyday city cars", icon: "Car", displayOrder: 1, isActive: true },
+        { name: "Sedan", description: "Comfortable executive travel with ample trunk capacity", icon: "Car", displayOrder: 2, isActive: true },
+        { name: "SUV", description: "Powerful rugged drives built for Tirumala ghat roads", icon: "Shield", displayOrder: 3, isActive: true },
+        { name: "Luxury", description: "Premium executive styling, leather seats & sunroof", icon: "Award", displayOrder: 4, isActive: true },
+        { name: "Electric", description: "100% green eco-friendly emission-free mobility", icon: "Zap", displayOrder: 5, isActive: true },
+        { name: "MUV", description: "Spacious 7-8 seater multi-utility family vehicles", icon: "Users", displayOrder: 6, isActive: true },
       ]);
     }
 

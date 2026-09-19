@@ -88,9 +88,9 @@ export interface CarItem {
   securityDeposit: number;
   lateFeePerHour: number;
   tag: string;
-  category: "Hatchback" | "Sedan" | "SUV" | "Luxury";
-  fuelType: "Petrol" | "Diesel" | "Electric" | "Hybrid" | "CNG";
-  transmission: "Manual" | "Automatic";
+  category: string;
+  fuelType: "Petrol" | "Diesel" | "Electric" | "Hybrid" | "CNG" | string;
+  transmission: "Manual" | "Automatic" | string;
   seats: number;
   mileage: string;
   color: string;
@@ -118,6 +118,18 @@ export interface CarItem {
   tyreHealth: "Excellent" | "Good" | "Replace Soon";
   batteryHealth: "Good" | "Check Required";
   isArchived?: boolean;
+}
+
+export interface CategoryItem {
+  id: number;
+  name: string;
+  description?: string;
+  icon?: string;
+  image?: string;
+  displayOrder?: number;
+  isActive: boolean;
+  carsCount?: number;
+  createdAt?: string;
 }
 
 export interface CustomerItem {

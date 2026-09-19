@@ -837,6 +837,18 @@ function ensureTablesExist($pdo, $force = false) {
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS Categories (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                description TEXT NULL,
+                icon VARCHAR(100) DEFAULT 'Car',
+                image TEXT NULL,
+                displayOrder INT DEFAULT 0,
+                isActive TINYINT DEFAULT 1,
+                createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            );
+
             CREATE TABLE IF NOT EXISTS AdminOtps (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 email VARCHAR(255) NOT NULL,
@@ -1225,6 +1237,25 @@ function ensureTablesExist($pdo, $force = false) {
                 }
             }
         }
+
+        // 4. Seed default Categories if table has 0 rows
+        try {
+            $catCount = (int)$pdo->query("SELECT COUNT(*) FROM Categories")->fetchColumn();
+            if ($catCount === 0) {
+                $defaultCategories = [
+                    ['name' => 'Hatchback', 'description' => 'Compact, fuel-efficient everyday city cars', 'icon' => 'Car', 'displayOrder' => 1, 'isActive' => 1],
+                    ['name' => 'Sedan', 'description' => 'Comfortable executive travel with ample trunk capacity', 'icon' => 'Car', 'displayOrder' => 2, 'isActive' => 1],
+                    ['name' => 'SUV', 'description' => 'Powerful rugged drives built for Tirumala ghat roads', 'icon' => 'Shield', 'displayOrder' => 3, 'isActive' => 1],
+                    ['name' => 'Luxury', 'description' => 'Premium executive styling, leather seats & sunroof', 'icon' => 'Award', 'displayOrder' => 4, 'isActive' => 1],
+                    ['name' => 'Electric', 'description' => '100% green eco-friendly emission-free mobility', 'icon' => 'Zap', 'displayOrder' => 5, 'isActive' => 1],
+                    ['name' => 'MUV', 'description' => 'Spacious 7-8 seater multi-utility family vehicles', 'icon' => 'Users', 'displayOrder' => 6, 'isActive' => 1],
+                ];
+                foreach ($defaultCategories as $cat) {
+                    $pdo->prepare("INSERT INTO Categories (name, description, icon, displayOrder, isActive) VALUES (?, ?, ?, ?, ?)")
+                        ->execute([$cat['name'], $cat['description'], $cat['icon'], $cat['displayOrder'], $cat['isActive']]);
+                }
+            }
+        } catch (Exception $e) {}
     } catch (Exception $e) {}
 }
 
@@ -2873,8 +2904,8 @@ if (preg_match('#^admin/cars/([0-9]+)$#', $route, $matches) && ($method === 'PUT
 }
 
 // DELETE /api/admin/cars/{id}
-if (preg_match('#^admin/cars/([0-9]+)$#', $route, $matches) && $method === 'DELETE') {
-    $carId = (int)$matches[1];
+if (preg_match('#^(cars|admin/cars)/([0-9]+)$#', $route, $matches) && $method === 'DELETE') {
+    $carId = (int)$matches[2];
     if (isset($pdo)) {
         try {
             $stmt = $pdo->prepare("DELETE FROM Cars WHERE id = ?");
@@ -2882,6 +2913,162 @@ if (preg_match('#^admin/cars/([0-9]+)$#', $route, $matches) && $method === 'DELE
         } catch (Exception $e) {}
     }
     echo json_encode(["success" => true, "message" => "Vehicle removed from fleet."]);
+    exit();
+}
+
+// ----------------------------------------------------------------------
+// 1.1 CATEGORIES CRUD ENDPOINTS (ADMIN & USER)
+// ----------------------------------------------------------------------
+// GET /api/categories or /api/admin/categories
+if (($route === 'categories' || $route === 'admin/categories') && $method === 'GET') {
+    if (isset($pdo)) {
+        try {
+            $categories = $pdo->query("SELECT * FROM Categories ORDER BY displayOrder ASC, name ASC")->fetchAll();
+            if (!empty($categories)) {
+                foreach ($categories as &$cat) {
+                    $cat['id'] = (int)$cat['id'];
+                    $cat['displayOrder'] = (int)($cat['displayOrder'] ?? 0);
+                    $cat['isActive'] = (bool)($cat['isActive'] ?? 1);
+                }
+                echo json_encode(["success" => true, "data" => $categories]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+    $defaultCats = [
+        ["id" => 1, "name" => "Hatchback", "description" => "Compact, fuel-efficient everyday city cars", "icon" => "Car", "displayOrder" => 1, "isActive" => true],
+        ["id" => 2, "name" => "Sedan", "description" => "Comfortable executive travel with ample trunk capacity", "icon" => "Car", "displayOrder" => 2, "isActive" => true],
+        ["id" => 3, "name" => "SUV", "description" => "Powerful rugged drives built for Tirumala ghat roads", "icon" => "Shield", "displayOrder" => 3, "isActive" => true],
+        ["id" => 4, "name" => "Luxury", "description" => "Premium executive styling, leather seats & sunroof", "icon" => "Award", "displayOrder" => 4, "isActive" => true],
+        ["id" => 5, "name" => "Electric", "description" => "100% green eco-friendly emission-free mobility", "icon" => "Zap", "displayOrder" => 5, "isActive" => true],
+        ["id" => 6, "name" => "MUV", "description" => "Spacious 7-8 seater multi-utility family vehicles", "icon" => "Users", "displayOrder" => 6, "isActive" => true],
+    ];
+    echo json_encode(["success" => true, "data" => $defaultCats]);
+    exit();
+}
+
+// POST /api/categories or /api/admin/categories
+if (($route === 'categories' || $route === 'admin/categories') && $method === 'POST') {
+    $name = trim($input['name'] ?? '');
+    $description = trim($input['description'] ?? '');
+    $icon = trim($input['icon'] ?? 'Car');
+    $image = $input['image'] ?? null;
+    $displayOrder = (int)($input['displayOrder'] ?? 0);
+    $isActive = isset($input['isActive']) ? ($input['isActive'] ? 1 : 0) : 1;
+
+    if (empty($name)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Category name is required."]);
+        exit();
+    }
+
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id FROM Categories WHERE LOWER(name) = LOWER(?) LIMIT 1");
+            $stmt->execute([$name]);
+            if ($stmt->fetch()) {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "Category \"$name\" already exists."]);
+                exit();
+            }
+
+            $ins = $pdo->prepare("INSERT INTO Categories (name, description, icon, image, displayOrder, isActive) VALUES (?, ?, ?, ?, ?, ?)");
+            $ins->execute([$name, $description, $icon, $image, $displayOrder, $isActive]);
+            $newId = (int)$pdo->lastInsertId();
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Category \"$name\" created successfully!",
+                "data" => [
+                    "id" => $newId,
+                    "name" => $name,
+                    "description" => $description,
+                    "icon" => $icon,
+                    "image" => $image,
+                    "displayOrder" => $displayOrder,
+                    "isActive" => (bool)$isActive
+                ]
+            ]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error creating category: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode(["success" => true, "data" => ["id" => rand(10, 999), "name" => $name, "description" => $description, "icon" => $icon, "isActive" => true]]);
+    exit();
+}
+
+// PUT /api/categories/{id} or /api/admin/categories/{id}
+if (preg_match('#^(categories|admin/categories)/([0-9]+)$#', $route, $matches) && ($method === 'PUT' || $method === 'PATCH')) {
+    $catId = (int)$matches[2];
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM Categories WHERE id = ?");
+            $stmt->execute([$catId]);
+            $existing = $stmt->fetch();
+            if (!$existing) {
+                http_response_code(404);
+                echo json_encode(["success" => false, "message" => "Category not found."]);
+                exit();
+            }
+
+            $name = isset($input['name']) ? trim($input['name']) : $existing['name'];
+            $description = isset($input['description']) ? trim($input['description']) : $existing['description'];
+            $icon = isset($input['icon']) ? trim($input['icon']) : $existing['icon'];
+            $image = array_key_exists('image', $input) ? $input['image'] : $existing['image'];
+            $displayOrder = isset($input['displayOrder']) ? (int)$input['displayOrder'] : (int)$existing['displayOrder'];
+            $isActive = isset($input['isActive']) ? ($input['isActive'] ? 1 : 0) : (int)$existing['isActive'];
+
+            if ($name !== $existing['name']) {
+                $pdo->prepare("UPDATE Cars SET category = ? WHERE category = ?")->execute([$name, $existing['name']]);
+            }
+
+            $upd = $pdo->prepare("UPDATE Categories SET name = ?, description = ?, icon = ?, image = ?, displayOrder = ?, isActive = ? WHERE id = ?");
+            $upd->execute([$name, $description, $icon, $image, $displayOrder, $isActive, $catId]);
+
+            echo json_encode([
+                "success" => true,
+                "message" => "Category updated successfully!",
+                "data" => [
+                    "id" => $catId,
+                    "name" => $name,
+                    "description" => $description,
+                    "icon" => $icon,
+                    "image" => $image,
+                    "displayOrder" => $displayOrder,
+                    "isActive" => (bool)$isActive
+                ]
+            ]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error updating category: " . $e->getMessage()]);
+            exit();
+        }
+    }
+    echo json_encode(["success" => true, "message" => "Category updated!"]);
+    exit();
+}
+
+// DELETE /api/categories/{id} or /api/admin/categories/{id}
+if (preg_match('#^(categories|admin/categories)/([0-9]+)$#', $route, $matches) && $method === 'DELETE') {
+    $catId = (int)$matches[2];
+    if (isset($pdo)) {
+        try {
+            $stmt = $pdo->prepare("DELETE FROM Categories WHERE id = ?");
+            $stmt->execute([$catId]);
+            echo json_encode(["success" => true, "message" => "Category removed successfully."]);
+            exit();
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error deleting category: " . $e->getMessage()]);
+            exit();
+        }
+    }
+    echo json_encode(["success" => true, "message" => "Category deleted."]);
     exit();
 }
 

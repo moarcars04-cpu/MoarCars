@@ -128,20 +128,27 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
     return user.favoriteCars;
   }, [user]);
 
-  // Fetch live fleet data from backend API
+  // Categories state
+  const [categories, setCategories] = useState<any[]>([]);
+
+  // Fetch live fleet data & categories from backend API
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
 
-    fetch("/api/cars")
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((res) => {
+    Promise.all([
+      fetch("/api/cars")
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null),
+      fetch("/api/categories")
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null),
+    ])
+      .then(([carsRes, catsRes]) => {
         if (!isMounted) return;
-        if (res.success && Array.isArray(res.data)) {
-          const mapped = res.data.map((car: any) => ({
+
+        if (carsRes && carsRes.success && Array.isArray(carsRes.data)) {
+          const mapped = carsRes.data.map((car: any) => ({
             ...car,
             pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0,
             hasSunroof: car.hasSunroof ?? false,
@@ -154,8 +161,12 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           }));
           setFleet(mapped);
         }
+
+        if (catsRes && catsRes.success && Array.isArray(catsRes.data)) {
+          setCategories(catsRes.data);
+        }
       })
-      .catch((err) => console.warn("[LandingPage] Fetch cars:", err))
+      .catch((err) => console.warn("[LandingPage] Fetch cars/categories:", err))
       .finally(() => {
         if (isMounted) setIsLoading(false);
       });
@@ -537,7 +548,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
           {/* Floating Search Widget */}
           <div className="w-full pb-1 sm:pb-2">
-            <HeroSearch onSearch={handleHeroSearch} />
+            <HeroSearch onSearch={handleHeroSearch} categories={categories} />
           </div>
         </div>
       </section>
@@ -549,6 +560,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       <div id="collections">
         <CollectionsSection
           fleet={fleet}
+          categories={categories}
           wishlistIds={wishlistIds}
           compareList={compareList}
           onToggleWishlist={handleToggleWishlist}

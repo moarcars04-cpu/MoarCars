@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 
 interface CollectionsSectionProps {
   fleet?: any[];
+  categories?: any[];
   wishlistIds?: (number | string)[];
   compareList?: any[];
   onToggleWishlist?: (carId: number | string) => void;
@@ -14,15 +15,9 @@ interface CollectionsSectionProps {
   onSelectBrand?: (brand: string) => void;
 }
 
-const CATEGORY_TABS = [
-  { id: "all", label: "All" },
-  { id: "SUV", label: "SUV" },
-  { id: "Sedan", label: "Sedan" },
-  { id: "Luxury", label: "Luxury" },
-];
-
 export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
   fleet = [],
+  categories = [],
   wishlistIds = [],
   onToggleWishlist,
   onViewDetails,
@@ -30,7 +25,31 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
   const [activeTab, setActiveTab] = useState("all");
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  // Filter cars for luxury collection
+  // Dynamic Category Tabs from database + fleet
+  const categoryTabs = useMemo(() => {
+    const tabs: Array<{ id: string; label: string }> = [{ id: "all", label: "All Vehicles" }];
+
+    if (categories && categories.length > 0) {
+      categories
+        .filter((c: any) => c.isActive !== false)
+        .forEach((c: any) => {
+          if (!tabs.some((t) => t.id.toLowerCase() === c.name.toLowerCase())) {
+            tabs.push({ id: c.name, label: c.name });
+          }
+        });
+    }
+
+    // Include categories currently assigned to fleet
+    fleet.forEach((c) => {
+      if (c.category && !tabs.some((t) => t.id.toLowerCase() === c.category.toLowerCase())) {
+        tabs.push({ id: c.category, label: c.category });
+      }
+    });
+
+    return tabs;
+  }, [categories, fleet]);
+
+  // Filter cars for collection
   const collectionCars = useMemo(() => {
     if (!fleet || fleet.length === 0) return [];
     if (activeTab === "all") return fleet.slice(0, 6);
@@ -38,7 +57,8 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
       .filter(
         (c) =>
           (c.category && c.category.toLowerCase() === activeTab.toLowerCase()) ||
-          (c.subCategory && c.subCategory.toLowerCase().includes(activeTab.toLowerCase()))
+          (c.subCategory && c.subCategory.toLowerCase().includes(activeTab.toLowerCase())) ||
+          (c.tag && c.tag.toLowerCase() === activeTab.toLowerCase())
       )
       .slice(0, 6);
   }, [fleet, activeTab]);
@@ -76,8 +96,8 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
 
         {/* Category Pills Filter Bar */}
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
-          {CATEGORY_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
+          {categoryTabs.map((tab) => {
+            const isActive = activeTab.toLowerCase() === tab.id.toLowerCase();
             return (
               <button
                 key={tab.id}

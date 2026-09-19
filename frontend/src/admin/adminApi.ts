@@ -1,5 +1,6 @@
 import {
   CarItem,
+  CategoryItem,
   BookingItem,
   CustomerItem,
   DriverItem,
@@ -36,6 +37,32 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T | nul
 }
 
 export const adminApi = {
+  // Categories (Fleet Segments)
+  async getCategories(): Promise<CategoryItem[] | null> {
+    return fetchJson<CategoryItem[]>(`${API_BASE}/categories`);
+  },
+  async createCategory(category: Partial<CategoryItem>): Promise<CategoryItem | null> {
+    const { id, ...data } = category;
+    return fetchJson<CategoryItem>(`${API_BASE}/admin/categories`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+  },
+  async updateCategory(id: number, category: Partial<CategoryItem>): Promise<CategoryItem | null> {
+    return fetchJson<CategoryItem>(`${API_BASE}/admin/categories/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(category),
+    });
+  },
+  async deleteCategory(id: number): Promise<boolean> {
+    const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/categories/${id}`, {
+      method: "DELETE",
+    });
+    return !!res;
+  },
+
   // Cars
   async getCars(): Promise<CarItem[] | null> {
     return fetchJson<CarItem[]>(`${API_BASE}/admin/cars`);
