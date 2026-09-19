@@ -31,43 +31,33 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  // Gallery datasets with realistic HD fallback images
-  const mainImage = car.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1200&q=80";
+  // Dynamic extraction of the car's real images from database (no fake injected images)
+  const currentPhotoList: string[] = React.useMemo(() => {
+    let list: string[] = [];
+    if (Array.isArray(car.galleryImages) && car.galleryImages.length > 0) {
+      list = car.galleryImages.filter((img: any) => typeof img === "string" && img.trim().length > 0);
+    } else if (car.galleryImages && typeof car.galleryImages === "string") {
+      try {
+        const parsed = JSON.parse(car.galleryImages);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          list = parsed.filter((img: any) => typeof img === "string" && img.trim().length > 0);
+        }
+      } catch (e) {}
+    }
 
-  const exteriorImages = [
-    mainImage,
-    "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
-  ];
+    if (list.length === 0 && car.image && typeof car.image === "string" && car.image.trim().length > 0) {
+      list = [car.image.trim()];
+    }
 
-  const interiorImages = [
-    "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=1200&q=80",
-  ];
+    if (list.length === 0) {
+      list = ["https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80"];
+    }
 
-  const bootImages = [
-    "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1200&q=80",
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
-  ];
+    return list;
+  }, [car.galleryImages, car.image]);
 
-  const rotationImages = [
-    exteriorImages[0],
-    exteriorImages[1],
-    exteriorImages[2],
-    exteriorImages[3],
-  ];
-
-  // Active photos based on current filter
-  const currentPhotoList =
-    activeTab === "interior"
-      ? interiorImages
-      : activeTab === "exterior"
-      ? exteriorImages
-      : activeTab === "boot"
-      ? bootImages
-      : [...exteriorImages, ...interiorImages, ...bootImages];
+  const mainImage = currentPhotoList[0];
+  const rotationImages = currentPhotoList.length > 1 ? currentPhotoList : [mainImage];
 
   // 360 Rotation Mouse / Touch Drag Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -144,21 +134,25 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
 
             {/* Left / Right Nav Arrows */}
-            <button
-              onClick={() =>
-                setActiveImageIndex((prev) => (prev - 1 + currentPhotoList.length) % currentPhotoList.length)
-              }
-              className="absolute left-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/60 text-white backdrop-blur hover:bg-black flex items-center justify-center transition-all opacity-80 hover:opacity-100"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
+            {currentPhotoList.length > 1 && (
+              <>
+                <button
+                  onClick={() =>
+                    setActiveImageIndex((prev) => (prev - 1 + currentPhotoList.length) % currentPhotoList.length)
+                  }
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/60 text-white backdrop-blur hover:bg-black flex items-center justify-center transition-all opacity-80 hover:opacity-100"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
 
-            <button
-              onClick={() => setActiveImageIndex((prev) => (prev + 1) % currentPhotoList.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/60 text-white backdrop-blur hover:bg-black flex items-center justify-center transition-all opacity-80 hover:opacity-100"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
+                <button
+                  onClick={() => setActiveImageIndex((prev) => (prev + 1) % currentPhotoList.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/60 text-white backdrop-blur hover:bg-black flex items-center justify-center transition-all opacity-80 hover:opacity-100"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            )}
           </>
         )}
 
@@ -190,7 +184,7 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
         {activeTab === "video" && (
           <div className="relative h-full w-full bg-black flex items-center justify-center">
             <img
-              src={exteriorImages[1] || mainImage}
+              src={mainImage}
               alt="Video thumbnail"
               className="h-full w-full object-cover opacity-80"
             />
@@ -247,14 +241,14 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
           </div>
           <div className="text-right">
             <span className="text-xs bg-black/60 backdrop-blur px-3 py-1 rounded-full text-brand-gold font-bold border border-brand-gold/30">
-              {activeImageIndex + 1} of {currentPhotoList.length} HD Photos
+              {currentPhotoList.length > 1 ? `${activeImageIndex + 1} of ${currentPhotoList.length} HD Photos` : "1 HD Photo"}
             </span>
           </div>
         </div>
       </div>
 
       {/* Thumbnail Strip */}
-      {activeTab !== "video" && (
+      {activeTab !== "video" && currentPhotoList.length > 1 && (
         <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
           {currentPhotoList.map((img, idx) => (
             <button

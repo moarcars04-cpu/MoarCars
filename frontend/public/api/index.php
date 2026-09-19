@@ -2779,8 +2779,8 @@ if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
             if ($cars !== false) {
                 foreach ($cars as &$c) {
                     $c['id'] = (int)$c['id'];
-                    $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, [$c['image'] ?? '']);
-                    $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, [$c['image'] ?? '']);
+                    $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, !empty($c['image']) ? [$c['image']] : []);
+                    $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, !empty($c['image']) ? [$c['image']] : []);
                 }
                 echo json_encode(["success" => true, "data" => $cars]);
                 exit();
@@ -2801,8 +2801,8 @@ if (preg_match('#^(cars|admin/cars)/([0-9]+)$#', $route, $matches) && $method ==
             $car = $stmt->fetch();
             if ($car) {
                 $car['id'] = (int)$car['id'];
-                $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, [$car['image'] ?? '']);
-                $car['angle360Images'] = safeJsonDecode($car['angle360Images'] ?? null, [$car['image'] ?? '']);
+                $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, !empty($car['image']) ? [$car['image']] : []);
+                $car['angle360Images'] = safeJsonDecode($car['angle360Images'] ?? null, !empty($car['image']) ? [$car['image']] : []);
                 echo json_encode(["success" => true, "data" => $car]);
                 exit();
             }
@@ -3492,18 +3492,22 @@ if (preg_match('#^admin/drivers/([0-9]+)$#', $route, $matches) && $method === 'D
 // ----------------------------------------------------------------------
 // 5. BRANCHES API
 // ----------------------------------------------------------------------
-if ($route === 'admin/branches' && $method === 'GET') {
+if (($route === 'branches' || $route === 'admin/branches' || $route === 'locations') && $method === 'GET') {
     if (isset($pdo)) {
         try {
             $branches = $pdo->query("SELECT * FROM Branches ORDER BY id ASC")->fetchAll();
+            $locNames = [];
             foreach ($branches as &$b) {
                 $b['id'] = (int)$b['id'];
+                if (!empty($b['name'])) {
+                    $locNames[] = $b['name'];
+                }
             }
-            echo json_encode(["success" => true, "data" => $branches]);
+            echo json_encode(["success" => true, "data" => $branches, "locations" => $locNames]);
             exit();
         } catch (Exception $e) {}
     }
-    echo json_encode(["success" => true, "data" => []]);
+    echo json_encode(["success" => true, "data" => [], "locations" => []]);
     exit();
 }
 

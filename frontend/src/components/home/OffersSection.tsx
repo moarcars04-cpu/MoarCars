@@ -1,39 +1,57 @@
-import React, { useState } from "react";
-import { Tag, Sparkles, Copy, CheckCircle2, Gift, Clock, ShieldCheck, ArrowRight, Building, Car } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Sparkles, Copy, CheckCircle2, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+interface OfferItem {
+  code: string;
+  discount: string;
+  title: string;
+  desc: string;
+  tag: string;
+  color?: string;
+  badgeColor?: string;
+}
+
+const COLOR_SCHEMES = [
+  { color: "from-amber-600/30 to-amber-950/40 border-amber-500/40", badgeColor: "bg-brand-gold text-brand-navy" },
+  { color: "from-emerald-600/30 to-emerald-950/40 border-emerald-500/40", badgeColor: "bg-emerald-400 text-slate-950" },
+  { color: "from-sky-600/30 to-sky-950/40 border-sky-500/40", badgeColor: "bg-sky-400 text-slate-950" },
+];
 
 export const OffersSection: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [offers, setOffers] = useState<OfferItem[]>([]);
 
-  const offers = [
-    {
-      code: "PILGRIM10",
-      discount: "Flat ₹500 OFF",
-      title: "Tirumala Pilgrimage Special",
-      desc: "Valid on all 7-seater Innova Crysta & Scorpio-N bookings with zero security deposit perk.",
-      tag: "Top Choice",
-      color: "from-amber-600/30 to-amber-950/40 border-amber-500/40",
-      badgeColor: "bg-brand-gold text-brand-navy",
-    },
-    {
-      code: "WEEKEND20",
-      discount: "20% Discount",
-      title: "Horsley Hills Weekend Escape",
-      desc: "Book Friday to Monday and enjoy unlimited km with 24/7 roadside assistance included.",
-      tag: "Weekend Deal",
-      color: "from-emerald-600/30 to-emerald-950/40 border-emerald-500/40",
-      badgeColor: "bg-emerald-400 text-slate-950",
-    },
-    {
-      code: "CORP2026",
-      discount: "Corporate Tariff",
-      title: "Executive & Chauffeur Rentals",
-      desc: "Monthly billing, GST invoice input credit, and dedicated priority fleet manager for companies.",
-      tag: "Business",
-      color: "from-sky-600/30 to-sky-950/40 border-sky-500/40",
-      badgeColor: "bg-sky-400 text-slate-950",
-    },
-  ];
+  useEffect(() => {
+    fetch("/api/coupons")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const activeCoupons = res.data.filter((c: any) => c.status !== "Expired" && c.status !== "Disabled");
+          const mapped: OfferItem[] = activeCoupons.map((c: any, i: number) => {
+            const scheme = COLOR_SCHEMES[i % COLOR_SCHEMES.length];
+            const discountTxt = c.discountType === "Percentage" || c.type === "Percentage"
+              ? `${c.discountValue || c.discount || 10}% OFF`
+              : `Flat ₹${c.discountValue || c.discount || 500} OFF`;
+            return {
+              code: c.code || "MOARSPECIAL",
+              discount: discountTxt,
+              title: c.title || c.description || "Special Fleet Offer",
+              desc: c.description || `Use coupon code ${c.code} at checkout to claim instant discount.`,
+              tag: c.category || "Exclusive Deal",
+              color: scheme.color,
+              badgeColor: scheme.badgeColor,
+            };
+          });
+          setOffers(mapped);
+        }
+      })
+      .catch((err) => console.warn("[OffersSection] Fetch coupons:", err));
+  }, []);
+
+  if (offers.length === 0) {
+    return null;
+  }
 
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -50,14 +68,14 @@ export const OffersSection: React.FC = () => {
             <Gift className="h-4 w-4" /> Exclusive Travel Offers
           </span>
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-            Best Deals & <span className="text-brand-gold">Pilgrimage Promo Codes</span>
+            Best Deals & <span className="text-brand-gold">Promo Codes</span>
           </h2>
           <p className="text-xs text-primary-foreground/70">
             Apply any promo code at instant checkout to claim flat cash discounts on your self-drive rental.
           </p>
         </div>
 
-        {/* 3 Offer Cards Grid */}
+        {/* Offer Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {offers.map((offer) => (
             <div

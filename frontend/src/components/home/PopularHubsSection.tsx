@@ -19,49 +19,18 @@ const DEFAULT_HUB_IMAGES: Record<string, string> = {
 export const PopularHubsSection: React.FC<PopularHubsSectionProps> = ({ onSelectHub }) => {
   const { hubs } = useLocations();
 
-  const displayHubs = hubs.length > 0
-    ? hubs.map((h, i) => ({
-        id: String(h.id),
-        name: h.name,
-        location: h.address || `${h.city}, ${h.state}`,
-        tag: h.operatingHours || "24/7 Desk",
-        carsAvailable: `${h.totalCars || 8}+ Cars`,
-        deliveryTime: "Instant Handover",
-        image: Object.values(DEFAULT_HUB_IMAGES)[i % Object.values(DEFAULT_HUB_IMAGES).length],
-        description: `Dedicated pickup and key dispatch hub in ${h.city}. Managed by ${h.managerName || "Station Manager"} (${h.managerPhone || "+91 94400 11223"}).`,
-      }))
-    : [
-        {
-          id: "1",
-          name: "Tirupati Central Hub (Station)",
-          location: "Railway Station Road, Tirupati",
-          tag: "24/7 Desk",
-          carsAvailable: "24+ Cars",
-          deliveryTime: "Instant (5 min)",
-          image: DEFAULT_HUB_IMAGES.station,
-          description: "Instant doorstep handover right outside the VIP exit or Station car park.",
-        },
-        {
-          id: "2",
-          name: "Renigunta Airport Hub (TIR T1)",
-          location: "Terminal 1 Arrivals, Tirupati Airport",
-          tag: "Airport Handover",
-          carsAvailable: "18+ Cars",
-          deliveryTime: "Flight-tracking",
-          image: DEFAULT_HUB_IMAGES.airport,
-          description: "Flight-tracking handovers with keyless curbside pickup upon landing.",
-        },
-        {
-          id: "3",
-          name: "Alipiri Tirumala Gate Hub",
-          location: "Bypass Road, Alipiri Gate",
-          tag: "Ghat Road Transit",
-          carsAvailable: "15+ SUVs",
-          deliveryTime: "Instant Handover",
-          image: DEFAULT_HUB_IMAGES.alipiri,
-          description: "Ghat-certified SUVs equipped with hill-hold and TTD pass clearance readiness.",
-        },
-      ];
+  if (!hubs || hubs.length === 0) return null;
+
+  const displayHubs = hubs.map((h, i) => ({
+    id: String(h.id),
+    name: h.name,
+    location: h.address || `${h.city}, ${h.state}`,
+    tag: h.operatingHours || "24/7 Desk",
+    carsAvailable: `${h.totalCars || 0}+ Cars`,
+    deliveryTime: "Instant Handover",
+    image: Object.values(DEFAULT_HUB_IMAGES)[i % Object.values(DEFAULT_HUB_IMAGES).length],
+    description: h.address ? `Dedicated pickup and key dispatch hub in ${h.city} at ${h.address}.` : `Dedicated hub in ${h.city}.`,
+  }));
 
   return (
     <section className="py-6 sm:py-8 bg-card border-b border-border">

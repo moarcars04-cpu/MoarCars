@@ -474,50 +474,47 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       setNotice({ type: "success", text: `Vehicle "${carData.name || editingCar.name}" updated successfully!` });
       adminApi.updateCar(editingCar.id, carData);
     } else {
+      const primaryImg = carData.image || (Array.isArray(carData.galleryImages) && carData.galleryImages[0] ? carData.galleryImages[0] : "");
       const newCar: CarItem = {
         id: Math.floor(100 + Math.random() * 900),
-        name: carData.name || "New Fleet Vehicle",
-        brand: carData.brand || "Maruti Suzuki",
-        model: carData.model || "Brezza",
-        variant: carData.variant || "ZXi",
-        year: carData.year || 2024,
-        registrationNumber: carData.registrationNumber || "AP 03 BX 2024",
-        vinNumber: carData.vinNumber || "MA3BREZ202400918",
-        detail: carData.detail || "Premium fleet addition",
-        price: `₹${carData.pricePerDay || 1999}`,
-        pricePerHour: carData.pricePerHour || 220,
-        pricePerDay: carData.pricePerDay || 1999,
-        pricePerWeek: carData.pricePerWeek || 11999,
-        pricePerMonth: carData.pricePerMonth || 41999,
-        securityDeposit: carData.securityDeposit || 4000,
-        lateFeePerHour: carData.lateFeePerHour || 200,
+        name: carData.name || "Fleet Vehicle",
+        brand: carData.brand || "",
+        model: carData.model || "",
+        variant: carData.variant || "",
+        year: carData.year || new Date().getFullYear(),
+        registrationNumber: carData.registrationNumber || "",
+        vinNumber: carData.vinNumber || "",
+        detail: carData.detail || "Self-drive rental vehicle",
+        price: carData.price || `₹${carData.pricePerDay || 0}/day`,
+        pricePerHour: carData.pricePerHour || 0,
+        pricePerDay: carData.pricePerDay || 0,
+        pricePerWeek: carData.pricePerWeek || 0,
+        pricePerMonth: carData.pricePerMonth || 0,
+        securityDeposit: carData.securityDeposit || 0,
+        lateFeePerHour: carData.lateFeePerHour || 0,
         tag: carData.tag || "New",
-        category: (carData.category as any) || "SUV",
+        category: (carData.category as any) || (categories[0]?.name || "Fleet"),
         fuelType: (carData.fuelType as any) || "Petrol",
-        transmission: (carData.transmission as any) || "Automatic",
+        transmission: (carData.transmission as any) || "Manual",
         seats: carData.seats || 5,
-        mileage: carData.mileage || "19 km/l",
-        color: carData.color || "Metallic Silver",
+        mileage: carData.mileage || "",
+        color: carData.color || "",
         status: (carData.status as any) || "Available",
         branch: carData.branch || "Tirupati Central Hub",
         location: carData.location || "Tirupati",
         gpsEnabled: carData.gpsEnabled !== undefined ? carData.gpsEnabled : true,
-        fastagNumber: carData.fastagNumber || "FTG-990011-22",
-        insuranceExpiry: carData.insuranceExpiry || "2027-10-10",
-        pollutionExpiry: carData.pollutionExpiry || "2026-12-31",
-        fitnessExpiry: carData.fitnessExpiry || "2029-01-01",
-        permitExpiry: carData.permitExpiry || "2028-05-15",
-        image:
-          carData.image ||
-          "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
-        galleryImages: [
-          carData.image ||
-            "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
-        ],
-        angle360Images: [
-          carData.image ||
-            "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
-        ],
+        fastagNumber: carData.fastagNumber || "",
+        insuranceExpiry: carData.insuranceExpiry || "",
+        pollutionExpiry: carData.pollutionExpiry || "",
+        fitnessExpiry: carData.fitnessExpiry || "",
+        permitExpiry: carData.permitExpiry || "",
+        image: primaryImg,
+        galleryImages: Array.isArray(carData.galleryImages) && carData.galleryImages.length > 0
+          ? carData.galleryImages
+          : (primaryImg ? [primaryImg] : []),
+        angle360Images: Array.isArray(carData.angle360Images) && carData.angle360Images.length > 0
+          ? carData.angle360Images
+          : (primaryImg ? [primaryImg] : []),
         totalTrips: 0,
         totalRevenue: 0,
         maintenanceCost: 0,
@@ -2315,6 +2312,16 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 const name = `${brand} ${model} ${variant}`.trim() || "Fleet Vehicle";
                 const pricePerDay = parseInt(form.pricePerDay?.value) || 0;
 
+                const primaryImage = form.image?.value?.trim() || "";
+                const galleryRaw = form.galleryImages?.value?.trim() || "";
+                let galleryImagesList: string[] = [];
+                if (galleryRaw) {
+                  galleryImagesList = galleryRaw.split(/[\n,]+/).map((s: string) => s.trim()).filter(Boolean);
+                }
+                if (primaryImage && !galleryImagesList.includes(primaryImage)) {
+                  galleryImagesList = [primaryImage, ...galleryImagesList];
+                }
+
                 handleSaveCar({
                   brand,
                   model,
@@ -2344,7 +2351,8 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   pollutionExpiry: form.pollutionExpiry?.value || "",
                   fitnessExpiry: form.fitnessExpiry?.value || "",
                   permitExpiry: form.permitExpiry?.value || "",
-                  image: form.image?.value?.trim() || "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
+                  image: primaryImage || (galleryImagesList[0] || ""),
+                  galleryImages: galleryImagesList.length > 0 ? galleryImagesList : (primaryImage ? [primaryImage] : []),
                 });
               }}
               className="space-y-4 text-xs"
@@ -2610,16 +2618,28 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               {activeCarModalTab === "media" && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 font-bold mb-1">Primary Image URL / Cloudinary</label>
+                    <label className="block text-slate-400 font-bold mb-1">Primary Display Image URL *</label>
                     <input
                       name="image"
                       defaultValue={editingCar?.image || ""}
-                      placeholder="e.g. https://images.unsplash.com/... or image URL"
+                      placeholder="e.g. https://your-domain.com/car.jpg or image URL"
                       className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
                     />
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 text-center">
-                    <p className="text-slate-400 text-xs">360° Angle Views & Walkaround Video configured automatically upon image upload</p>
+                  <div>
+                    <label className="block text-slate-400 font-bold mb-1">Additional Gallery Photos (Optional - One URL per line)</label>
+                    <textarea
+                      name="galleryImages"
+                      rows={4}
+                      defaultValue={
+                        Array.isArray(editingCar?.galleryImages)
+                          ? editingCar.galleryImages.filter((img: string) => img !== editingCar?.image).join("\n")
+                          : ""
+                      }
+                      placeholder="https://.../photo2.jpg&#10;https://.../photo3.jpg"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">Leave empty if you only have 1 image. Only images you enter here will be saved and displayed.</p>
                   </div>
                 </div>
               )}

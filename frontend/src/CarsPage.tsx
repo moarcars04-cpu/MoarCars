@@ -45,8 +45,8 @@ interface CarsPageProps {
 export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
-  // Fleet state initialized with default cars for instant zero-lag rendering
-  const [fleet, setFleet] = useState<CarFleetItem[]>(DEFAULT_DATABASE_CARS);
+  // Fleet state fetched from live backend database API
+  const [fleet, setFleet] = useState<CarFleetItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Search & Filter State

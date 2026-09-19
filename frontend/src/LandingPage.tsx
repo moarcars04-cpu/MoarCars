@@ -92,7 +92,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [fleet, setFleet] = useState<CarFleetItem[]>(DEFAULT_DATABASE_CARS);
+  const [fleet, setFleet] = useState<CarFleetItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");

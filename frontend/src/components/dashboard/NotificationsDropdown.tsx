@@ -23,41 +23,8 @@ interface NotificationsDropdownProps {
   onNavigateTab: (tabId: string) => void;
 }
 
-const DEFAULT_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "notif_1",
-    title: "Welcome to Moar Cars!",
-    message: "Your self-drive membership is active. 100 Moar Coins credited to your wallet.",
-    type: "system",
-    channel: "push",
-    isRead: false,
-    link: "wallet",
-    timestamp: "10 mins ago",
-  },
-  {
-    id: "notif_2",
-    title: "Brahmotsavam Festive Offer Live 🪔",
-    message: "Get Flat ₹500 OFF + 2X Loyalty Coins on SUV bookings with coupon TIRUMALA500.",
-    type: "offer",
-    channel: "whatsapp",
-    isRead: false,
-    link: "rewards",
-    timestamp: "1 hour ago",
-  },
-  {
-    id: "notif_3",
-    title: "KYC Express Verification Ready",
-    message: "Upload your Driving License & Aadhaar to enjoy zero-wait instant vehicle pickup at Station Hub.",
-    type: "pickup",
-    channel: "sms",
-    isRead: true,
-    link: "kyc",
-    timestamp: "Yesterday",
-  },
-];
-
 export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
-  notifications = DEFAULT_NOTIFICATIONS,
+  notifications = [],
   onMarkRead,
   onMarkAllRead,
   onNavigateTab,
@@ -65,7 +32,7 @@ export const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread" | "offers">("all");
 
-  const displayList = notifications && notifications.length > 0 ? notifications : DEFAULT_NOTIFICATIONS;
+  const displayList = notifications || [];
   const unreadCount = displayList.filter((n) => !n.isRead).length;
 
   const filteredItems = displayList.filter((n) => {

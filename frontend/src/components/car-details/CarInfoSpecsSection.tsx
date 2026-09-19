@@ -24,59 +24,54 @@ interface CarInfoSpecsSectionProps {
 }
 
 export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car }) => {
-  // Dynamic or fallback specs calculations
   const isEV = (car.fuelType || "").toLowerCase() === "electric" || (car.category || "").toLowerCase() === "electric";
-  const isLuxury = (car.category || "").toLowerCase() === "luxury" || car.name.includes("BMW") || car.name.includes("Innova");
-  const isSUV = (car.category || "").toLowerCase() === "suv" || car.name.includes("Scorpio") || car.name.includes("Creta");
 
   const specs = [
     {
       label: "Fuel Type",
-      value: car.fuelType || (isEV ? "100% Electric" : "Petrol"),
-      sub: isEV ? "Zero Emission" : "BS6 Phase 2",
+      value: car.fuelType || (isEV ? "Electric" : "Petrol"),
+      sub: isEV ? "Zero Emission" : "Verified Engine",
       icon: Fuel,
     },
     {
       label: "Transmission",
-      value: car.transmission || "Automatic",
-      sub: "Smooth Shift",
+      value: car.transmission || "Manual",
+      sub: "Certified Transmission",
       icon: Gauge,
     },
     {
       label: "Seating Capacity",
       value: `${car.seats || 5} Passengers`,
-      sub: car.seats === 7 ? "Captain Seats Layout" : "Ergonomic Cushion",
+      sub: "Comfort Cabin",
       icon: Users,
     },
     {
       label: "Mileage / Range",
-      value: car.mileage || (isEV ? "405 km / charge" : "18 km/l"),
-      sub: "Real-world Tested",
+      value: car.mileage || (isEV ? "Electric Range" : "Real-world Tested"),
+      sub: "Certified Efficiency",
       icon: Zap,
     },
     {
       label: "Boot Space",
-      value: car.bootSpace || (car.seats === 7 ? "520 Litres" : "380 Litres"),
-      sub: "Holds 3 Large + 2 Small Bags",
+      value: car.bootSpace || "Spacious Trunk",
+      sub: "Luggage Storage",
       icon: Luggage,
     },
     {
       label: "Ground Clearance",
-      value: isSUV ? "205 mm" : "175 mm",
-      sub: "Ghat Road Optimized",
+      value: car.groundClearance || "Ghat Road Ready",
+      sub: "Tirumala Certified",
       icon: Compass,
     },
   ];
 
   const comfortFeatures = [
-    { name: "Panoramic Sunroof", available: car.hasSunroof ?? true, desc: "Breathtaking views of Tirumala hills" },
-    { name: "Wireless Apple CarPlay / Android Auto", available: true, desc: "Seamless navigation & playlist streaming" },
-    { name: "Ventilated Front Seats", available: isLuxury || isSUV, desc: "Keeps you cool during sunny temple tours" },
-    { name: "Dual-Zone Automatic Climate Control", available: true, desc: "Independent temperature with rear AC vents" },
-    { name: "Premium Bose / Harman Sound", available: isLuxury || isSUV, desc: "Devotional chants & crystal audio" },
-    { name: "Wireless Smartphone Charging", available: true, desc: "Fast 15W inductive charge pad" },
-    { name: "Keyless Smart Entry & Push Start", available: true, desc: "Walk-in access with digital key sync" },
-    { name: "Cruise Control with Speed Limiter", available: true, desc: "Effortless highway driving on NH140/NH71" },
+    { name: "Panoramic Sunroof", available: car.hasSunroof ?? false, desc: "Breathtaking views and airy cabin feel" },
+    { name: "Wireless Apple CarPlay / Android Auto", available: car.hasCarPlay ?? true, desc: "Seamless navigation & playlist streaming" },
+    { name: "Cabin Air Conditioning & Rear Vents", available: car.hasAC ?? true, desc: "Dual-zone climate comfort" },
+    { name: "FASTag Integrated", available: Boolean(car.fastagNumber) || true, desc: "Automatic toll deductions at actual government rates" },
+    { name: "Keyless Smart Entry & Push Start", available: car.keylessEntry ?? true, desc: "Convenient keyless start system" },
+    { name: "Cruise Control with Speed Limiter", available: car.cruiseControl ?? true, desc: "Effortless highway driving" },
   ];
 
   const safetyFeatures = [

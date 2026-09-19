@@ -37,48 +37,6 @@ interface SettingsSectionProps {
   onNavigateToTab?: (tab: string) => void;
 }
 
-const DEFAULT_ADDRESSES: SavedAddress[] = [
-  {
-    id: "addr_1",
-    label: "Home",
-    addressLine: "Flat 402, Sri Venkateswara Nilayam, Bhavani Nagar",
-    city: "Tirupati",
-    state: "Andhra Pradesh",
-    pincode: "517501",
-    landmark: "Near Alipiri Link Road",
-    isDefault: true,
-  },
-  {
-    id: "addr_2",
-    label: "Hotel / Temple",
-    addressLine: "Srinivasam Pilgrimage Guest House, Station Road",
-    city: "Tirupati",
-    state: "Andhra Pradesh",
-    pincode: "517501",
-    landmark: "Opposite RTC Central Bus Stand",
-    isDefault: false,
-  },
-];
-
-const DEFAULT_PAYMENTS: SavedPaymentMethod[] = [
-  {
-    id: "pay_1",
-    type: "upi",
-    upiVpa: "vishnu@okaxis",
-    bankName: "Axis Bank UPI",
-    isDefault: true,
-  },
-  {
-    id: "pay_2",
-    type: "card",
-    cardBrand: "Visa",
-    cardLast4: "4242",
-    holderName: "S. Vishnu Vardhan",
-    cardExpiry: "08/29",
-    isDefault: false,
-  },
-];
-
 export const SettingsSection: React.FC<SettingsSectionProps> = ({
   user,
   onProfileUpdated,
@@ -93,7 +51,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   const [addresses, setAddresses] = useState<SavedAddress[]>(
     user.savedAddresses && user.savedAddresses.length > 0
       ? user.savedAddresses
-      : DEFAULT_ADDRESSES
+      : []
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
@@ -109,7 +67,7 @@ export const SettingsSection: React.FC<SettingsSectionProps> = ({
   const [payments, setPayments] = useState<SavedPaymentMethod[]>(
     user.savedPaymentMethods && user.savedPaymentMethods.length > 0
       ? user.savedPaymentMethods
-      : DEFAULT_PAYMENTS
+      : []
   );
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
   const [payType, setPayType] = useState<"upi" | "card">("upi");

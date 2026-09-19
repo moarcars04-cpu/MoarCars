@@ -1,70 +1,51 @@
-import React, { useState } from "react";
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Testimonial {
-  id: string;
+  id: string | number;
   name: string;
   location: string;
-  avatar: string;
+  avatar?: string;
   rating: number;
   quote: string;
 }
 
-const TESTIMONIALS_DATA: Testimonial[] = [
-  {
-    id: "1",
-    name: "Rahul Mehta",
-    location: "Hyderabad",
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
-    rating: 5,
-    quote:
-      "“Amazing experience! The car was in perfect condition and the booking process was so smooth. MOAR CARS made our trip unforgettable.”",
-  },
-  {
-    id: "2",
-    name: "Sneha Reddy",
-    location: "Bengaluru",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-    rating: 5,
-    quote:
-      "“Premium cars, professional service and no hidden charges. Highly recommended for anyone who loves to drive in style!”",
-  },
-  {
-    id: "3",
-    name: "Arjun Varma",
-    location: "Chennai",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-    rating: 5,
-    quote:
-      "“Picked up the car at the airport, super convenient! The vehicle was clean, and the support team was available 24/7. Truly a premium service.”",
-  },
-  {
-    id: "4",
-    name: "Pooja Sharma",
-    location: "Mumbai",
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80",
-    rating: 5,
-    quote:
-      "“Rented the BMW for our executive summit. Flawless doorstep delivery and luxury interior. Definitely booking again for our next tour!”",
-  },
-];
-
 export const TestimonialsSection: React.FC = () => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [startIndex, setStartIndex] = useState(0);
 
+  useEffect(() => {
+    fetch("/api/reviews")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((res) => {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const mapped: Testimonial[] = res.data.map((r: any) => ({
+            id: r.id,
+            name: r.customerName || r.name || "Verified Customer",
+            location: r.location || "Tirupati",
+            avatar: r.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.customerName || "Customer")}&background=c88d18&color=fff`,
+            rating: Number(r.rating) || 5,
+            quote: r.comment || r.review || r.quote || "",
+          }));
+          setTestimonials(mapped);
+        }
+      })
+      .catch((err) => console.warn("[TestimonialsSection] Fetch reviews:", err));
+  }, []);
+
+  if (testimonials.length === 0) {
+    return null;
+  }
+
   const handlePrev = () => {
-    setStartIndex((prev) => (prev === 0 ? TESTIMONIALS_DATA.length - 3 : prev - 1));
+    setStartIndex((prev) => (prev === 0 ? Math.max(0, testimonials.length - 3) : prev - 1));
   };
 
   const handleNext = () => {
-    setStartIndex((prev) => (prev >= TESTIMONIALS_DATA.length - 3 ? 0 : prev + 1));
+    setStartIndex((prev) => (prev >= testimonials.length - 3 ? 0 : prev + 1));
   };
 
-  const visibleTestimonials = [
-    TESTIMONIALS_DATA[startIndex % TESTIMONIALS_DATA.length],
-    TESTIMONIALS_DATA[(startIndex + 1) % TESTIMONIALS_DATA.length],
-    TESTIMONIALS_DATA[(startIndex + 2) % TESTIMONIALS_DATA.length],
-  ];
+  const visibleTestimonials = testimonials.slice(startIndex, startIndex + 3);
 
   return (
     <section className="py-6 sm:py-8 bg-white">
@@ -82,28 +63,30 @@ export const TestimonialsSection: React.FC = () => {
 
           <div className="flex items-center gap-3 self-start sm:self-auto">
             <span className="text-xs text-slate-400 font-medium">Real journeys. Real smiles.</span>
-            <div className="flex items-center gap-1.5 ml-2">
-              <button
-                type="button"
-                onClick={handlePrev}
-                aria-label="Previous review"
-                className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:border-[#c88d18] hover:text-[#c88d18] hover:bg-amber-50/50 transition-all"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                aria-label="Next review"
-                className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:border-[#c88d18] hover:text-[#c88d18] hover:bg-amber-50/50 transition-all"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+            {testimonials.length > 3 && (
+              <div className="flex items-center gap-1.5 ml-2">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  aria-label="Previous review"
+                  className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:border-[#c88d18] hover:text-[#c88d18] hover:bg-amber-50/50 transition-all"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  aria-label="Next review"
+                  className="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:border-[#c88d18] hover:text-[#c88d18] hover:bg-amber-50/50 transition-all"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* 3 Testimonial Cards Grid */}
+        {/* Testimonial Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {visibleTestimonials.map((t) => (
             <div
@@ -119,7 +102,7 @@ export const TestimonialsSection: React.FC = () => {
 
               {/* Review Quote */}
               <p className="text-xs sm:text-[13px] leading-relaxed text-slate-600 font-normal italic flex-1">
-                {t.quote}
+                "{t.quote}"
               </p>
 
               {/* User Profile */}

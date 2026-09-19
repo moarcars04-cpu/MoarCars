@@ -31,62 +31,12 @@ interface SupportSectionProps {
   userTickets?: UserSupportTicket[];
 }
 
-const DEFAULT_TICKETS: UserSupportTicket[] = [
-  {
-    id: "TKT-882190",
-    bookingId: 1001,
-    category: "Payment / Refund",
-    priority: "Medium",
-    status: "Resolved",
-    assignedAgent: "Nagaraju V (Accounts)",
-    subject: "Security Deposit Settlement for Innova Crysta",
-    messages: [
-      {
-        sender: "Customer",
-        text: "Hi, I returned the vehicle yesterday at Tirupati Station Hub. When can I expect the ₹3,000 security deposit refund?",
-        time: "2026-09-06 14:30",
-      },
-      {
-        sender: "Agent",
-        text: "Namaste! We checked the return audit report. The car was returned in pristine condition with a full tank. ₹3,000 has been credited back to your UPI (REF_UPI_2026_9941).",
-        time: "2026-09-06 15:10",
-      },
-    ],
-    createdAt: "2026-09-06 14:30",
-    lastUpdated: "2026-09-06 15:10",
-  },
-  {
-    id: "TKT-910442",
-    category: "General Enquiry",
-    priority: "Low",
-    status: "In Progress",
-    assignedAgent: "Support Desk",
-    subject: "Fastag Toll deduction for Srikalahasti trip",
-    messages: [
-      {
-        sender: "Customer",
-        text: "Could you provide the toll pass breakdown for our trip to Srikalahasti and Kanipakam?",
-        time: "2026-09-07 10:15",
-      },
-      {
-        sender: "AI Assistant",
-        text: "We have fetched your FASTag logs. Two toll plazas (Renigunta Toll ₹75 and Kanipakam Toll ₹60) were recorded.",
-        time: "2026-09-07 10:16",
-      },
-    ],
-    createdAt: "2026-09-07 10:15",
-    lastUpdated: "2026-09-07 10:16",
-  },
-];
-
 export const SupportSection: React.FC<SupportSectionProps> = ({
   user,
   bookings = [],
-  userTickets = DEFAULT_TICKETS,
+  userTickets = [],
 }) => {
-  const [tickets, setTickets] = useState<UserSupportTicket[]>(
-    userTickets.length > 0 ? userTickets : DEFAULT_TICKETS
-  );
+  const [tickets, setTickets] = useState<UserSupportTicket[]>(userTickets || []);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<UserSupportTicket | null>(null);
