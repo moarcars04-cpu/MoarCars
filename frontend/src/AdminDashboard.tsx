@@ -2309,35 +2309,42 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
               onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.target as any;
+                const brand = form.brand?.value?.trim() || "";
+                const model = form.model?.value?.trim() || "";
+                const variant = form.variant?.value?.trim() || "";
+                const name = `${brand} ${model} ${variant}`.trim() || "Fleet Vehicle";
+                const pricePerDay = parseInt(form.pricePerDay?.value) || 0;
+
                 handleSaveCar({
-                  brand: form.brand?.value || "Maruti Suzuki",
-                  model: form.model?.value || "Swift",
-                  variant: form.variant?.value || "ZXi+",
-                  name: `${form.brand?.value || "Maruti"} ${form.model?.value || "Swift"} ${form.variant?.value || ""}`.trim(),
-                  year: parseInt(form.year?.value) || 2024,
-                  registrationNumber: form.registrationNumber?.value || "AP 03 TX 1024",
-                  vinNumber: form.vinNumber?.value || "MA3EYD21S00192844",
+                  brand,
+                  model,
+                  variant,
+                  name,
+                  year: parseInt(form.year?.value) || new Date().getFullYear(),
+                  registrationNumber: form.registrationNumber?.value?.trim() || "",
+                  vinNumber: form.vinNumber?.value?.trim() || "",
                   fuelType: form.fuelType?.value || "Petrol",
                   transmission: form.transmission?.value || "Manual",
                   seats: parseInt(form.seats?.value) || 5,
-                  mileage: form.mileage?.value || "20 km/l",
-                  color: form.color?.value || "Pearl White",
-                  category: form.category?.value || "Hatchback",
-                  pricePerHour: parseInt(form.pricePerHour?.value) || 199,
-                  pricePerDay: parseInt(form.pricePerDay?.value) || 1699,
-                  pricePerWeek: parseInt(form.pricePerWeek?.value) || 9999,
-                  pricePerMonth: parseInt(form.pricePerMonth?.value) || 34999,
-                  securityDeposit: parseInt(form.securityDeposit?.value) || 3000,
-                  lateFeePerHour: parseInt(form.lateFeePerHour?.value) || 150,
+                  mileage: form.mileage?.value?.trim() || "20 km/l",
+                  color: form.color?.value?.trim() || "White",
+                  category: form.category?.value || (categories[0]?.name || "Hatchback"),
+                  pricePerHour: parseInt(form.pricePerHour?.value) || (pricePerDay > 0 ? Math.round(pricePerDay / 10) : 0),
+                  pricePerDay,
+                  price: pricePerDay > 0 ? `₹${pricePerDay.toLocaleString("en-IN")}/day` : "₹0/day",
+                  pricePerWeek: parseInt(form.pricePerWeek?.value) || (pricePerDay * 6),
+                  pricePerMonth: parseInt(form.pricePerMonth?.value) || (pricePerDay * 22),
+                  securityDeposit: parseInt(form.securityDeposit?.value) || 0,
+                  lateFeePerHour: parseInt(form.lateFeePerHour?.value) || 0,
                   status: form.status?.value || "Available",
                   branch: form.branch?.value || "Tirupati Central Hub",
                   location: form.location?.value || "Tirupati",
-                  fastagNumber: form.fastagNumber?.value || "FTG-102030-40",
-                  insuranceExpiry: form.insuranceExpiry?.value || "2027-04-15",
-                  pollutionExpiry: form.pollutionExpiry?.value || "2026-11-20",
-                  fitnessExpiry: form.fitnessExpiry?.value || "2028-08-10",
-                  permitExpiry: form.permitExpiry?.value || "2027-12-31",
-                  image: form.image?.value || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80",
+                  fastagNumber: form.fastagNumber?.value?.trim() || "",
+                  insuranceExpiry: form.insuranceExpiry?.value || "",
+                  pollutionExpiry: form.pollutionExpiry?.value || "",
+                  fitnessExpiry: form.fitnessExpiry?.value || "",
+                  permitExpiry: form.permitExpiry?.value || "",
+                  image: form.image?.value?.trim() || "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80",
                 });
               }}
               className="space-y-4 text-xs"
@@ -2347,30 +2354,64 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Brand *</label>
-                      <input name="brand" defaultValue={editingCar?.brand || "Maruti Suzuki"} required className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="brand"
+                        defaultValue={editingCar?.brand || ""}
+                        placeholder="e.g. Maruti Suzuki / Hyundai / Toyota"
+                        required
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Model *</label>
-                      <input name="model" defaultValue={editingCar?.model || "Swift"} required className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="model"
+                        defaultValue={editingCar?.model || ""}
+                        placeholder="e.g. Swift / Creta / Innova"
+                        required
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Variant</label>
-                      <input name="variant" defaultValue={editingCar?.variant || "ZXi Plus"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="variant"
+                        defaultValue={editingCar?.variant || ""}
+                        placeholder="e.g. ZXi Plus / SX(O)"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Reg Number *</label>
-                      <input name="registrationNumber" defaultValue={editingCar?.registrationNumber || "AP 03 TX 1024"} required className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white uppercase font-mono" />
+                      <input
+                        name="registrationNumber"
+                        defaultValue={editingCar?.registrationNumber || ""}
+                        placeholder="e.g. AP 03 TX 1024"
+                        required
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white uppercase font-mono placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">VIN / Chassis No</label>
-                      <input name="vinNumber" defaultValue={editingCar?.vinNumber || "MA3EYD21S00192844"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono" />
+                      <input
+                        name="vinNumber"
+                        defaultValue={editingCar?.vinNumber || ""}
+                        placeholder="e.g. MA3EYD21S00192844"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-mono placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Year</label>
-                      <input name="year" type="number" defaultValue={editingCar?.year || 2024} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="year"
+                        type="number"
+                        defaultValue={editingCar?.year || ""}
+                        placeholder="e.g. 2024"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                   </div>
 
@@ -2438,7 +2479,13 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Seats</label>
-                      <input name="seats" type="number" defaultValue={editingCar?.seats || 5} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="seats"
+                        type="number"
+                        defaultValue={editingCar?.seats || ""}
+                        placeholder="e.g. 5"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2449,26 +2496,57 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Price Per Day (₹) *</label>
-                      <input name="pricePerDay" type="number" defaultValue={editingCar?.pricePerDay || 1699} required className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold text-sm" />
+                      <input
+                        name="pricePerDay"
+                        type="number"
+                        defaultValue={editingCar?.pricePerDay || ""}
+                        placeholder="e.g. 1999"
+                        required
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-emerald-400 font-bold text-sm placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Price Per Hour (₹)</label>
-                      <input name="pricePerHour" type="number" defaultValue={editingCar?.pricePerHour || 199} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="pricePerHour"
+                        type="number"
+                        defaultValue={editingCar?.pricePerHour || ""}
+                        placeholder="e.g. 199"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Price Per Week (₹)</label>
-                      <input name="pricePerWeek" type="number" defaultValue={editingCar?.pricePerWeek || 9999} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="pricePerWeek"
+                        type="number"
+                        defaultValue={editingCar?.pricePerWeek || ""}
+                        placeholder="e.g. 9999"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Security Deposit (₹)</label>
-                      <input name="securityDeposit" type="number" defaultValue={editingCar?.securityDeposit || 3000} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-bold" />
+                      <input
+                        name="securityDeposit"
+                        type="number"
+                        defaultValue={editingCar?.securityDeposit || ""}
+                        placeholder="e.g. 3000"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-[#c88d18] font-bold placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Late Fee / Hr (₹)</label>
-                      <input name="lateFeePerHour" type="number" defaultValue={editingCar?.lateFeePerHour || 150} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="lateFeePerHour"
+                        type="number"
+                        defaultValue={editingCar?.lateFeePerHour || ""}
+                        placeholder="e.g. 150"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Initial Status</label>
@@ -2497,18 +2575,33 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">FASTag Number</label>
-                      <input name="fastagNumber" defaultValue={editingCar?.fastagNumber || "FTG-889021-39"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="fastagNumber"
+                        defaultValue={editingCar?.fastagNumber || ""}
+                        placeholder="e.g. FTG-889021-39"
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Insurance Expiry Date</label>
-                      <input name="insuranceExpiry" type="date" defaultValue={editingCar?.insuranceExpiry || "2027-04-15"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="insuranceExpiry"
+                        type="date"
+                        defaultValue={editingCar?.insuranceExpiry || ""}
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Pollution (PUC) Expiry</label>
-                      <input name="pollutionExpiry" type="date" defaultValue={editingCar?.pollutionExpiry || "2026-11-20"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                      <input
+                        name="pollutionExpiry"
+                        type="date"
+                        defaultValue={editingCar?.pollutionExpiry || ""}
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2518,7 +2611,12 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-slate-400 font-bold mb-1">Primary Image URL / Cloudinary</label>
-                    <input name="image" defaultValue={editingCar?.image || "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"} className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white" />
+                    <input
+                      name="image"
+                      defaultValue={editingCar?.image || ""}
+                      placeholder="e.g. https://images.unsplash.com/... or image URL"
+                      className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
+                    />
                   </div>
                   <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800 text-center">
                     <p className="text-slate-400 text-xs">360° Angle Views & Walkaround Video configured automatically upon image upload</p>
