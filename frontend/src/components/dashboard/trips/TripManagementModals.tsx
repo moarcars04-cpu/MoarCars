@@ -99,7 +99,7 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
               <input
                 type="date"
                 min={getTodayDateStr()}
-                max={getMaxBookingDateStr(2)}
+                max={getMaxBookingDateStr(60)}
                 value={startDate}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -124,7 +124,7 @@ export const ModifyBookingModal: React.FC<ModalProps> = ({
               <input
                 type="date"
                 min={startDate || getTodayDateStr()}
-                max={getMaxBookingDateStr(2)}
+                max={getMaxBookingDateStr(60)}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full p-2 rounded-xl bg-brand-mist/60 border border-border font-semibold text-brand-navy outline-none cursor-pointer"

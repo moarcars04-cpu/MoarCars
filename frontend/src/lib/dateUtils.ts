@@ -2,7 +2,7 @@
  * MOAR CARS - Unified Date Utilities
  * Enforces booking rules:
  * 1. Past dates are blocked (min = today).
- * 2. Maximum booking window is restricted to 2 months in advance (max = today + 2 months).
+ * 2. Maximum booking window is strictly capped to exactly 60 days in advance (max = today + 60 days).
  * 3. Default pickup is today, default return is today + 2 days.
  */
 
@@ -33,25 +33,26 @@ export const getFutureDateStr = (daysAhead: number = 2): string => {
 };
 
 /**
- * Returns maximum allowable booking date (exactly 2 months from today) formatted as YYYY-MM-DD
+ * Returns maximum allowable booking date (strictly 60 days from today) formatted as YYYY-MM-DD
  */
-export const getMaxBookingDateStr = (monthsAhead: number = 2): string => {
+export const getMaxBookingDateStr = (daysAhead: number = 60): string => {
   const d = new Date();
-  d.setMonth(d.getMonth() + monthsAhead);
+  d.setDate(d.getDate() + daysAhead);
   return formatDateToYMD(d);
 };
 
 /**
- * Ensures a date string falls within [today, today + 2 months].
+ * Ensures a date string falls within [today, today + 60 days].
  * If earlier than min, returns min. If later than max, returns max.
  */
 export const clampBookingDate = (
   dateStr: string,
   minStr: string = getTodayDateStr(),
-  maxStr: string = getMaxBookingDateStr()
+  maxStr: string = getMaxBookingDateStr(60)
 ): string => {
   if (!dateStr) return minStr;
   if (dateStr < minStr) return minStr;
   if (dateStr > maxStr) return maxStr;
   return dateStr;
 };
+

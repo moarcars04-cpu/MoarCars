@@ -3285,7 +3285,7 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                 <input
                   type="date"
                   min={getTodayDateStr()}
-                  max={getMaxBookingDateStr(2)}
+                  max={getMaxBookingDateStr(60)}
                   value={rescheduleDates.startDate}
                   onChange={(e) => setRescheduleDates({ ...rescheduleDates, startDate: e.target.value })}
                   className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
@@ -3296,7 +3296,7 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                 <input
                   type="date"
                   min={rescheduleDates.startDate || getTodayDateStr()}
-                  max={getMaxBookingDateStr(2)}
+                  max={getMaxBookingDateStr(60)}
                   value={rescheduleDates.endDate}
                   onChange={(e) => setRescheduleDates({ ...rescheduleDates, endDate: e.target.value })}
                   className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
@@ -3655,7 +3655,7 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                     name="startDate"
                     type="date"
                     min={getTodayDateStr()}
-                    max={getMaxBookingDateStr(2)}
+                    max={getMaxBookingDateStr(60)}
                     defaultValue={editingBooking?.startDate || getTodayDateStr()}
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />
@@ -3666,7 +3666,7 @@ Honda, City, ZX CVT, 2199, AP 03 DX 5088, Sedan`}
                     name="endDate"
                     type="date"
                     min={getTodayDateStr()}
-                    max={getMaxBookingDateStr(2)}
+                    max={getMaxBookingDateStr(60)}
                     defaultValue={editingBooking?.endDate || getFutureDateStr(2)}
                     className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
                   />

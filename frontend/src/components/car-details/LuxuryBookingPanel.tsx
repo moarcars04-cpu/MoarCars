@@ -268,7 +268,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
             <input
               type="date"
               min={getTodayDateStr()}
-              max={getMaxBookingDateStr(2)}
+              max={getMaxBookingDateStr(60)}
               value={startDate}
               onChange={(e) => {
                 const val = e.target.value;
@@ -295,7 +295,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
             <input
               type="date"
               min={startDate || getTodayDateStr()}
-              max={getMaxBookingDateStr(2)}
+              max={getMaxBookingDateStr(60)}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full bg-transparent text-xs font-bold text-brand-navy outline-none cursor-pointer"

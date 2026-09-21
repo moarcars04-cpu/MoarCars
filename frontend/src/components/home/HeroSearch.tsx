@@ -296,7 +296,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [
                   type="date"
                   required
                   min={getTodayDateStr()}
-                  max={getMaxBookingDateStr(2)}
+                  max={getMaxBookingDateStr(60)}
                   value={startDate}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -331,7 +331,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [
                   type="date"
                   required
                   min={startDate || getTodayDateStr()}
-                  max={getMaxBookingDateStr(2)}
+                  max={getMaxBookingDateStr(60)}
                   value={returnDate}
                   onChange={(e) => setReturnDate(e.target.value)}
                   className="w-full bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 outline-none cursor-pointer"
