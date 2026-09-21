@@ -455,15 +455,16 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
                 >
-                  <div className="h-7 w-7 rounded-full overflow-hidden bg-slate-900 border border-[#d49b29]">
-                    <img
-                      src={
-                        user.avatar ||
-                        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"
-                      }
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
+                  <div className="h-7 w-7 rounded-full overflow-hidden bg-slate-900 border border-[#d49b29] text-[#d49b29] font-bold text-xs flex items-center justify-center shrink-0">
+                    {user.avatar && !user.avatar.includes("unsplash.com") ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-3.5 w-3.5 text-[#d49b29]" />
+                    )}
                   </div>
                 </button>
 

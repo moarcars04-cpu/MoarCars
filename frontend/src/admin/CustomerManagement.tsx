@@ -20,6 +20,7 @@ import {
   Shield,
   Coins,
   Share2,
+  User,
 } from "lucide-react";
 import { CustomerItem, BookingItem } from "./types";
 import { adminApi } from "./adminApi";
@@ -88,7 +89,7 @@ export default function CustomerManagement({
         name: formData.name || "New Customer",
         phone: formData.phone || "+91 98765 00000",
         email: formData.email || "customer@example.com",
-        avatar: formData.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+        avatar: formData.avatar || "",
         kycStatus: (formData.kycStatus as any) || "Verified",
         dlNumber: formData.dlNumber || "AP03 2024009182",
         dlExpiry: formData.dlExpiry || "2032-05-15",
@@ -297,11 +298,17 @@ export default function CustomerManagement({
               <tr key={c.id} className="hover:bg-slate-800/60 transition-colors">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={c.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"}
-                      alt={c.name}
-                      className="w-10 h-10 rounded-full object-cover border border-slate-800"
-                    />
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-slate-800 bg-slate-800 flex items-center justify-center text-amber-500 font-bold shrink-0">
+                      {c.avatar && !c.avatar.includes("unsplash.com") ? (
+                        <img
+                          src={c.avatar}
+                          alt={c.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-5 h-5 text-amber-500" />
+                      )}
+                    </div>
                     <div>
                       <p className="font-bold text-white flex items-center gap-1.5">
                         {c.name}

@@ -346,7 +346,7 @@ export const AuthModal: React.FC = () => {
     const res = await socialLogin("google", {
       name: "Google Traveler",
       email: mockEmail,
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
+      avatar: "",
     });
     if (!res.success) setErrorMsg(res.message);
   };
@@ -357,7 +357,7 @@ export const AuthModal: React.FC = () => {
     const res = await socialLogin("apple", {
       name: "Apple Member",
       email: mockEmail,
-      avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80",
+      avatar: "",
     });
     if (!res.success) setErrorMsg(res.message);
   };

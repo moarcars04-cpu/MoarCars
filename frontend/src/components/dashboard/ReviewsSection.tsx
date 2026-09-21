@@ -16,6 +16,7 @@ import {
   Filter,
   X,
   AlertTriangle,
+  User,
 } from "lucide-react";
 import { ReviewItem, BookingItem } from "../../types/user";
 import { Button } from "@/components/ui/button";
@@ -205,14 +206,17 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({
             {/* Top Bar: Customer info, car, stars */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
               <div className="flex items-center gap-3.5">
-                <img
-                  src={
-                    rev.customerAvatar ||
-                    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"
-                  }
-                  alt={rev.customerName}
-                  className="h-11 w-11 rounded-full object-cover border border-brand-gold/40"
-                />
+                <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-gold/40 bg-slate-800 flex items-center justify-center text-brand-gold font-bold text-sm shrink-0">
+                  {rev.customerAvatar && !rev.customerAvatar.includes("unsplash.com") ? (
+                    <img
+                      src={rev.customerAvatar}
+                      alt={rev.customerName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-brand-gold" />
+                  )}
+                </div>
                 <div>
                   <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
                     {rev.customerName}

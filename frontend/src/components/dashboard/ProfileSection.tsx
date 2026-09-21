@@ -22,14 +22,6 @@ interface ProfileSectionProps {
   onUpdateProfile: (fields: Partial<UserProfile>) => Promise<{ success: boolean; message: string; data?: UserProfile }>;
 }
 
-const predefinedAvatars = [
-  "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-  "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80",
-];
-
 export const ProfileSection: React.FC<ProfileSectionProps> = ({
   user,
   onProfileUpdated,
@@ -39,7 +31,7 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   const [email, setEmail] = useState(user.email || "");
   const [phone, setPhone] = useState(user.phone || "");
   const [dlNumber, setDlNumber] = useState(user.dlNumber || "");
-  const [avatar, setAvatar] = useState(user.avatar || predefinedAvatars[0]);
+  const [avatar, setAvatar] = useState((user.avatar && !user.avatar.includes("unsplash.com")) ? user.avatar : "");
   const [gender, setGender] = useState(user.gender || "Male");
   const [dob, setDob] = useState(user.dob || "1996-05-15");
   const [emergencyContactName, setEmergencyContactName] = useState(user.emergencyContactName || "");
@@ -104,10 +96,14 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
         {/* AVATAR & BASIC BADGE */}
         <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-6 flex flex-col sm:flex-row items-center gap-6 shadow-xl">
           <div className="relative group">
-            <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-brand-gold bg-black shadow-lg">
-              <img src={avatar} alt={name} className="h-full w-full object-cover" />
+            <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-brand-gold bg-slate-800 flex items-center justify-center shadow-lg">
+              {avatar && !avatar.includes("unsplash.com") ? (
+                <img src={avatar} alt={name} className="h-full w-full object-cover" />
+              ) : (
+                <User className="h-12 w-12 text-brand-gold" />
+              )}
             </div>
-            <label className="absolute bottom-0 right-0 p-2 rounded-full bg-brand-gold text-brand-navy cursor-pointer hover:bg-brand-gold-soft shadow transition-transform group-hover:scale-110">
+            <label className="absolute bottom-0 right-0 p-2 rounded-full bg-brand-gold text-brand-navy cursor-pointer hover:bg-brand-gold-soft shadow transition-transform group-hover:scale-110" title="Upload Profile Picture">
               <Camera className="h-4 w-4" />
               <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
             </label>
@@ -123,23 +119,9 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
             <p className="text-xs text-white/60">
               Member ID: <span className="font-mono text-white/80">MOAR-MEM-{user.id || "101"}</span> · Referral Code: <span className="font-mono text-brand-gold font-bold">{user.referralCode || "MOAR8899"}</span>
             </p>
-
-            {/* Quick Avatar Picker */}
-            <div className="flex items-center justify-center sm:justify-start gap-2 pt-1">
-              <span className="text-[10px] uppercase font-bold text-white/40">Presets:</span>
-              {predefinedAvatars.map((url, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setAvatar(url)}
-                  className={`h-7 w-7 rounded-full overflow-hidden border-2 transition-all ${
-                    avatar === url ? "border-brand-gold scale-110" : "border-transparent opacity-60 hover:opacity-100"
-                  }`}
-                >
-                  <img src={url} alt="Preset avatar" className="h-full w-full object-cover" />
-                </button>
-              ))}
-            </div>
+            <p className="text-[11px] text-white/40">
+              Click the camera icon to upload your personalized profile photo.
+            </p>
           </div>
         </div>
 

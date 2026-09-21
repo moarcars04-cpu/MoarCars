@@ -205,15 +205,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
             </Button>
 
             <div className="flex items-center gap-2.5 pl-2 border-l border-white/10">
-              <div className="h-9 w-9 rounded-full overflow-hidden border border-brand-gold/60 bg-black shrink-0">
-                <img
-                  src={
-                    currentUser.avatar ||
-                    "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"
-                  }
-                  alt={currentUser.name}
-                  className="h-full w-full object-cover"
-                />
+              <div className="h-9 w-9 rounded-full overflow-hidden border border-brand-gold/60 bg-slate-900 text-brand-gold font-bold text-sm flex items-center justify-center shrink-0">
+                {currentUser.avatar && !currentUser.avatar.includes("unsplash.com") ? (
+                  <img
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-5 w-5 text-brand-gold" />
+                )}
               </div>
 
               <div className="hidden md:block text-left text-xs">

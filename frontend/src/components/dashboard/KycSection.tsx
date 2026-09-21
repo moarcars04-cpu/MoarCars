@@ -79,7 +79,7 @@ export const KycSection: React.FC<KycSectionProps> = ({ user, onKycUpdated, onUp
       aadhaarBackDocUrl: aadhaarBackDocUrl || aadhaarFrontDocUrl,
       passportNumber,
       passportDocUrl,
-      selfieDocUrl: selfieDocUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=300&q=80",
+      selfieDocUrl: selfieDocUrl || "",
     });
 
     setIsSubmitting(false);

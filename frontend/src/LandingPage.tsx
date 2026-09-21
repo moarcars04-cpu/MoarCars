@@ -376,12 +376,16 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                   className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 px-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors"
                 >
                   <span className="text-[#c88d18]">{user.name.split(" ")[0]}</span>
-                  <div className="h-6 w-6 rounded-full overflow-hidden border border-[#c88d18] bg-slate-200 shrink-0">
-                    <img
-                      src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80"}
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
+                  <div className="h-6 w-6 rounded-full overflow-hidden border border-[#c88d18] bg-[#0b1426] text-[#c88d18] font-bold text-[10px] flex items-center justify-center shrink-0">
+                    {user.avatar && !user.avatar.includes("unsplash.com") ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-3.5 w-3.5 text-[#c88d18]" />
+                    )}
                   </div>
                   <ChevronDown className="h-3 w-3 text-slate-400" />
                 </button>

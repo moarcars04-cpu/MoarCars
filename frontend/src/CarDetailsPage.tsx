@@ -221,12 +221,16 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
                   className="flex items-center gap-2 rounded-full border border-amber-500/40 bg-slate-900/80 p-1 pl-3 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
                 >
                   <span className="text-brand-gold">{user.name.split(" ")[0]}</span>
-                  <div className="h-7 w-7 rounded-full overflow-hidden border border-brand-gold bg-black shrink-0">
-                    <img
-                      src={user.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"}
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
+                  <div className="h-7 w-7 rounded-full overflow-hidden border border-brand-gold bg-slate-900 text-brand-gold font-bold text-xs flex items-center justify-center shrink-0">
+                    {user.avatar && !user.avatar.includes("unsplash.com") ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-3.5 w-3.5 text-brand-gold" />
+                    )}
                   </div>
                   <ChevronDown className="h-3.5 w-3.5 text-white/60 mr-1" />
                 </button>
