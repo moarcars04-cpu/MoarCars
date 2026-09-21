@@ -53,7 +53,7 @@ export const QuickBookingModal: React.FC<QuickBookingModalProps> = ({
   const [isBooking, setIsBooking] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const basePricePerDay = car?.pricePerDay || 1999;
+  const basePricePerDay = Number(car?.pricePerDay) || parseInt(String(car?.price || "0").replace(/[^0-9]/g, ""), 10) || 1699;
   const days = 2; // Default 2-day calculation
   const rentalAmount = basePricePerDay * days;
   const gstAmount = Math.round((rentalAmount - appliedDiscount) * 0.18);

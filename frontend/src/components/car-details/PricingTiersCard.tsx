@@ -8,12 +8,14 @@ interface PricingTiersCardProps {
 export const PricingTiersCard: React.FC<PricingTiersCardProps> = ({ car }) => {
   const [selectedTier, setSelectedTier] = useState<"daily" | "hourly" | "weekly" | "monthly">("daily");
 
-  const dailyPrice = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0;
-  const hourlyPrice = Number(car.pricePerHour) || (dailyPrice > 0 ? Math.round(dailyPrice / 10) : 0);
-  const weeklyPrice = Number(car.pricePerWeek) || (dailyPrice > 0 ? dailyPrice * 7 : 0);
-  const monthlyPrice = Number(car.pricePerMonth) || (dailyPrice > 0 ? dailyPrice * 30 : 0);
-  const deposit = Number(car.securityDeposit) || 0;
-  const lateFee = Number(car.lateFeePerHour) || 0;
+  const dailyPrice = (Number(car?.pricePerDay) && Number(car?.pricePerDay) > 0)
+    ? Number(car.pricePerDay)
+    : (parseInt(String(car?.price || "0").replace(/[^0-9]/g, ""), 10) || 1699);
+  const hourlyPrice = Number(car?.pricePerHour) || (dailyPrice > 0 ? Math.round(dailyPrice / 10) : 199);
+  const weeklyPrice = Number(car?.pricePerWeek) || (dailyPrice > 0 ? dailyPrice * 6 : 9999);
+  const monthlyPrice = Number(car?.pricePerMonth) || (dailyPrice > 0 ? dailyPrice * 22 : 34999);
+  const deposit = Number(car?.securityDeposit) || 3000;
+  const lateFee = Number(car?.lateFeePerHour) || 150;
 
   if (dailyPrice === 0) {
     return null;

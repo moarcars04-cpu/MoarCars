@@ -84,9 +84,8 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                   </div>
                 </div>
 
-                {/* Rows */}
                 <div className="h-10 flex items-center border-b border-white/5 font-black text-brand-gold text-sm">
-                  {car.price || `₹${car.pricePerDay || 1999}/day`}
+                  {car.price && car.price !== "₹0" && car.price !== "0" ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(Number(car.pricePerDay) || 1699).toLocaleString("en-IN")}/day`}
                 </div>
 
                 <div className="h-10 flex items-center border-b border-white/5 font-semibold text-white">

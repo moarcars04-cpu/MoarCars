@@ -154,9 +154,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Calculations
   const dailyRate =
-    Number(car?.pricePerDay) ||
-    parseInt(String(car?.price || "0").replace(/[^0-9]/g, ""), 10) ||
-    0;
+    (Number(car?.pricePerDay) && Number(car?.pricePerDay) > 0)
+      ? Number(car.pricePerDay)
+      : (parseInt(String(car?.price || "0").replace(/[^0-9]/g, ""), 10) || 1699);
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
   const driverFee = 0;

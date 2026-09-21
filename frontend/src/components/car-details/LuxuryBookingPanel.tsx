@@ -104,7 +104,17 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   }, [startDate, startTime, endDate, endTime]);
 
   // Dynamic Price calculations
-  const dailyRate = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0;
+  const dailyRate = useMemo(() => {
+    if (!car) return 1699;
+    if (car.pricePerDay && Number(car.pricePerDay) > 0) {
+      return Number(car.pricePerDay);
+    }
+    if (car.price) {
+      const parsed = parseInt(String(car.price).replace(/[^0-9]/g, ""), 10);
+      if (parsed > 0) return parsed;
+    }
+    return 1699;
+  }, [car]);
   const baseFare = dailyRate * rentalDays;
   const deliveryFee = 0;
   const driverFee = 0;

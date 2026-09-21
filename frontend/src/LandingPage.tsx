@@ -41,7 +41,6 @@ import { PopularHubsSection } from "./components/home/PopularHubsSection";
 import { HowItWorksSection } from "./components/home/HowItWorksSection";
 import { FaqSection } from "./components/home/FaqSection";
 import { BlogSection } from "./components/home/BlogSection";
-import { AppDownloadSection } from "./components/home/AppDownloadSection";
 import { RecentlyViewedSection } from "./components/home/RecentlyViewedSection";
 import { Viewer360Modal } from "./components/home/360ViewerModal";
 import { CompareModal } from "./components/home/CompareModal";
@@ -156,7 +155,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
         if (carsRes && carsRes.success && Array.isArray(carsRes.data)) {
           const mapped = carsRes.data.map((car: any) => ({
             ...car,
-            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0,
+            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 1699,
             hasSunroof: car.hasSunroof ?? false,
             hasGPS: car.hasGPS ?? true,
             hasAC: car.hasAC ?? true,
@@ -655,10 +654,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       {/* 11. Travel Guides & Blogs */}
       <BlogSection />
 
-      {/* 12. App Download Banner */}
-      <AppDownloadSection />
-
-      {/* 13. Luxury Dark Footer */}
+      {/* 12. Luxury Dark Footer */}
       <footer id="contact" className="bg-[#070e1c] text-white pt-10 pb-8 border-t border-slate-800">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-8">
           {/* Main Footer 4 Columns Grid */}

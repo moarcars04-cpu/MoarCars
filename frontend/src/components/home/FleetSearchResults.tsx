@@ -94,7 +94,7 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
         return false;
       }
       // Price
-      const dailyPrice = car.pricePerDay || 1999;
+      const dailyPrice = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 1699;
       if (dailyPrice > maxPrice) {
         return false;
       }
@@ -113,10 +113,11 @@ export const FleetSearchResults: React.FC<FleetSearchResultsProps> = ({
   // Sort logic
   const sortedCars = useMemo(() => {
     const list = [...filteredCars];
+    const getP = (c: any) => Number(c.pricePerDay) || parseInt(String(c.price || "0").replace(/[^0-9]/g, ""), 10) || 1699;
     if (sortBy === "price_asc") {
-      list.sort((a, b) => (a.pricePerDay || 1999) - (b.pricePerDay || 1999));
+      list.sort((a, b) => getP(a) - getP(b));
     } else if (sortBy === "price_desc") {
-      list.sort((a, b) => (b.pricePerDay || 1999) - (a.pricePerDay || 1999));
+      list.sort((a, b) => getP(b) - getP(a));
     } else if (sortBy === "rating") {
       list.sort((a, b) => (b.totalTrips || 0) - (a.totalTrips || 0));
     } else if (sortBy === "distance") {

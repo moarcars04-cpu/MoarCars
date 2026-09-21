@@ -87,8 +87,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
         if (res.success && Array.isArray(res.data)) {
           const mapped: CarFleetItem[] = res.data.map((car: any) => ({
             ...car,
-            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0,
-            priceDisplay: car.priceDisplay || (car.price ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(Number(car.pricePerDay) || 0).toLocaleString("en-IN")}`),
+            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 1699,
+            priceDisplay: car.priceDisplay || (car.price && car.price !== "₹0" && car.price !== "0" ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(Number(car.pricePerDay) || 1699).toLocaleString("en-IN")}/day`),
             subCategory: car.subCategory || car.variant || `${car.category || "Fleet"} Vehicle`,
             hasSunroof: car.hasSunroof ?? false,
             hasGPS: car.hasGPS ?? true,

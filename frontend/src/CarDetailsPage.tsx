@@ -50,22 +50,49 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [carReviews, setCarReviews] = useState<any[]>([]);
 
+  // Helper to ensure all required fields are present
+  const normalizeCar = (c: any) => {
+    if (!c) return null;
+    const pricePerDay =
+      (c.pricePerDay && Number(c.pricePerDay) > 0)
+        ? Number(c.pricePerDay)
+        : (parseInt(String(c.price || "0").replace(/[^0-9]/g, ""), 10) || 1699);
+    return {
+      ...c,
+      pricePerDay,
+      price: c.price && c.price !== "₹0" && c.price !== "0" ? c.price : `₹${pricePerDay.toLocaleString("en-IN")}/day`,
+    };
+  };
+
   // Fetch live fleet data
   useEffect(() => {
+    // If numeric ID given, fetch specific car endpoint first for instant response
+    if (carIdOrName && !isNaN(Number(carIdOrName))) {
+      fetch(`/api/cars/${carIdOrName}`)
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.success && res.data) {
+            setCurrentCar(normalizeCar(res.data));
+          }
+        })
+        .catch(() => {});
+    }
+
     fetch("/api/cars")
       .then((res) => res.json())
       .then((res) => {
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          setFleet(res.data);
+          const normalizedFleet = res.data.map(normalizeCar);
+          setFleet(normalizedFleet);
           if (carIdOrName) {
-            const found = res.data.find(
+            const found = normalizedFleet.find(
               (c: any) =>
                 String(c.id) === String(carIdOrName) ||
                 (c.name && c.name.toLowerCase().includes(String(carIdOrName).toLowerCase()))
             );
-            setCurrentCar(found || res.data[0]);
+            setCurrentCar(found || normalizedFleet[0]);
           } else {
-            setCurrentCar(res.data[0]);
+            setCurrentCar(normalizedFleet[0]);
           }
         }
       })
