@@ -12,6 +12,7 @@ function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
   const [targetCarToBook, setTargetCarToBook] = useState<string>("");
   const [selectedCarForDetails, setSelectedCarForDetails] = useState<string | number>("");
+  const [selectedCarObject, setSelectedCarObject] = useState<any>(null);
   const [checkoutParams, setCheckoutParams] = useState<any>(null);
   const { openAuthModal, user } = useAuth();
 
@@ -74,6 +75,9 @@ function AppContent() {
       return;
     }
 
+    if (state?.car) {
+      setSelectedCarObject(state.car);
+    }
     if (state) {
       setCheckoutParams(state);
     }
@@ -86,6 +90,7 @@ function AppContent() {
 
     window.history.pushState(null, "", newPath);
     setPath(newPath);
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     if (newPath === "/login") {
       openAuthModal("login");
@@ -120,7 +125,7 @@ function AppContent() {
           }}
         />
       ) : path.startsWith("/car/") || path === "/car-details" || path === "/car" ? (
-        <CarDetailsPage carIdOrName={activeCarParam} onNavigate={navigateTo} />
+        <CarDetailsPage carIdOrName={activeCarParam} initialCar={selectedCarObject} onNavigate={navigateTo} />
       ) : (
         <LandingPage
           onNavigate={(p, st) => {

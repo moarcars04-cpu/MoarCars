@@ -586,7 +586,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           onToggleCompare={handleToggleCompare}
           onOpen360={handleOpen360}
           onBookCar={handleBookCar}
-          onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`)}
+          onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`, { car })}
           onSelectBrand={(brand) => {
             document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
           }}
@@ -623,7 +623,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           onToggleCompare={handleToggleCompare}
           onOpen360={handleOpen360}
           onBookCar={handleBookCar}
-          onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`)}
+          onViewDetails={(car) => onNavigate?.(`/car/${car.id || car.name}`, { car })}
         />
       </div>
 

@@ -33,22 +33,12 @@ import { CompareModal } from "./components/home/CompareModal";
 
 interface CarDetailsPageProps {
   carIdOrName?: string | number;
-  onNavigate?: (path: string) => void;
+  initialCar?: any;
+  onNavigate?: (path: string, state?: any) => void;
 }
 
-export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onNavigate }) => {
+export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, initialCar, onNavigate }) => {
   const { user, openAuthModal, logout, toggleFavoriteCar } = useAuth();
-
-  const [fleet, setFleet] = useState<any[]>([]);
-  const [currentCar, setCurrentCar] = useState<any | null>(null);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [copiedShareNotice, setCopiedShareNotice] = useState(false);
-
-  // Modals
-  const [selected360Car, setSelected360Car] = useState<any | null>(null);
-  const [compareList, setCompareList] = useState<any[]>([]);
-  const [showCompareModal, setShowCompareModal] = useState(false);
-  const [carReviews, setCarReviews] = useState<any[]>([]);
 
   // Helper to ensure all required fields are present
   const normalizeCar = (c: any) => {
@@ -64,39 +54,83 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
     };
   };
 
+  const [fleet, setFleet] = useState<any[]>([]);
+  const [currentCar, setCurrentCar] = useState<any | null>(initialCar ? normalizeCar(initialCar) : null);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialCar);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [copiedShareNotice, setCopiedShareNotice] = useState(false);
+
+  // Modals
+  const [selected360Car, setSelected360Car] = useState<any | null>(null);
+  const [compareList, setCompareList] = useState<any[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [carReviews, setCarReviews] = useState<any[]>([]);
+
+  // If initialCar provided directly from navigation, use it immediately
+  useEffect(() => {
+    if (initialCar) {
+      setCurrentCar(normalizeCar(initialCar));
+      setIsLoading(false);
+    }
+  }, [initialCar]);
+
   // Fetch live fleet data
   useEffect(() => {
-    // If numeric ID given, fetch specific car endpoint first for instant response
+    let isMounted = true;
+
+    // If no initialCar or ID does not match, set loading
+    if (!initialCar || (carIdOrName && String(initialCar.id) !== String(carIdOrName))) {
+      setIsLoading(true);
+    }
+
+    // 1. If numeric ID given, fetch specific car endpoint first for instant response
     if (carIdOrName && !isNaN(Number(carIdOrName))) {
       fetch(`/api/cars/${carIdOrName}`)
         .then((res) => res.json())
         .then((res) => {
+          if (!isMounted) return;
           if (res.success && res.data) {
-            setCurrentCar(normalizeCar(res.data));
+            const normalized = normalizeCar(res.data);
+            setCurrentCar(normalized);
+            setIsLoading(false);
           }
         })
         .catch(() => {});
     }
 
+    // 2. Fetch full fleet to support similar cars and fallback resolution
     fetch("/api/cars")
       .then((res) => res.json())
       .then((res) => {
+        if (!isMounted) return;
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           const normalizedFleet = res.data.map(normalizeCar);
           setFleet(normalizedFleet);
+
           if (carIdOrName) {
             const found = normalizedFleet.find(
               (c: any) =>
                 String(c.id) === String(carIdOrName) ||
                 (c.name && c.name.toLowerCase().includes(String(carIdOrName).toLowerCase()))
             );
-            setCurrentCar(found || normalizedFleet[0]);
-          } else {
+            if (found) {
+              setCurrentCar(found);
+            } else if (!initialCar) {
+              setCurrentCar(normalizedFleet[0]);
+            }
+          } else if (!initialCar) {
             setCurrentCar(normalizedFleet[0]);
           }
         }
       })
-      .catch((err) => console.warn(err));
+      .catch((err) => console.warn(err))
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [carIdOrName]);
 
   // Sync current car when ID / Name prop changes
@@ -311,8 +345,31 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, onN
         </div>
       </header>
 
-      {/* Main Vehicle Content or Empty State */}
-      {!currentCar ? (
+      {/* Main Vehicle Content, Loading Skeleton or Empty State */}
+      {isLoading && !currentCar ? (
+        <div className="pt-24 pb-24 max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-8 animate-pulse">
+          {/* Header Skeleton */}
+          <div className="space-y-3">
+            <div className="h-4 w-48 bg-slate-200 rounded-md" />
+            <div className="h-9 w-80 bg-slate-200 rounded-xl" />
+            <div className="h-4 w-96 bg-slate-200 rounded-md" />
+          </div>
+
+          {/* Main Grid Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-8 space-y-4">
+              <div className="h-[420px] w-full bg-slate-200 rounded-3xl" />
+              <div className="grid grid-cols-4 gap-3">
+                <div className="h-20 bg-slate-200 rounded-2xl" />
+                <div className="h-20 bg-slate-200 rounded-2xl" />
+                <div className="h-20 bg-slate-200 rounded-2xl" />
+                <div className="h-20 bg-slate-200 rounded-2xl" />
+              </div>
+            </div>
+            <div className="lg:col-span-4 h-[520px] bg-slate-200 rounded-3xl" />
+          </div>
+        </div>
+      ) : !currentCar ? (
         <div className="pt-32 pb-24 max-w-[1600px] mx-auto px-4 sm:px-8 text-center space-y-4">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-brand-gold">
             <Car className="h-8 w-8" />
