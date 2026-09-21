@@ -277,6 +277,14 @@ export const TripCard: React.FC<TripCardProps> = ({
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => onOpenInvoice(booking)}
+                className="rounded-xl border-border text-xs font-bold text-brand-navy flex items-center gap-1.5 shadow-sm"
+              >
+                <Receipt className="h-3.5 w-3.5 text-brand-teal" /> Tax Invoice
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onOpenExtend(booking)}
                 className="rounded-xl border-border text-xs font-bold text-brand-navy flex items-center gap-1"
               >
@@ -288,6 +296,16 @@ export const TripCard: React.FC<TripCardProps> = ({
           {/* Upcoming Trip Actions */}
           {isUpcoming && (
             <>
+              {/* Official Tax Invoice */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onOpenInvoice(booking)}
+                className="rounded-xl border-amber-500/40 bg-amber-500/10 text-brand-gold hover:bg-amber-500/20 text-xs font-black flex items-center gap-1.5 shadow-sm"
+              >
+                <Receipt className="h-3.5 w-3.5" /> Tax Invoice & Receipt
+              </Button>
+
               {onOpenPickupInspection && (
                 <Button
                   size="sm"
@@ -402,13 +420,23 @@ export const TripCard: React.FC<TripCardProps> = ({
 
           {/* Cancelled Trip Actions */}
           {isCancelled && (
-            <Button
-              size="sm"
-              onClick={() => onBookAgain?.(booking.carName)}
-              className="rounded-xl bg-brand-navy text-white text-xs font-bold flex items-center gap-1.5"
-            >
-              <RotateCcw className="h-3.5 w-3.5" /> Re-Book Fleet
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onOpenInvoice(booking)}
+                className="rounded-xl border-border text-xs font-bold text-brand-navy flex items-center gap-1.5 shadow-sm"
+              >
+                <Receipt className="h-3.5 w-3.5 text-slate-500" /> Refund Invoice
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onBookAgain?.(booking.carName)}
+                className="rounded-xl bg-brand-navy text-white text-xs font-bold flex items-center gap-1.5"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Re-Book Fleet
+              </Button>
+            </div>
           )}
         </div>
       </div>

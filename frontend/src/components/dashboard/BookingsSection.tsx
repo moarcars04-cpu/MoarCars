@@ -40,6 +40,7 @@ import { PickupInspectionModal } from "./trips/PickupInspectionModal";
 import { TripSupportModal } from "./trips/TripSupportModal";
 import { ReturnInspectionModal } from "./trips/ReturnInspectionModal";
 import { ReviewModal } from "./ReviewModal";
+import { GstInvoiceModal } from "./trips/GstInvoiceModal";
 
 interface BookingsSectionProps {
   upcomingBookings: BookingItem[];
@@ -389,128 +390,11 @@ export const BookingsSection: React.FC<BookingsSectionProps> = ({
       )}
 
       {/* 6. GST TAX INVOICE & RECEIPT MODAL */}
-      {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in">
-          <div className="relative max-w-xl w-full rounded-3xl bg-slate-900 border border-brand-gold/40 p-6 text-white space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-gold text-brand-navy font-black text-sm shadow">
-                  M
-                </span>
-                <div>
-                  <h3 className="text-sm font-black uppercase tracking-wide text-white">
-                    Tax Invoice & Trip Receipt
-                  </h3>
-                  <p className="text-[10px] font-mono text-brand-gold">
-                    GSTIN: 37AAHCM4412K1Z9 • INV-MC-2026-{(selectedInvoice as any).bookingId || selectedInvoice.id}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedInvoice(null)}
-                className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Invoice Breakdown */}
-            <div className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-950/70 border border-white/10">
-                <div>
-                  <span className="text-[10px] text-white/50 uppercase font-bold block">Vehicle Rented</span>
-                  <p className="font-bold text-white text-sm">{selectedInvoice.carName}</p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-white/50 uppercase font-bold block">Pickup Hub</span>
-                  <p className="font-bold text-white">{selectedInvoice.pickup}</p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-white/50 uppercase font-bold block">Rental Dates</span>
-                  <p className="font-semibold text-white/90">
-                    {selectedInvoice.startDate} &rarr; {selectedInvoice.endDate}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-white/50 uppercase font-bold block">Customer Details</span>
-                  <p className="font-bold text-white">{selectedInvoice.customerName}</p>
-                  <p className="text-[10px] text-white/60">{selectedInvoice.customerPhone}</p>
-                </div>
-              </div>
-
-              {/* Price Details */}
-              <div className="space-y-2 pt-2 border-t border-white/10">
-                <div className="flex justify-between text-white/70">
-                  <span>Base Vehicle Rental (Unlimited KM)</span>
-                  <span>₹{Number(selectedInvoice.baseFare !== undefined ? selectedInvoice.baseFare : (Number(selectedInvoice.grandTotal || selectedInvoice.amount || 0) - Number(selectedInvoice.gstAmount || selectedInvoice.taxAmount || 0) - Number(selectedInvoice.securityDeposit || 0))).toLocaleString("en-IN")}</span>
-                </div>
-                {Number(selectedInvoice.deliveryFee || 0) > 0 && (
-                  <div className="flex justify-between text-white/70">
-                    <span>Doorstep Delivery Service</span>
-                    <span>₹{Number(selectedInvoice.deliveryFee).toLocaleString("en-IN")}</span>
-                  </div>
-                )}
-                {Number(selectedInvoice.discountAmount || 0) > 0 && (
-                  <div className="flex justify-between text-emerald-400">
-                    <span>Discounts & Promo Applied</span>
-                    <span>-₹{Number(selectedInvoice.discountAmount).toLocaleString("en-IN")}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-white/70">
-                  <span>GST Tax ({selectedInvoice.gstRate || 18}%)</span>
-                  <span>₹{Number(selectedInvoice.gstAmount !== undefined ? selectedInvoice.gstAmount : (selectedInvoice.taxAmount || 0)).toLocaleString("en-IN")}</span>
-                </div>
-                {Number(selectedInvoice.securityDeposit || 0) > 0 && (
-                  <div className="flex justify-between text-emerald-400">
-                    <span>Security Deposit (Refundable)</span>
-                    <span>₹{Number(selectedInvoice.securityDeposit).toLocaleString("en-IN")}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-black text-base text-brand-gold pt-2 border-t border-white/10">
-                  <span>Total Booking Value</span>
-                  <span>₹{Number(selectedInvoice.grandTotal || selectedInvoice.amount || 0).toLocaleString("en-IN")}</span>
-                </div>
-
-                {/* Advance Paid vs Balance Due */}
-                <div className="p-2.5 rounded-xl bg-slate-900 border border-white/10 space-y-1 mt-1 text-[11px]">
-                  <div className="flex justify-between text-emerald-400 font-bold">
-                    <span>Advance Paid Online:</span>
-                    <span>₹{Number(selectedInvoice.paidAmount !== undefined ? selectedInvoice.paidAmount : (selectedInvoice.grandTotal || selectedInvoice.amount || 0)).toLocaleString("en-IN")}</span>
-                  </div>
-                  {Number(selectedInvoice.balanceDue || 0) > 0 ? (
-                    <div className="flex justify-between text-amber-400 font-bold">
-                      <span>Balance Due at Car Handover:</span>
-                      <span>₹{Number(selectedInvoice.balanceDue).toLocaleString("en-IN")}</span>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between text-white/50">
-                      <span>Balance Due:</span>
-                      <span>₹0 (Fully Paid)</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Print / Download CTA */}
-            <div className="flex gap-3 pt-2">
-              <Button
-                onClick={() => window.print()}
-                className="flex-1 h-10 rounded-xl bg-brand-gold text-brand-navy font-extrabold text-xs uppercase hover:bg-brand-gold-soft flex items-center justify-center gap-1.5 shadow"
-              >
-                <Download className="h-4 w-4" /> Download Official GST PDF
-              </Button>
-              <Button
-                onClick={() => setSelectedInvoice(null)}
-                variant="outline"
-                className="h-10 rounded-xl border-white/20 text-white hover:bg-white/10 text-xs font-bold"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <GstInvoiceModal
+        booking={selectedInvoice}
+        isOpen={!!selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+      />
 
       {/* 7. DIGITAL RENTAL AGREEMENT MODAL */}
       {selectedAgreement && (

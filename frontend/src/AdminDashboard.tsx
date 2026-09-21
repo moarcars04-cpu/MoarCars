@@ -972,7 +972,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   activeTab === "branches" ? "bg-[#c88d18]/20 text-[#c88d18] border border-amber-400/30 shadow-md" : "text-slate-300 hover:text-white hover:bg-slate-800/60"
                 }`}
               >
-                <div className="flex items-center gap-3"><Building2 className="w-4 h-4" /> Station Hubs</div>
+                <div className="flex items-center gap-3"><MapPin className="w-4 h-4" /> Pickup Locations</div>
                 <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-900/80 text-[#c88d18] border border-slate-800">{branches.length}</span>
               </button>
             </nav>
