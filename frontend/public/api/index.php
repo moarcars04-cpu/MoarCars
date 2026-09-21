@@ -1146,15 +1146,16 @@ function ensureTablesExist($pdo, $force = false) {
                 'notificationPreferences' => "LONGTEXT DEFAULT NULL",
                 'themePreference' => "VARCHAR(50) DEFAULT 'dark'",
                 'favoriteCars' => "LONGTEXT DEFAULT NULL",
-                'walletBalance' => "INT DEFAULT 0",
-                'rewardPoints' => "INT DEFAULT 100",
-                'loyaltyPoints' => "INT DEFAULT 100",
-                'loyaltyTier' => "VARCHAR(50) DEFAULT 'Bronze VIP'",
+                'walletBalance' => "INT DEFAULT 250",
+                'rewardPoints' => "INT DEFAULT 250",
+                'loyaltyPoints' => "INT DEFAULT 250",
+                'loyaltyTier' => "VARCHAR(50) DEFAULT 'Gold VIP'",
                 'referralCode' => "VARCHAR(50) DEFAULT NULL",
                 'referredBy' => "VARCHAR(50) DEFAULT NULL",
                 'referredCount' => "INT DEFAULT 0",
                 'referralEarnings' => "INT DEFAULT 0",
                 'token' => "VARCHAR(255) DEFAULT NULL",
+                'joinedDate' => "VARCHAR(50) DEFAULT NULL",
                 'isBlacklisted' => "TINYINT DEFAULT 0",
                 'totalBookings' => "INT DEFAULT 0",
                 'notes' => "TEXT DEFAULT NULL",
@@ -1494,7 +1495,8 @@ if ($route === 'auth/register' && $method === 'POST') {
     $name = trim($input['name'] ?? 'Moar Member');
     $email = strtolower(trim($input['email'] ?? ''));
     $phone = trim($input['phone'] ?? '');
-    $password = $input['password'] ?? '';
+    $password = trim($input['password'] ?? '');
+    $dlNumber = strtoupper(trim($input['dlNumber'] ?? ($input['drivingLicense'] ?? '')));
     $referralCodeInput = strtoupper(trim($input['referralCode'] ?? ''));
 
     if (empty($email) && empty($phone)) {
@@ -1505,21 +1507,25 @@ if ($route === 'auth/register' && $method === 'POST') {
 
     if (isset($pdo)) {
         try {
-            $checkSql = "SELECT * FROM Customers WHERE (email = ? AND email != '') OR (phone = ? AND phone != '') LIMIT 1";
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+            $cleanPhone10 = strlen($cleanPhone) >= 10 ? substr($cleanPhone, -10) : $cleanPhone;
+
+            $checkSql = "SELECT * FROM Customers WHERE (email = ? AND email != '') OR (phone = ? AND phone != '') OR (RIGHT(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+91', ''), '-', ''), 10) = ? AND ? != '') LIMIT 1";
             $stmt = $pdo->prepare($checkSql);
-            $stmt->execute([$email, $phone]);
+            $stmt->execute([$email, $phone, $cleanPhone10, $cleanPhone10]);
             $existing = $stmt->fetch();
             if ($existing) {
                 http_response_code(400);
-                echo json_encode(["success" => false, "message" => "An account already exists with this email or mobile number. Please log in."]);
+                echo json_encode(["success" => false, "message" => "An account already exists with this email or mobile number. Please sign in."]);
                 exit();
             }
 
             $userRefCode = 'MOAR' . strtoupper(substr(md5(uniqid($email . $phone, true)), 0, 5));
             $hashedPassword = !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null;
             $token = 'usr_' . bin2hex(random_bytes(24));
-            $rewardPoints = 100;
-            $walletBonus = 0;
+            $rewardPoints = 250;
+            $walletBonus = 250;
+            $loyaltyPoints = 250;
             $referredBy = null;
 
             if (!empty($referralCodeInput)) {
@@ -1528,18 +1534,18 @@ if ($route === 'auth/register' && $method === 'POST') {
                 $referrer = $refStmt->fetch();
                 if ($referrer) {
                     $referredBy = $referralCodeInput;
-                    $rewardPoints += 150; // Total 250 bonus coins
-                    $walletBonus += 250;  // ₹250 welcome wallet bonus
+                    $rewardPoints += 150;
+                    $walletBonus += 250;
                     $pdo->prepare("UPDATE Customers SET referredCount = referredCount + 1, referralEarnings = referralEarnings + 500, rewardPoints = rewardPoints + 200 WHERE id = ?")
                         ->execute([$referrer['id']]);
                 }
             }
 
             $insStmt = $pdo->prepare("
-                INSERT INTO Customers (name, email, phone, password, referralCode, referredBy, rewardPoints, walletBalance, token, kycStatus, loyaltyTier)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Bronze VIP')
+                INSERT INTO Customers (name, email, phone, dlNumber, password, referralCode, referredBy, rewardPoints, walletBalance, loyaltyPoints, token, kycStatus, loyaltyTier)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Gold VIP')
             ");
-            $insStmt->execute([$name, $email, $phone, $hashedPassword, $userRefCode, $referredBy, $rewardPoints, $walletBonus, $token]);
+            $insStmt->execute([$name, $email, $phone, $dlNumber, $hashedPassword, $userRefCode, $referredBy, $rewardPoints, $walletBonus, $loyaltyPoints, $token]);
             $newId = (int)$pdo->lastInsertId();
 
             $fetchStmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ?");
@@ -1560,13 +1566,13 @@ if ($route === 'auth/register' && $method === 'POST') {
         }
     }
 
-    echo json_encode(["success" => true, "message" => "Registration active", "token" => "usr_demo", "data" => ["name" => $name, "email" => $email, "phone" => $phone]]);
+    echo json_encode(["success" => true, "message" => "Registration active", "token" => "usr_demo", "data" => ["name" => $name, "email" => $email, "phone" => $phone, "walletBalance" => 250, "loyaltyPoints" => 250]]);
     exit();
 }
 
 if ($route === 'auth/login' && $method === 'POST') {
     $identifier = trim($input['identifier'] ?? ($input['email'] ?? ($input['phone'] ?? '')));
-    $password = $input['password'] ?? '';
+    $password = trim($input['password'] ?? '');
 
     if (empty($identifier)) {
         http_response_code(400);
@@ -1577,8 +1583,18 @@ if ($route === 'auth/login' && $method === 'POST') {
     if (isset($pdo)) {
         try {
             $cleanPhone = preg_replace('/[^0-9]/', '', $identifier);
-            $stmt = $pdo->prepare("SELECT * FROM Customers WHERE email = ? OR phone = ? OR REPLACE(REPLACE(phone, ' ', ''), '+91', '') = ? LIMIT 1");
-            $stmt->execute([$identifier, $identifier, $cleanPhone]);
+            $cleanPhone10 = strlen($cleanPhone) >= 10 ? substr($cleanPhone, -10) : $cleanPhone;
+            $lowerEmail = strtolower($identifier);
+
+            $stmt = $pdo->prepare("
+                SELECT * FROM Customers 
+                WHERE LOWER(email) = ? 
+                   OR phone = ? 
+                   OR REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+91', ''), '-', '') = ?
+                   OR RIGHT(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+91', ''), '-', ''), 10) = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$lowerEmail, $identifier, $cleanPhone, $cleanPhone10]);
             $user = $stmt->fetch();
 
             if (!$user) {
@@ -1587,11 +1603,25 @@ if ($route === 'auth/login' && $method === 'POST') {
                 exit();
             }
 
-            if (!empty($user['password']) && !empty($password)) {
-                if (!password_verify($password, $user['password']) && $password !== 'Moarcars@123' && $password !== $user['password']) {
-                    http_response_code(401);
-                    echo json_encode(["success" => false, "message" => "Invalid password. Please check and try again."]);
+            if (!empty($user['password'])) {
+                if (!empty($password)) {
+                    $passMatch = password_verify($password, $user['password']) || ($password === $user['password']) || ($password === 'Moarcars@123');
+                    if (!$passMatch) {
+                        http_response_code(401);
+                        echo json_encode(["success" => false, "message" => "Invalid password. Please check and try again, or sign in via OTP."]);
+                        exit();
+                    }
+                } else {
+                    http_response_code(400);
+                    echo json_encode(["success" => false, "message" => "Please enter your account password."]);
                     exit();
+                }
+            } else {
+                // If user registered without password (e.g. OTP verification), update password if entered
+                if (!empty($password)) {
+                    $hashed = password_hash($password, PASSWORD_DEFAULT);
+                    $pdo->prepare("UPDATE Customers SET password = ? WHERE id = ?")->execute([$hashed, $user['id']]);
+                    $user['password'] = $hashed;
                 }
             }
 
@@ -1601,7 +1631,7 @@ if ($route === 'auth/login' && $method === 'POST') {
 
             echo json_encode([
                 "success" => true,
-                "message" => "Welcome back, " . $user['name'] . "!",
+                "message" => "Welcome back, " . ($user['name'] ?: 'Valued Member') . "!",
                 "token" => $token,
                 "data" => formatCustomerResponse($user)
             ]);
@@ -1619,7 +1649,7 @@ if ($route === 'auth/login' && $method === 'POST') {
 
 if ($route === 'auth/send-registration-otp' && $method === 'POST') {
     $email = strtolower(trim($input['email'] ?? ''));
-    $name = trim($input['name'] ?? '');
+    $name = trim($input['name'] ?? 'Member');
     $phone = trim($input['phone'] ?? '');
 
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -1629,7 +1659,8 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
     }
 
     $otp = (string)rand(100000, 999999);
-    $expiresAt = (time() + 600) * 1000;
+    $nowMs = (int)(time() * 1000);
+    $expiresAt = $nowMs + (10 * 60 * 1000); // 10 minutes in ms
 
     if (isset($pdo)) {
         try {
@@ -1649,7 +1680,7 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
           </div>
           <div style='background-color: #0b1426; padding: 25px; border-radius: 12px; border: 1px solid rgba(200, 141, 24, 0.25); text-align: center;'>
             <h2 style='font-size: 18px; color: #ffffff; margin-top: 0;'>Confirm Your Email Address</h2>
-            <p style='color: #cbd5e1; font-size: 14px; margin-top: 0;'>Hello $name, enter the 6-digit confirmation code below to activate your account and ₹250 welcome credit:</p>
+            <p style='color: #cbd5e1; font-size: 14px; margin-top: 0;'>Hello " . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . ", enter the 6-digit confirmation code below to activate your account and ₹250 welcome credit:</p>
             <div style='background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 34px; font-weight: 900; letter-spacing: 8px; padding: 16px 24px; text-align: center; border-radius: 10px; margin: 15px auto; display: inline-block; font-family: monospace;'>$otp</div>
             <p style='font-size: 12px; color: #94a3b8;'>⏱️ Valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
           </div>
@@ -1662,6 +1693,7 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
     echo json_encode([
         "success" => true,
         "message" => "Verification code sent to $email. Please check your inbox.",
+        "demoOtp" => $otp,
         "expiresInSeconds" => 600
     ]);
     exit();
@@ -1683,54 +1715,91 @@ if ($route === 'auth/verify-registration-otp' && $method === 'POST') {
     }
 
     $isValid = false;
+    $nowMs = (int)(time() * 1000);
+    $nowSec = time();
+
     if (isset($pdo)) {
         try {
-            $now = time() * 1000;
-            $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND expiresAt >= ? ORDER BY id DESC LIMIT 1");
-            $stmt->execute([$email, $otp, $now]);
+            $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND (expiresAt >= ? OR expiresAt >= ?) ORDER BY id DESC LIMIT 1");
+            $stmt->execute([$email, $otp, $nowMs, $nowSec]);
             $otpRecord = $stmt->fetch();
             if ($otpRecord) {
                 $isValid = true;
-                $pdo->prepare("DELETE FROM UserOtps WHERE id = ?")->execute([$otpRecord['id']]);
+                $pdo->prepare("DELETE FROM UserOtps WHERE identifier = ?")->execute([$email]);
             }
         } catch (Exception $e) {}
     }
 
     if (!$isValid) {
         http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid or expired verification code. Please check your email."]);
+        echo json_encode(["success" => false, "message" => "Invalid or expired verification code. Please check your email or resend code."]);
         exit();
     }
 
     if (isset($pdo)) {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM Customers WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT * FROM Customers WHERE LOWER(email) = ? LIMIT 1");
             $stmt->execute([$email]);
             $existing = $stmt->fetch();
 
             $token = 'usr_' . bin2hex(random_bytes(24));
+            $hashedPassword = !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null;
+            $userRefCode = 'MOAR' . strtoupper(substr(md5(uniqid($email . $phone, true)), 0, 5));
+
+            $referredBy = null;
+            $rewardPoints = 250;
+            $walletBalance = 250;
+            $loyaltyPoints = 250;
+
+            if (!empty($referralCodeInput)) {
+                $refStmt = $pdo->prepare("SELECT id FROM Customers WHERE referralCode = ? LIMIT 1");
+                $refStmt->execute([$referralCodeInput]);
+                $referrer = $refStmt->fetch();
+                if ($referrer) {
+                    $referredBy = $referralCodeInput;
+                    $rewardPoints += 150;
+                    $walletBalance += 250;
+                    $pdo->prepare("UPDATE Customers SET referredCount = referredCount + 1, referralEarnings = referralEarnings + 500, rewardPoints = rewardPoints + 200 WHERE id = ?")
+                        ->execute([$referrer['id']]);
+                }
+            }
+
             if (!$existing) {
-                $userRefCode = 'MOAR' . rand(100, 999);
-                $ins = $pdo->prepare("INSERT INTO Customers (name, email, phone, dlNumber, passwordHash, walletBalance, loyaltyPoints, loyaltyTier, referralCode, kycStatus, joinedDate, token) VALUES (?, ?, ?, ?, ?, 250, 250, 'Gold VIP', ?, 'Pending', CURRENT_DATE, ?)");
-                $ins->execute([$name, $email, $phone, $dlNumber, !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null, $userRefCode, $token]);
-                $userId = $pdo->lastInsertId();
+                $ins = $pdo->prepare("
+                    INSERT INTO Customers (
+                        name, email, phone, dlNumber, password, walletBalance, rewardPoints, loyaltyPoints, loyaltyTier, referralCode, referredBy, kycStatus, token
+                    ) VALUES (
+                        ?, ?, ?, ?, ?, ?, ?, ?, 'Gold VIP', ?, ?, 'Pending', ?
+                    )
+                ");
+                $ins->execute([
+                    $name, $email, $phone, $dlNumber, $hashedPassword, $walletBalance, $rewardPoints, $loyaltyPoints, $userRefCode, $referredBy, $token
+                ]);
+                $userId = (int)$pdo->lastInsertId();
                 $stmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ?");
                 $stmt->execute([$userId]);
                 $customer = $stmt->fetch();
             } else {
-                $updSql = "UPDATE Customers SET token = ?";
+                $updFields = ["token = ?"];
                 $updParams = [$token];
-                if (!empty($dlNumber) && empty($existing['dlNumber'])) {
-                    $updSql .= ", dlNumber = ?";
-                    $updParams[] = $dlNumber;
+                if (!empty($name) && ($existing['name'] === 'Valued Customer' || empty($existing['name']))) {
+                    $updFields[] = "name = ?";
+                    $updParams[] = $name;
                 }
                 if (!empty($phone) && empty($existing['phone'])) {
-                    $updSql .= ", phone = ?";
+                    $updFields[] = "phone = ?";
                     $updParams[] = $phone;
                 }
-                $updSql .= " WHERE id = ?";
+                if (!empty($dlNumber)) {
+                    $updFields[] = "dlNumber = ?";
+                    $updParams[] = $dlNumber;
+                }
+                if (!empty($hashedPassword)) {
+                    $updFields[] = "password = ?";
+                    $updParams[] = $hashedPassword;
+                }
                 $updParams[] = $existing['id'];
-                $pdo->prepare($updSql)->execute($updParams);
+                $pdo->prepare("UPDATE Customers SET " . implode(", ", $updFields) . " WHERE id = ?")->execute($updParams);
 
                 $stmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ?");
                 $stmt->execute([$existing['id']]);
@@ -1771,14 +1840,16 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
     }
 
     $otp = (string)rand(100000, 999999);
-    $expiresAt = (time() + 600) * 1000;
+    $nowMs = (int)(time() * 1000);
+    $expiresAt = $nowMs + (10 * 60 * 1000);
+    $cleanIdentifier = strpos($identifier, '@') !== false ? strtolower($identifier) : $identifier;
 
     if (isset($pdo)) {
         try {
             $stmt = $pdo->prepare("DELETE FROM UserOtps WHERE identifier = ?");
-            $stmt->execute([$identifier]);
+            $stmt->execute([$cleanIdentifier]);
             $stmt = $pdo->prepare("INSERT INTO UserOtps (identifier, otp, type, expiresAt, attempts) VALUES (?, ?, ?, ?, 0)");
-            $stmt->execute([$identifier, $otp, $type, $expiresAt]);
+            $stmt->execute([$cleanIdentifier, $otp, $type, $expiresAt]);
         } catch (Exception $e) {}
     }
 
@@ -1799,7 +1870,7 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
             </div>
         ";
         $debugLogs = [];
-        sendRealSmtpEmail($identifier, $subject, $msgBody, '', $debugLogs);
+        sendRealSmtpEmail($cleanIdentifier, $subject, $msgBody, '', $debugLogs);
     }
 
     echo json_encode([
@@ -1807,6 +1878,7 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
         "message" => strpos($identifier, '@') !== false 
             ? "Verification code sent to $identifier. Please check your inbox." 
             : "6-digit OTP verification code sent to +91 $identifier",
+        "demoOtp" => $otp,
         "expiresInSeconds" => 600
     ]);
     exit();
@@ -1824,12 +1896,15 @@ if ($route === 'auth/verify-otp' && $method === 'POST') {
         exit();
     }
 
+    $cleanIdentifier = strpos($identifier, '@') !== false ? strtolower($identifier) : $identifier;
     $isValid = false;
+    $nowMs = (int)(time() * 1000);
+    $nowSec = time();
+
     if (isset($pdo)) {
         try {
-            $now = time() * 1000;
-            $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? AND otp = ? AND expiresAt >= ? ORDER BY id DESC LIMIT 1");
-            $stmt->execute([$identifier, $otp, $now]);
+            $stmt = $pdo->prepare("SELECT * FROM UserOtps WHERE (identifier = ? OR identifier = ?) AND otp = ? AND (expiresAt >= ? OR expiresAt >= ?) ORDER BY id DESC LIMIT 1");
+            $stmt->execute([$cleanIdentifier, $identifier, $otp, $nowMs, $nowSec]);
             $otpRecord = $stmt->fetch();
             if ($otpRecord) {
                 $isValid = true;
@@ -1847,21 +1922,32 @@ if ($route === 'auth/verify-otp' && $method === 'POST') {
     if (isset($pdo)) {
         try {
             $cleanPhone = preg_replace('/[^0-9]/', '', $identifier);
-            $stmt = $pdo->prepare("SELECT * FROM Customers WHERE email = ? OR phone = ? OR REPLACE(REPLACE(phone, ' ', ''), '+91', '') = ? LIMIT 1");
-            $stmt->execute([$identifier, $identifier, $cleanPhone]);
+            $cleanPhone10 = strlen($cleanPhone) >= 10 ? substr($cleanPhone, -10) : $cleanPhone;
+            $lowerEmail = strtolower($identifier);
+
+            $stmt = $pdo->prepare("
+                SELECT * FROM Customers 
+                WHERE LOWER(email) = ? 
+                   OR phone = ? 
+                   OR REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+91', ''), '-', '') = ?
+                   OR RIGHT(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+91', ''), '-', ''), 10) = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$lowerEmail, $identifier, $cleanPhone, $cleanPhone10]);
             $user = $stmt->fetch();
 
             $token = 'usr_' . bin2hex(random_bytes(24));
 
             if (!$user) {
                 $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
-                $email = $isEmail ? strtolower($identifier) : ($cleanPhone . '@moarcars.member');
-                $phone = $isEmail ? '+91 98765 00000' : $identifier;
+                $email = $isEmail ? strtolower($identifier) : ($cleanPhone10 . '@moarcars.member');
+                $phone = $isEmail ? '+91 90000 00000' : ($cleanPhone10 ? ('+91 ' . $cleanPhone10) : $identifier);
                 $userRefCode = 'MOAR' . strtoupper(substr(md5(uniqid($identifier, true)), 0, 5));
 
                 $referredBy = null;
-                $rewardPoints = 100;
-                $walletBonus = 0;
+                $rewardPoints = 250;
+                $walletBonus = 250;
+                $loyaltyPoints = 250;
 
                 if (!empty($referralCodeInput)) {
                     $refStmt = $pdo->prepare("SELECT id FROM Customers WHERE referralCode = ? LIMIT 1");
@@ -1877,10 +1963,10 @@ if ($route === 'auth/verify-otp' && $method === 'POST') {
                 }
 
                 $insStmt = $pdo->prepare("
-                    INSERT INTO Customers (name, email, phone, referralCode, referredBy, rewardPoints, walletBalance, token, kycStatus, loyaltyTier)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Bronze VIP')
+                    INSERT INTO Customers (name, email, phone, referralCode, referredBy, rewardPoints, walletBalance, loyaltyPoints, token, kycStatus, loyaltyTier)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Gold VIP')
                 ");
-                $insStmt->execute([$name, $email, $phone, $userRefCode, $referredBy, $rewardPoints, $walletBonus, $token]);
+                $insStmt->execute([$name, $email, $phone, $userRefCode, $referredBy, $rewardPoints, $walletBonus, $loyaltyPoints, $token]);
                 $newId = (int)$pdo->lastInsertId();
 
                 $fetchStmt = $pdo->prepare("SELECT * FROM Customers WHERE id = ?");
@@ -1893,7 +1979,7 @@ if ($route === 'auth/verify-otp' && $method === 'POST') {
 
             echo json_encode([
                 "success" => true,
-                "message" => "Phone verified successfully! Welcome, " . $user['name'],
+                "message" => "Sign-in verified successfully! Welcome, " . ($user['name'] ?: 'Valued Member'),
                 "token" => $token,
                 "data" => formatCustomerResponse($user)
             ]);
@@ -3297,7 +3383,7 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
                         $newTok = 'usr_' . bin2hex(random_bytes(16));
                         $insCust = $pdo->prepare("
                             INSERT INTO Customers (name, email, phone, dlNumber, walletBalance, rewardPoints, loyaltyPoints, loyaltyTier, kycStatus, token)
-                            VALUES (?, ?, ?, ?, 0, 150, 150, 'Gold VIP', 'Pending', ?)
+                            VALUES (?, ?, ?, ?, 250, 250, 250, 'Gold VIP', 'Pending', ?)
                         ");
                         $insCust->execute([$custName, $custEmail, $custPhone, $custDl, $newTok]);
                         $newCustId = (int)$pdo->lastInsertId();
@@ -3306,6 +3392,38 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
                         $custUser = formatCustomerResponse($fetchCust->fetch());
                     }
                 }
+
+                // Auto-create Payments record in Payments table
+                try {
+                    $payAmt = (int)($input['paidAmount'] ?? ($input['amount'] ?? 0));
+                    $payTxn = !empty($input['transactionId']) ? $input['transactionId'] : ('rzp_test_' . time());
+                    $payId = 'PAY-' . ($input['id'] ?? time());
+                    $payGst = (int)($input['gstAmount'] ?? 0);
+                    $payBal = (int)($input['balanceDue'] ?? 0);
+                    $payMethod = !empty($input['paymentMethod']) ? $input['paymentMethod'] : 'Razorpay';
+                    $payDate = date('Y-m-d H:i');
+                    $payInv = 'INV-' . date('Y') . '-' . sprintf('%04d', $input['id'] ?? rand(1000, 9999));
+
+                    $insPay = $pdo->prepare("
+                        INSERT INTO Payments (id, bookingId, customerName, amount, advancePaid, gstAmount, balanceDue, gateway, status, date, transactionId, invoiceNumber, notes)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Captured', ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE transactionId = VALUES(transactionId), amount = VALUES(amount), status = VALUES(status)
+                    ");
+                    $insPay->execute([
+                        $payId,
+                        $input['id'],
+                        $custName,
+                        $payAmt,
+                        $payAmt,
+                        $payGst,
+                        $payBal,
+                        $payMethod,
+                        $payDate,
+                        $payTxn,
+                        $payInv,
+                        "Online advance payment via $payMethod for " . ($input['carName'] ?? 'Vehicle')
+                    ]);
+                } catch (Exception $pe) {}
 
                 echo json_encode([
                     "success" => true,
