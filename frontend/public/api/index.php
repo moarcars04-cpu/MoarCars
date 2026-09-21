@@ -1203,15 +1203,20 @@ function ensureTablesExist($pdo, $force = false) {
                 'city' => "VARCHAR(100) DEFAULT 'Tirupati'",
                 'state' => "VARCHAR(100) DEFAULT 'Andhra Pradesh'",
                 'address' => "TEXT NULL",
-                'phone' => "VARCHAR(50) DEFAULT '+91 877 223344'",
-                'managerName' => "VARCHAR(255) DEFAULT 'Nagaraju V'",
-                'managerPhone' => "VARCHAR(50) DEFAULT '+91 98765 11122'",
+                'phone' => "VARCHAR(50) DEFAULT '+91 85000 12345'",
+                'managerName' => "VARCHAR(255) DEFAULT 'Station Incharge'",
+                'managerPhone' => "VARCHAR(50) DEFAULT '+91 98765 00000'",
                 'managerEmail' => "VARCHAR(255) DEFAULT NULL",
-                'operatingHours' => "VARCHAR(100) DEFAULT '24/7'",
+                'operatingHours' => "VARCHAR(100) DEFAULT '24 Hours (7 Days)'",
                 'fleetCount' => "INT DEFAULT 0",
+                'totalCars' => "INT DEFAULT 0",
+                'availableCars' => "INT DEFAULT 0",
+                'staffCount' => "INT DEFAULT 2",
                 'activeTrips' => "INT DEFAULT 0",
                 'monthlyRevenue' => "INT DEFAULT 0",
+                'mapCoordinates' => "VARCHAR(100) DEFAULT '13.6288° N, 79.4192° E'",
                 'status' => "VARCHAR(50) DEFAULT 'Active'",
+                'isActive' => "TINYINT DEFAULT 1",
             ],
             'Payments' => [
                 'id' => "VARCHAR(100) PRIMARY KEY",
@@ -1289,14 +1294,17 @@ function ensureTablesExist($pdo, $force = false) {
                 'attachmentUrl' => "TEXT DEFAULT NULL",
                 'rating' => "INT DEFAULT NULL",
                 'messages' => "LONGTEXT DEFAULT NULL",
-                'lastUpdated' => "VARCHAR(50) DEFAULT NULL",
+                'notes' => "TEXT DEFAULT NULL",
+                'tags' => "VARCHAR(255) DEFAULT NULL",
+                'createdAt' => "VARCHAR(50) DEFAULT NULL",
+                'updatedAt' => "VARCHAR(50) DEFAULT NULL",
             ],
             'ActivityLogs' => [
-                'adminName' => "VARCHAR(255) DEFAULT 'Executive Super Admin'",
-                'adminUser' => "VARCHAR(255) DEFAULT 'Super Admin'",
-                'module' => "VARCHAR(100) DEFAULT 'Fleet'",
-                'action' => "VARCHAR(255) DEFAULT 'UPDATE'",
-                'actionType' => "VARCHAR(255) DEFAULT 'UPDATE'",
+                'user' => "VARCHAR(255) DEFAULT 'Super Admin'",
+                'userRole' => "VARCHAR(50) DEFAULT 'SuperAdmin'",
+                'action' => "VARCHAR(255) NOT NULL DEFAULT 'System Update'",
+                'category' => "VARCHAR(100) DEFAULT 'General'",
+                'status' => "VARCHAR(50) DEFAULT 'Success'",
                 'details' => "TEXT DEFAULT NULL",
                 'description' => "TEXT DEFAULT NULL",
                 'target' => "VARCHAR(255) DEFAULT NULL",
@@ -1365,6 +1373,129 @@ function ensureTablesExist($pdo, $force = false) {
                 $stmt = $pdo->prepare("INSERT INTO Settings (`key`, `value`) VALUES (?, ?)");
                 foreach ($defaultSettings as $k => $v) {
                     $stmt->execute([$k, $v]);
+                }
+            }
+        } catch (Exception $e) {}
+
+        // 7. Seed default Branches / Hubs if table has 0 rows
+        try {
+            $branchCount = (int)$pdo->query("SELECT COUNT(*) FROM Branches")->fetchColumn();
+            if ($branchCount === 0) {
+                $defaultBranches = [
+                    [
+                        'name' => 'Tirupati Central Hub (Station)',
+                        'city' => 'Tirupati',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Platform 1 Exit, Near Railway Station & Central Bus Stand, Tirupati',
+                        'phone' => '+91 85000 12345',
+                        'managerName' => 'Nagaraju V',
+                        'managerPhone' => '+91 98765 11122',
+                        'operatingHours' => '24 Hours (7 Days)',
+                        'totalCars' => 12,
+                        'staffCount' => 4,
+                        'monthlyRevenue' => 350000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ],
+                    [
+                        'name' => 'Renigunta Airport Hub (TIR T1)',
+                        'city' => 'Tirupati',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Terminal 1 Arrival Canopy, Tirupati International Airport (TIR), Renigunta',
+                        'phone' => '+91 85000 12346',
+                        'managerName' => 'Kishore Babu',
+                        'managerPhone' => '+91 98765 22233',
+                        'operatingHours' => '24 Hours (Flight Synchronized)',
+                        'totalCars' => 10,
+                        'staffCount' => 3,
+                        'monthlyRevenue' => 320000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ],
+                    [
+                        'name' => 'Alipiri Tirumala Gate Hub',
+                        'city' => 'Tirupati',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Alipiri Checkpost Circle, Near Toll Plaza, Footpath Entry',
+                        'phone' => '+91 85000 12347',
+                        'managerName' => 'Subramanyam Reddy',
+                        'managerPhone' => '+91 98765 33344',
+                        'operatingHours' => '04:00 AM - 11:30 PM',
+                        'totalCars' => 8,
+                        'staffCount' => 3,
+                        'monthlyRevenue' => 240000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ],
+                    [
+                        'name' => 'Chandragiri Heritage Point',
+                        'city' => 'Chandragiri',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Fort Junction, Main Bypass Road, Chandragiri',
+                        'phone' => '+91 85000 12348',
+                        'managerName' => 'Bhanu Prakash',
+                        'managerPhone' => '+91 98765 44455',
+                        'operatingHours' => '06:00 AM - 10:00 PM',
+                        'totalCars' => 5,
+                        'staffCount' => 2,
+                        'monthlyRevenue' => 180000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ],
+                    [
+                        'name' => 'Horsley Hills Route Hub',
+                        'city' => 'Madanapalle',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Madanapalle Highway Junction, Horsley Hills Foothills Point',
+                        'phone' => '+91 85000 12349',
+                        'managerName' => 'Ramesh Naidu',
+                        'managerPhone' => '+91 98765 55566',
+                        'operatingHours' => '07:00 AM - 09:00 PM',
+                        'totalCars' => 4,
+                        'staffCount' => 2,
+                        'monthlyRevenue' => 140000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ],
+                    [
+                        'name' => 'Srikalahasti Temple Hub',
+                        'city' => 'Srikalahasti',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Temple North Gopuram Road, Swarnamukhi River Corridor, Srikalahasti',
+                        'phone' => '+91 85000 12350',
+                        'managerName' => 'Venkatesh Rao',
+                        'managerPhone' => '+91 98765 66677',
+                        'operatingHours' => '05:00 AM - 10:30 PM',
+                        'totalCars' => 6,
+                        'staffCount' => 2,
+                        'monthlyRevenue' => 210000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ],
+                    [
+                        'name' => 'Kanipakam Temple Corridor',
+                        'city' => 'Chittoor',
+                        'state' => 'Andhra Pradesh',
+                        'address' => 'Vinayaka Temple Ring Road, Kanipakam, Chittoor District',
+                        'phone' => '+91 85000 12351',
+                        'managerName' => 'Anil Kumar',
+                        'managerPhone' => '+91 98765 77788',
+                        'operatingHours' => '05:30 AM - 10:00 PM',
+                        'totalCars' => 5,
+                        'staffCount' => 2,
+                        'monthlyRevenue' => 175000,
+                        'status' => 'Active',
+                        'isActive' => 1
+                    ]
+                ];
+                $bStmt = $pdo->prepare("INSERT INTO Branches (name, city, state, address, phone, managerName, managerPhone, operatingHours, totalCars, fleetCount, staffCount, monthlyRevenue, status, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                foreach ($defaultBranches as $db) {
+                    $bStmt->execute([
+                        $db['name'], $db['city'], $db['state'], $db['address'], $db['phone'],
+                        $db['managerName'], $db['managerPhone'], $db['operatingHours'],
+                        $db['totalCars'], $db['totalCars'], $db['staffCount'], $db['monthlyRevenue'],
+                        $db['status'], $db['isActive']
+                    ]);
                 }
             }
         } catch (Exception $e) {}

@@ -58,14 +58,16 @@ export default function BranchManagement({
         city: formData.city || "Tirupati",
         state: formData.state || "Andhra Pradesh",
         address: formData.address || "Main Highway Road, Tirupati",
+        phone: formData.phone || "+91 85000 12345",
         operatingHours: formData.operatingHours || "24 Hours (7 Days)",
         managerName: formData.managerName || "Station Incharge",
         managerPhone: formData.managerPhone || "+91 98765 00000",
-        totalCars: 0,
-        availableCars: 0,
-        staffCount: 2,
-        monthlyRevenue: 0,
-        mapCoordinates: "13.6288° N, 79.4192° E",
+        managerEmail: formData.managerEmail || "",
+        totalCars: formData.totalCars || 0,
+        availableCars: formData.totalCars || 0,
+        staffCount: formData.staffCount || 2,
+        monthlyRevenue: formData.monthlyRevenue || 0,
+        mapCoordinates: formData.mapCoordinates || "13.6288° N, 79.4192° E",
       };
       const created = await adminApi.createBranch(payload);
       const newB: BranchItem = {
@@ -74,17 +76,19 @@ export default function BranchManagement({
         city: payload.city!,
         state: payload.state!,
         address: payload.address!,
+        phone: payload.phone!,
         operatingHours: payload.operatingHours!,
         managerName: payload.managerName!,
         managerPhone: payload.managerPhone!,
-        totalCars: 0,
-        availableCars: 0,
-        staffCount: 2,
-        monthlyRevenue: 0,
-        mapCoordinates: "13.6288° N, 79.4192° E",
+        managerEmail: payload.managerEmail,
+        totalCars: payload.totalCars || 0,
+        availableCars: payload.totalCars || 0,
+        staffCount: payload.staffCount || 2,
+        monthlyRevenue: payload.monthlyRevenue || 0,
+        mapCoordinates: payload.mapCoordinates || "13.6288° N, 79.4192° E",
       };
       setBranches([newB, ...(branches || [])]);
-      setNotice({ type: "success", text: `Station Hub "${newB.name}" established!` });
+      setNotice({ type: "success", text: `Station Hub "${newB.name}" established in database!` });
     }
     setIsAddEditModalOpen(false);
     setEditingBranch(null);
@@ -268,10 +272,11 @@ export default function BranchManagement({
                   city: t.city.value,
                   state: t.state.value,
                   address: t.address.value,
+                  phone: t.phone?.value || "+91 85000 12345",
                   operatingHours: t.operatingHours.value,
                   managerName: t.managerName.value,
                   managerPhone: t.managerPhone.value,
-                  managerEmail: t.managerEmail.value,
+                  managerEmail: t.managerEmail?.value || "",
                   totalCars: parseInt(t.totalCars.value) || 5,
                   staffCount: parseInt(t.staffCount.value) || 3,
                   monthlyRevenue: parseInt(t.monthlyRevenue.value) || 150000,
@@ -285,7 +290,7 @@ export default function BranchManagement({
                   name="name"
                   defaultValue={editingBranch?.name || ""}
                   required
-                  placeholder="Tirupati Central Hub"
+                  placeholder="e.g. Tirupati Central Hub (Station)"
                   className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white font-bold"
                 />
               </div>
@@ -322,7 +327,15 @@ export default function BranchManagement({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-400 font-bold mb-1">Station Desk Phone</label>
+                  <input
+                    name="phone"
+                    defaultValue={editingBranch?.phone || "+91 85000 12345"}
+                    className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
+                </div>
                 <div>
                   <label className="block text-slate-400 font-bold mb-1">Station Manager Name</label>
                   <input
@@ -332,7 +345,7 @@ export default function BranchManagement({
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 font-bold mb-1">Manager Mobile Phone</label>
+                  <label className="block text-slate-400 font-bold mb-1">Manager Phone</label>
                   <input
                     name="managerPhone"
                     defaultValue={editingBranch?.managerPhone || "+91 94400 11223"}

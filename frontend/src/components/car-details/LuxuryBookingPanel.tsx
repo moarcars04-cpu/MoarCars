@@ -38,8 +38,6 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
 
   // Booking parameters
   const [pickupHub, setPickupHub] = useState(locations[0] || "Tirupati Central Hub (Station)");
-  const [deliveryMode, setDeliveryMode] = useState<"hub" | "doorstep">("hub");
-  const [doorstepAddress, setDoorstepAddress] = useState("");
   const [startDate, setStartDate] = useState(getTodayDateStr());
   const [startTime, setStartTime] = useState("09:00");
   const [endDate, setEndDate] = useState(getFutureDateStr(2));
@@ -108,7 +106,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   // Dynamic Price calculations
   const dailyRate = Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 0;
   const baseFare = dailyRate * rentalDays;
-  const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
+  const deliveryFee = 0;
   const driverFee = 0;
   const extrasTotal = 0;
 
@@ -161,7 +159,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
 
   // Submit Booking / Navigate to Checkout
   const handleInstantReserve = async () => {
-    const targetPickup = deliveryMode === "doorstep" ? `Doorstep Delivery (${doorstepAddress || "Tirupati Address"})` : pickupHub;
+    const targetPickup = pickupHub;
 
     const payload = {
       pickup: targetPickup,
@@ -175,7 +173,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       car,
       carId: car.id,
       withDriver: false,
-      deliveryMode,
+      deliveryMode: "hub",
       bookingType: "Self Drive",
       customerName: customerName || user?.name || "Valued Guest",
       customerPhone: customerPhone || user?.phone || "+91 98765 43210",
@@ -319,59 +317,23 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         </div>
       </div>
 
-      {/* Delivery Mode & Location */}
-      <div className="space-y-3">
+      {/* Pickup & Drop Location */}
+      <div className="space-y-2">
         <label className="text-xs font-bold text-brand-navy flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5 text-brand-teal" /> Pickup & Delivery Location
+          <MapPin className="h-3.5 w-3.5 text-brand-teal" /> Pickup & Drop Location
         </label>
 
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setDeliveryMode("hub")}
-            className={`p-2.5 rounded-xl text-xs font-bold transition-all ${
-              deliveryMode === "hub"
-                ? "bg-brand-navy text-white shadow"
-                : "bg-brand-mist/60 text-muted-foreground border border-border"
-            }`}
-          >
-            Hub Pickup (Free)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDeliveryMode("doorstep")}
-            className={`p-2.5 rounded-xl text-xs font-bold transition-all ${
-              deliveryMode === "doorstep"
-                ? "bg-brand-navy text-white shadow"
-                : "bg-brand-mist/60 text-muted-foreground border border-border"
-            }`}
-          >
-            Doorstep (+₹299)
-          </button>
-        </div>
-
-        {deliveryMode === "hub" ? (
-          <select
-            value={pickupHub}
-            onChange={(e) => setPickupHub(e.target.value)}
-            className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-bold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
-          >
-            {locations.map((h) => (
-              <option key={h} value={h}>
-                {h}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type="text"
-            placeholder="Enter hotel name or doorstep address in Tirupati..."
-            value={doorstepAddress}
-            onChange={(e) => setDoorstepAddress(e.target.value)}
-            className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-semibold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal"
-          />
-        )}
+        <select
+          value={pickupHub}
+          onChange={(e) => setPickupHub(e.target.value)}
+          className="w-full p-3 rounded-2xl bg-brand-mist/60 border border-border text-xs font-bold text-brand-navy outline-none focus:ring-1 focus:ring-brand-teal cursor-pointer"
+        >
+          {locations.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Promo Code Engine */}
