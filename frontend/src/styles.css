@@ -392,4 +392,112 @@
   border-color: #e2e8f0 !important;
 }
 
+/* ==========================================================================
+   HIGH-PRECISION A4 PRINT ENGINE & INVOICE PAGE LAYOUT
+   ========================================================================== */
+@page {
+  size: A4 portrait;
+  margin: 6mm 8mm 6mm 8mm;
+}
+
+@media print {
+  /* 1. Global Print Reset: disable dark modes, overlays, and viewport locks */
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 11px !important;
+  }
+
+  /* 2. Hide all non-printable UI elements */
+  header,
+  footer,
+  nav,
+  aside,
+  button,
+  .print\:hidden,
+  [data-print-hidden="true"],
+  .no-print {
+    display: none !important;
+  }
+
+  /* 3. When an invoice or agreement modal is active, hide root content outside it */
+  body.print-invoice-mode #root > *:not(:has(#printable-gst-invoice)):not(:has(.printable-document)),
+  body.print-invoice-mode > *:not(#root):not(.print-portal-active) {
+    display: none !important;
+  }
+
+  /* 4. Reset modal overlays and fixed containers */
+  .fixed,
+  .fixed.inset-0,
+  div:has(> #printable-gst-invoice),
+  div:has(> .printable-document),
+  div:has(> div > #printable-gst-invoice) {
+    position: static !important;
+    inset: auto !important;
+    display: block !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: none !important;
+  }
+
+  /* 5. Printable Invoice & Document Container */
+  #printable-gst-invoice,
+  .printable-document {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* 6. Page-break prevention on atomic sections */
+  .avoid-page-break,
+  #printable-gst-invoice table,
+  #printable-gst-invoice thead,
+  #printable-gst-invoice tbody,
+  #printable-gst-invoice tr,
+  #printable-gst-invoice .invoice-block {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 7. Enhanced crisp contrast for printed text & borders */
+  #printable-gst-invoice * {
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+}
+
+
 

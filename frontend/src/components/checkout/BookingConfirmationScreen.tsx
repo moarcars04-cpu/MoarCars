@@ -72,12 +72,13 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
 }) => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [emailSentNotice, setEmailSentNotice] = useState(false);
 
-  const bookingId = bookingData.bookingId || `MC-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-  const invoiceId = `INV-${bookingId}`;
+  const rawBookingId = bookingData.bookingId || `MC-2026-${bookingData.id || Math.floor(10000 + Math.random() * 90000)}`;
+  const bookingId = String(rawBookingId).replace(/^#+/, "");
   const transactionId = bookingData.transactionId || `pay_live_${Date.now().toString().slice(-8)}`;
-  const keyPin = Math.floor(1000 + (Math.abs(bookingId.split("").reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 9000));
+  const keyPin = bookingData.keyPin || Math.floor(1000 + (Math.abs(bookingId.split("").reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 9000));
 
   const pickupInfo = formatDateTimeDisplay(bookingData.startDate, bookingData.startTime);
   const returnInfo = formatDateTimeDisplay(bookingData.endDate, bookingData.endTime);
@@ -85,7 +86,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
   const grandTotal = Number(bookingData.grandTotal || bookingData.amount || 0);
   const paidAmount = Number(bookingData.paidAmount !== undefined ? bookingData.paidAmount : grandTotal);
   const balanceDue = Number(bookingData.balanceDue !== undefined ? bookingData.balanceDue : Math.max(0, grandTotal - paidAmount));
-  const rentalDays = Number(bookingData.rentalDays || 2);
+  const rentalDays = Number(bookingData.totalDays || bookingData.rentalDays || 2);
 
   const handleCopyBookingId = () => {
     navigator.clipboard.writeText(bookingId);
@@ -99,8 +100,8 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
       `🚗 *MOAR CARS TIRUPATI - BOOKING VOUCHER*\n\n` +
       `• *Booking ID:* #${bookingId}\n` +
       `• *Vehicle:* ${carName}\n` +
-      `• *Pickup:* ${bookingData.pickupLocation || "Tirupati Central Hub"} on ${pickupInfo.date} at ${pickupInfo.time}\n` +
-      `• *Return:* ${bookingData.dropLocation || bookingData.pickupLocation} on ${returnInfo.date} at ${returnInfo.time}\n` +
+      `• *Pickup:* ${bookingData.pickupLocation || bookingData.pickup || "Tirupati Central Hub"} on ${pickupInfo.date} at ${pickupInfo.time}\n` +
+      `• *Return:* ${bookingData.dropLocation || bookingData.dropAddress || bookingData.pickupLocation || "Tirupati Central Hub"} on ${returnInfo.date} at ${returnInfo.time}\n` +
       `• *Key Pickup PIN:* ${keyPin}\n` +
       `• *Advance Paid:* ₹${paidAmount.toLocaleString("en-IN")}\n` +
       `• *Balance Due:* ₹${balanceDue.toLocaleString("en-IN")}\n\n` +
@@ -110,41 +111,41 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
   };
 
   const handleSendEmail = async () => {
-    setEmailSentNotice(true);
+    if (emailSending) return;
+    setEmailSending(true);
     try {
       await fetch("/api/bookings/resend-voucher", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
-          email: bookingData.customerEmail,
+          customerEmail: bookingData.customerEmail || bookingData.email,
+          email: bookingData.customerEmail || bookingData.email,
           ...bookingData,
         }),
       });
+      setEmailSentNotice(true);
     } catch {}
-    setTimeout(() => setEmailSentNotice(false), 4000);
-  };
-
-  const handlePrintInvoice = () => {
-    window.print();
+    setEmailSending(false);
+    setTimeout(() => setEmailSentNotice(false), 5000);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300 pb-12">
+    <div className="w-full space-y-6 sm:space-y-8 animate-in fade-in duration-300 pb-12">
       {/* 1. Ultra-Luxury Hero Confirmation Banner */}
-      <div className="relative rounded-3xl bg-gradient-to-br from-[#070e1c] via-[#0b162c] to-[#070e1c] p-8 sm:p-10 border border-amber-500/30 text-white shadow-2xl overflow-hidden text-center">
+      <div className="w-full relative rounded-3xl bg-gradient-to-br from-[#070e1c] via-[#0b1426] to-[#070e1c] p-6 sm:p-10 border border-amber-500/30 text-white shadow-2xl overflow-hidden text-center">
         {/* Ambient Glows */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
+        <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
           {/* Animated Success Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-black uppercase tracking-wider shadow-inner">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-pulse" />
             <span>Reservation Confirmed • Vehicle Assigned</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
             You're All Set to Drive,{" "}
             <span className="bg-gradient-to-r from-[#c88d18] via-[#e6b14d] to-[#c88d18] bg-clip-text text-transparent">
               {bookingData.customerName?.split(" ")[0] || "Valued Guest"}
@@ -152,7 +153,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
             !
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-lg mx-auto">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl mx-auto">
             Your self-drive booking is confirmed in our live dispatch system. Your vehicle is currently sanitized, fueled, and staged for your trip.
           </p>
 
@@ -170,12 +171,18 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
             <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-white/5 border border-white/15 text-xs font-mono text-slate-300 shadow-sm">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Txn: {transactionId}
             </span>
+
+            {bookingData.customerEmail && (
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-medium text-emerald-300 shadow-sm">
+                <Mail className="w-3.5 h-3.5 text-emerald-400" /> Voucher emailed to {bookingData.customerEmail}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
       {/* 2. Digital Boarding Pass & Trip Itinerary Card */}
-      <div className="rounded-3xl border border-slate-800 bg-[#0b1426] shadow-2xl overflow-hidden">
+      <div className="w-full rounded-3xl border border-slate-800 bg-[#0b1426] shadow-2xl overflow-hidden">
         {/* Card Header */}
         <div className="px-6 py-4 bg-[#070e1c] border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -193,32 +200,32 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
           {/* Left: Vehicle Image & Specs (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="relative group shrink-0">
+              <div className="relative group shrink-0 w-full sm:w-auto">
                 <img
                   src={
                     bookingData.car?.image ||
                     "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=800&q=80"
                   }
                   alt={bookingData.car?.name || "Vehicle"}
-                  className="w-full sm:w-44 h-28 object-cover rounded-2xl border border-slate-800 shadow-lg bg-[#070e1c]"
+                  className="w-full sm:w-48 h-32 object-cover rounded-2xl border border-slate-800 shadow-lg bg-[#070e1c]"
                 />
                 <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/80 backdrop-blur text-[10px] font-bold text-amber-400 border border-white/10">
                   {bookingData.car?.category || "Self Drive"}
                 </span>
               </div>
 
-              <div className="space-y-1">
-                <h3 className="text-xl font-black text-white">
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <h3 className="text-xl font-black text-white truncate">
                   {bookingData.car?.name || bookingData.carName || "Premium Self-Drive Vehicle"}
                 </h3>
                 <p className="text-xs text-slate-400 font-medium">
-                  {bookingData.car?.variant || "Special Self-Drive Edition"} • {bookingData.car?.fuelType || "Petrol"} • {bookingData.car?.transmission || "Automatic"}
+                  {bookingData.car?.variant || "Special Self-Drive Edition"} • {bookingData.car?.fuelType || "Petrol"} • {bookingData.car?.transmission || "Manual/Auto"}
                 </p>
                 <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
-                  <span className="px-2 py-0.5 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700 font-medium">
                     5 Seater
                   </span>
-                  <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
                     Ghat Road Certified
                   </span>
                 </div>
@@ -238,7 +245,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
                     <span className="text-xs font-bold text-slate-300">{pickupInfo.time}</span>
                   </div>
                   <p className="text-sm font-black text-white truncate mt-0.5">
-                    {bookingData.pickupLocation || "Tirupati Central Hub (Station)"}
+                    {bookingData.pickupLocation || bookingData.pickup || "Tirupati Central Hub (Station)"}
                   </p>
                   <p className="text-xs text-slate-400 font-medium">{pickupInfo.date}</p>
                 </div>
@@ -261,7 +268,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
                     <span className="text-xs font-bold text-slate-300">{returnInfo.time}</span>
                   </div>
                   <p className="text-sm font-black text-white truncate mt-0.5">
-                    {bookingData.dropLocation || bookingData.pickupLocation || "Tirupati Central Hub (Station)"}
+                    {bookingData.dropLocation || bookingData.dropAddress || bookingData.pickupLocation || "Tirupati Central Hub (Station)"}
                   </p>
                   <p className="text-xs text-slate-400 font-medium">{returnInfo.date}</p>
                 </div>
@@ -272,24 +279,24 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
           {/* Right: Key PIN, QR Check-in & Instant Actions (5 cols) */}
           <div className="lg:col-span-5 p-6 rounded-2xl bg-gradient-to-b from-[#070e1c] to-[#0b1426] border border-slate-800 space-y-5 text-center">
             {/* Key Pickup PIN Box */}
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <span className="text-[10px] uppercase tracking-widest font-black text-slate-400 block">
                 Contactless Key Handover PIN
               </span>
-              <div className="inline-block px-6 py-2 rounded-2xl bg-gradient-to-r from-[#c88d18]/20 via-[#c88d18]/30 to-[#c88d18]/20 border border-amber-500/40 text-amber-400 font-mono text-2xl font-black tracking-widest shadow-lg">
+              <div className="inline-block px-8 py-2.5 rounded-2xl bg-gradient-to-r from-[#c88d18]/20 via-[#c88d18]/30 to-[#c88d18]/20 border border-amber-500/40 text-amber-400 font-mono text-3xl font-black tracking-widest shadow-lg">
                 {keyPin}
               </div>
-              <p className="text-[10px] text-slate-400 pt-1">
+              <p className="text-[11px] text-slate-400 pt-1">
                 Show this PIN with your Original DL at the station hub for instant handover.
               </p>
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2.5 pt-2">
               <button
                 type="button"
                 onClick={handleWhatsAppShare}
-                className="w-full py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.01]"
+                className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.01]"
               >
                 <MessageSquare className="w-4 h-4" /> Save Pass on WhatsApp
               </button>
@@ -297,17 +304,23 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
               <button
                 type="button"
                 onClick={() => setShowInvoiceModal(true)}
-                className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3.5 px-4 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-100 border border-amber-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
               >
-                <FileText className="w-4 h-4 text-[#c88d18]" /> View GST Tax Invoice
+                <FileText className="w-4 h-4 text-amber-400" /> View GST Tax Invoice (1-Page A4)
               </button>
 
               <button
                 type="button"
                 onClick={handleSendEmail}
-                className="w-full py-2.5 px-4 rounded-2xl bg-transparent hover:bg-white/5 text-slate-400 hover:text-white font-medium text-[11px] flex items-center justify-center gap-1.5 transition-colors"
+                disabled={emailSending}
+                className="w-full py-2.5 px-4 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white font-medium text-[11px] flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
               >
-                <Mail className="w-3.5 h-3.5" /> {emailSentNotice ? "✅ Email Sent to " + (bookingData.customerEmail || "Inbox") : "Resend Voucher to Email"}
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                {emailSending
+                  ? "Sending Email..."
+                  : emailSentNotice
+                  ? `✅ Voucher Dispatched to ${bookingData.customerEmail || "Inbox"}`
+                  : "Resend Voucher to Email"}
               </button>
             </div>
           </div>
@@ -315,14 +328,14 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
       </div>
 
       {/* 3. Transparent Financial Breakdown & Payment Guarantee */}
-      <div className="rounded-3xl border border-slate-800 bg-[#0b1426] p-6 sm:p-8 space-y-5 shadow-xl">
+      <div className="w-full rounded-3xl border border-slate-800 bg-[#0b1426] p-6 sm:p-8 space-y-5 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
             <h3 className="text-base font-black text-white">Payment & Escrow Summary</h3>
           </div>
           <span className="text-xs font-mono text-slate-400">
-            Payment Mode: <strong className="text-white uppercase">{bookingData.paymentMethod || "Razorpay Online"}</strong>
+            Payment Mode: <strong className="text-emerald-400 uppercase">{bookingData.paymentMethod || "Razorpay Online"}</strong>
           </span>
         </div>
 
@@ -331,7 +344,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
           <div className="p-4 rounded-2xl bg-[#070e1c] border border-slate-800 space-y-1">
             <span className="text-slate-400 font-medium">Total Trip Amount</span>
             <p className="text-xl font-black text-white">₹{grandTotal.toLocaleString("en-IN")}</p>
-            <p className="text-[10px] text-slate-500">Includes {rentalDays} Days Rental & GST</p>
+            <p className="text-[10px] text-slate-500">Includes {rentalDays} Days Rental & 18% GST</p>
           </div>
 
           {/* Advance Paid */}
@@ -353,12 +366,12 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
 
         <div className="p-3.5 rounded-2xl bg-[#070e1c] border border-slate-800/80 flex items-center justify-between text-xs">
           <span className="text-slate-300 font-medium">Refundable Security Deposit:</span>
-          <span className="text-emerald-400 font-bold">₹0 (Zero Security Deposit Policy)</span>
+          <span className="text-emerald-400 font-bold">₹0 (Zero Security Deposit Policy Guarantee)</span>
         </div>
       </div>
 
       {/* 4. 3-Step Pickup Guide */}
-      <div className="rounded-3xl border border-slate-800 bg-[#0b1426] p-6 sm:p-8 space-y-5">
+      <div className="w-full rounded-3xl border border-slate-800 bg-[#0b1426] p-6 sm:p-8 space-y-5 shadow-xl">
         <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
           <Compass className="w-4 h-4 text-[#c88d18]" /> What Happens Next • 3 Easy Steps
         </h3>
@@ -370,7 +383,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
             </div>
             <h4 className="font-bold text-white">Reach Station Hub</h4>
             <p className="text-slate-400 leading-relaxed">
-              Arrive at {bookingData.pickupLocation || "Tirupati Central Hub"} at your scheduled time ({pickupInfo.time}).
+              Arrive at {bookingData.pickupLocation || bookingData.pickup || "Tirupati Central Hub"} at your scheduled time ({pickupInfo.time}).
             </p>
           </div>
 
@@ -397,7 +410,7 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
       </div>
 
       {/* 5. Main Action Navigation Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+      <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
         <Button
           size="lg"
           onClick={onGoToDashboard}
@@ -426,3 +439,4 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
   );
 };
 
+export default BookingConfirmationScreen;

@@ -218,6 +218,278 @@ app.delete(["/api/categories/:id", "/api/admin/categories/:id"], async (req, res
   }
 });
 
+// Transporter configuration for Gmail SMTP
+const getTransporter = () => {
+  const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
+  const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
+  });
+};
+
+// Reusable Luxury Booking Confirmation Email Dispatcher
+const sendBookingConfirmationEmail = async (bookingData) => {
+  try {
+    const rawEmail = bookingData.customerEmail || bookingData.email;
+    if (!rawEmail || !rawEmail.includes("@")) {
+      console.log("[EMAIL] Skipping booking confirmation email - no valid email address:", rawEmail);
+      return false;
+    }
+    const targetEmail = rawEmail.trim().toLowerCase();
+    const authorizedEmail = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim().toLowerCase();
+
+    const rawBookingId = bookingData.bookingId || `MC-2026-${bookingData.id || "8812"}`;
+    const bookingId = String(rawBookingId).replace(/^#+/, "");
+    const invoiceNumber = `INV-${bookingId}`;
+    const customerName = (bookingData.customerName || "Valued Customer").trim();
+    const carName = bookingData.carName || (bookingData.car ? bookingData.car.name : "Premium Fleet Vehicle");
+    
+    // Contactless Key Handover PIN
+    const keyPin = bookingData.keyPin || Math.floor(1000 + (Math.abs(String(bookingId).split("").reduce((a, b) => a + b.charCodeAt(0), 0)) % 9000));
+    
+    const pickupLoc = bookingData.pickup || bookingData.pickupLocation || "Tirupati Central Hub (Station)";
+    const dropLoc = bookingData.dropAddress || bookingData.dropLocation || pickupLoc;
+    const startDate = bookingData.startDate || "Scheduled Date";
+    const endDate = bookingData.endDate || "Scheduled Return";
+    const rentalDays = bookingData.totalDays || bookingData.rentalDays || bookingData.duration || "2 Days";
+    
+    const grandTotal = Number(bookingData.grandTotal || bookingData.amount || 0);
+    const paidAmount = Number(bookingData.paidAmount !== undefined ? bookingData.paidAmount : (bookingData.paymentStatus === "Paid" ? grandTotal : 0));
+    const balanceDue = Number(bookingData.balanceDue !== undefined ? bookingData.balanceDue : Math.max(0, grandTotal - paidAmount));
+    const paymentMethod = (bookingData.paymentMethod || "Razorpay Online").toUpperCase();
+    const dlNumber = bookingData.drivingLicense || bookingData.dlNumber || "Verified at Station";
+
+    const transporter = getTransporter();
+    const mailOptions = {
+      from: `"Moar Cars Reservations" <${authorizedEmail}>`,
+      to: targetEmail,
+      subject: `🚗 Booking Confirmed: #${bookingId} - ${carName} | Moar Cars Tirupati`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Moar Cars Booking Confirmation #${bookingId}</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #070e1c; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc; -webkit-font-smoothing: antialiased;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #070e1c; padding: 24px 12px;">
+            <tr>
+              <td align="center">
+                <!-- Main Card -->
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #0b1426; border-radius: 20px; border: 1px solid #1e293b; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                  
+                  <!-- Brand Header -->
+                  <tr>
+                    <td style="padding: 32px 24px 20px 24px; text-align: center; background: linear-gradient(180deg, #070e1c 0%, #0b1426 100%); border-bottom: 1px solid #1e293b;">
+                      <table align="center" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="width: 44px; height: 44px; line-height: 44px; text-align: center; border-radius: 12px; background: linear-gradient(135deg, #c88d18, #d49b29); color: #070e1c; font-size: 24px; font-weight: 900; box-shadow: 0 4px 15px rgba(200, 141, 24, 0.4);">M</td>
+                          <td style="padding-left: 12px; text-align: left;">
+                            <div style="font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #ffffff; line-height: 1;">MOAR <span style="color: #c88d18;">CARS</span></div>
+                            <div style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px;">Self-Drive Car Rental • Tirupati</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Confirmation Badge & Title -->
+                  <tr>
+                    <td style="padding: 28px 24px 16px 24px; text-align: center;">
+                      <div style="display: inline-block; padding: 6px 16px; border-radius: 20px; background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;">
+                        ✓ Reservation Confirmed • Vehicle Assigned
+                      </div>
+                      <h1 style="color: #ffffff; font-size: 24px; font-weight: 900; margin: 0 0 10px 0; letter-spacing: -0.5px;">
+                        You're All Set to Drive, <span style="color: #c88d18;">${customerName.split(" ")[0]}</span>!
+                      </h1>
+                      <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; margin: 0 auto; max-width: 480px;">
+                        Your self-drive reservation is confirmed in our live dispatch fleet. Below is your official travel voucher, contactless key handover PIN, and trip itinerary.
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Key PIN Box -->
+                  <tr>
+                    <td style="padding: 0 24px 20px 24px;">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, rgba(200, 141, 24, 0.12), rgba(11, 20, 38, 0.9)); border: 1px solid rgba(200, 141, 24, 0.4); border-radius: 16px; text-align: center; padding: 18px;">
+                        <tr>
+                          <td>
+                            <div style="color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px;">Contactless Key Handover PIN</div>
+                            <div style="color: #f59e0b; font-size: 32px; font-weight: 900; letter-spacing: 8px; font-family: monospace; padding: 8px 0;">${keyPin}</div>
+                            <div style="color: #cbd5e1; font-size: 11px;">Show this PIN with your Original Driving License (<strong>${dlNumber}</strong>) at the station hub for instant vehicle handover.</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Vehicle & Schedule Summary Card -->
+                  <tr>
+                    <td style="padding: 0 24px 20px 24px;">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #070e1c; border-radius: 16px; border: 1px solid #1e293b; overflow: hidden;">
+                        
+                        <!-- Header inside card -->
+                        <tr>
+                          <td style="padding: 14px 18px; background-color: #0a1324; border-bottom: 1px solid #1e293b;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="color: #ffffff; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+                                  🚗 ${carName}
+                                </td>
+                                <td align="right" style="color: #c88d18; font-size: 11px; font-weight: 700; font-family: monospace;">
+                                  Booking Ref: #${bookingId}
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+
+                        <!-- Timeline Rows -->
+                        <tr>
+                          <td style="padding: 18px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                              <!-- Pickup -->
+                              <tr>
+                                <td style="width: 28px; vertical-align: top; padding-bottom: 14px;">
+                                  <div style="width: 20px; height: 20px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; text-align: center; line-height: 20px; font-size: 10px; font-weight: bold;">●</div>
+                                </td>
+                                <td style="padding-bottom: 14px;">
+                                  <div style="color: #10b981; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">PICKUP LOCATION & TIME</div>
+                                  <div style="color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 2px;">${pickupLoc}</div>
+                                  <div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${startDate}</div>
+                                </td>
+                              </tr>
+
+                              <!-- Connecting line note -->
+                              <tr>
+                                <td></td>
+                                <td style="padding-bottom: 14px; border-left: 2px dashed #334155; padding-left: 12px; margin-left: 9px;">
+                                  <div style="color: #c88d18; font-size: 11px; font-weight: 700;">
+                                    ⏱️ Duration: ${rentalDays} • Unlimited Kilometres • Tirumala Ghat Certified
+                                  </div>
+                                </td>
+                              </tr>
+
+                              <!-- Return -->
+                              <tr>
+                                <td style="width: 28px; vertical-align: top;">
+                                  <div style="width: 20px; height: 20px; border-radius: 50%; background-color: rgba(245, 158, 11, 0.2); border: 1px solid #f59e0b; color: #f59e0b; text-align: center; line-height: 20px; font-size: 10px; font-weight: bold;">●</div>
+                                </td>
+                                <td>
+                                  <div style="color: #f59e0b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">RETURN LOCATION & TIME</div>
+                                  <div style="color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 2px;">${dropLoc}</div>
+                                  <div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${endDate}</div>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Payment & Financial Ledger -->
+                  <tr>
+                    <td style="padding: 0 24px 20px 24px;">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #070e1c; border-radius: 16px; border: 1px solid #1e293b; padding: 18px;">
+                        <tr>
+                          <td style="padding-bottom: 12px; border-bottom: 1px solid #1e293b;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="color: #ffffff; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Payment & Escrow Summary</td>
+                                <td align="right" style="color: #10b981; font-size: 11px; font-weight: 700; font-family: monospace;">✓ ${paymentMethod}</td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding-top: 12px;">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="4" style="font-size: 12px;">
+                              <tr>
+                                <td style="color: #94a3b8;">Total Trip Fare (incl. 18% GST):</td>
+                                <td align="right" style="color: #ffffff; font-weight: 800; font-family: monospace;">₹${grandTotal.toLocaleString("en-IN")}</td>
+                              </tr>
+                              <tr>
+                                <td style="color: #34d399; font-weight: 700;">Advance Paid Online:</td>
+                                <td align="right" style="color: #34d399; font-weight: 900; font-family: monospace;">₹${paidAmount.toLocaleString("en-IN")}</td>
+                              </tr>
+                              <tr>
+                                <td style="color: #f59e0b; font-weight: 700;">Balance Payable at Handover:</td>
+                                <td align="right" style="color: #f59e0b; font-weight: 900; font-family: monospace;">₹${balanceDue.toLocaleString("en-IN")}</td>
+                              </tr>
+                              <tr>
+                                <td style="color: #94a3b8;">Refundable Security Deposit:</td>
+                                <td align="right" style="color: #34d399; font-weight: 700;">₹0 (Zero Deposit Policy)</td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- What Happens Next 3-Step Guide -->
+                  <tr>
+                    <td style="padding: 0 24px 24px 24px;">
+                      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #070e1c; border-radius: 16px; border: 1px solid #1e293b; padding: 18px;">
+                        <tr>
+                          <td style="color: #ffffff; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding-bottom: 12px;">
+                            What Happens Next • 3 Easy Steps
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <div style="color: #cbd5e1; font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
+                              <strong style="color: #c88d18;">1. Reach Station Hub:</strong> Arrive at your scheduled time at <em>${pickupLoc}</em>.
+                            </div>
+                            <div style="color: #cbd5e1; font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
+                              <strong style="color: #c88d18;">2. Show DL & Key PIN:</strong> Present your original Driving License and Key PIN <strong>${keyPin}</strong>.
+                            </div>
+                            <div style="color: #cbd5e1; font-size: 12px; line-height: 1.6;">
+                              <strong style="color: #c88d18;">3. Drive Away:</strong> Complete a 60-second digital walkaround and enjoy 100% peace of mind!
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Station Contact & Footer -->
+                  <tr>
+                    <td style="padding: 24px; background-color: #070e1c; border-top: 1px solid #1e293b; text-align: center;">
+                      <div style="color: #ffffff; font-size: 13px; font-weight: 800;">Moar Cars Tirupati Central Station Hub</div>
+                      <div style="color: #94a3b8; font-size: 11px; margin-top: 4px;">Station Road, Opp. Tirupati Central Railway Station Hub, Tirupati, AP - 517501</div>
+                      <div style="color: #c88d18; font-size: 12px; font-weight: 800; margin-top: 8px;">📞 24/7 Helpline: +91 96664 99904 • info@moarcars.com</div>
+                      <div style="color: #475569; font-size: 10px; margin-top: 16px; border-top: 1px solid #1e293b; padding-top: 12px;">
+                        Tax Invoice No: ${invoiceNumber} • GSTIN: 37AAHCM4412K1Z9 • CIN: U50100AP2026PTC012345<br/>
+                        &copy; ${new Date().getFullYear()} Moar Cars Private Limited. All rights reserved.
+                      </div>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `,
+    };
+
+    const mailInfo = await transporter.sendMail(mailOptions);
+    console.log(`[BOOKING-EMAIL] Confirmation email successfully sent to ${targetEmail} for Booking #${bookingId} (MsgId: ${mailInfo.messageId})`);
+    return true;
+  } catch (error) {
+    console.error("[BOOKING-EMAIL] Error sending booking confirmation email:", error.message);
+    return false;
+  }
+};
+
 // ======================================================================
 // 2. BOOKINGS & DISPATCH API
 // ======================================================================
@@ -321,10 +593,52 @@ app.post(["/api/bookings", "/api/admin/bookings"], async (req, res) => {
       });
     } catch (logErr) {}
 
+    // 5. Automatically Send Real Booking Confirmation Email to Customer
+    try {
+      sendBookingConfirmationEmail({
+        ...req.body,
+        ...newBooking.toJSON(),
+      });
+    } catch (mailErr) {
+      console.warn("[BOOKING-EMAIL] Auto-send warning:", mailErr.message);
+    }
+
     res.status(201).json({ success: true, message: "Booking confirmed successfully!", data: newBooking });
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).json({ success: false, message: "Error saving booking details." });
+  }
+});
+
+// Endpoint to Resend Booking Confirmation Voucher Email
+app.post(["/api/bookings/resend-voucher", "/api/bookings/:id/resend-voucher", "/api/bookings/send-voucher"], async (req, res) => {
+  try {
+    let bookingData = req.body;
+    if (req.params?.id) {
+      const found = await Booking.findByPk(req.params.id);
+      if (found) {
+        bookingData = { ...found.toJSON(), ...req.body };
+      }
+    }
+    const targetEmail = bookingData.customerEmail || bookingData.email;
+    if (!targetEmail || !targetEmail.includes("@")) {
+      return res.status(400).json({ success: false, message: "Please provide a valid customer email address." });
+    }
+    const sent = await sendBookingConfirmationEmail(bookingData);
+    if (sent) {
+      return res.json({
+        success: true,
+        message: `Booking confirmation voucher successfully sent to ${targetEmail}.`,
+      });
+    } else {
+      return res.status(500).json({
+        success: false,
+        message: `Could not send confirmation email to ${targetEmail}. Please check email address.`,
+      });
+    }
+  } catch (error) {
+    console.error("Resend voucher error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -996,18 +1310,6 @@ app.all(["/api/settings", "/api/admin/settings"], async (req, res, next) => {
 // 12. AUTH & OTP ENDPOINTS
 // ======================================================================
 const otpStore = new Map();
-
-const getTransporter = () => {
-  const user = (process.env.ADMIN_EMAIL || "moarcars04@gmail.com").trim();
-  const pass = (process.env.ADMIN_EMAIL_APP_PASSWORD || "giykjehrkoeeoqzc").replace(/\s+/g, "");
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-  });
-};
 
 app.post("/api/admin/send-otp", async (req, res) => {
   try {

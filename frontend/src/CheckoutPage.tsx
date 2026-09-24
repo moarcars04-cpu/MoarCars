@@ -404,10 +404,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   return (
-    <main className="min-h-screen bg-brand-cream text-brand-ink pb-20">
+    <main className={`min-h-screen transition-colors duration-300 pb-20 ${currentStep === "confirmed" ? "bg-[#070e1c] text-white" : "bg-[#070e1c] text-white"}`}>
       {/* Checkout Top Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/95 backdrop-blur-md">
-        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 py-3.5 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-[#070e1c]/95 backdrop-blur-md">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -417,7 +417,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 else if (onNavigate) onNavigate(`/car/${car?.id || car?.name}`);
                 else window.history.back();
               }}
-              className="text-white hover:text-brand-gold hover:bg-white/10 rounded-xl px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-bold"
+              className="text-white hover:text-amber-400 hover:bg-white/10 rounded-xl px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-bold"
             >
               <ChevronLeft className="h-4 w-4" /> Back
             </Button>
@@ -430,13 +430,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   onNavigate("/");
                 }
               }}
-              className="brand-mark flex items-center gap-2 text-xl font-black text-primary-foreground"
+              className="brand-mark flex items-center gap-2 text-xl font-black text-white"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-brand-gold text-sm text-brand-gold font-bold">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-amber-400 text-sm text-amber-400 font-bold">
                 M
               </span>
               <span>
-                MOAR <span className="text-brand-gold">CARS</span>
+                MOAR <span className="text-amber-400">CARS</span>
               </span>
             </a>
           </div>
@@ -446,21 +446,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               <Lock className="h-3.5 w-3.5" /> 256-Bit SSL Checkout
             </div>
             <a href="tel:+918500012345" className="flex items-center gap-1.5 text-white/80 hover:text-white font-medium">
-              <Phone className="h-3.5 w-3.5 text-brand-gold" /> +91 85000 12345
+              <Phone className="h-3.5 w-3.5 text-amber-400" /> +91 85000 12345
             </a>
           </div>
         </div>
       </header>
 
       {/* Main Container */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 pt-20 pb-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
         {/* Stepper Progress Bar */}
         {currentStep !== "confirmed" && (
-          <div className="flex items-center justify-center gap-3 sm:gap-6 text-xs font-bold text-muted-foreground pt-4">
-            <div className={`flex items-center gap-2 ${currentStep === "details" ? "text-brand-teal" : "text-emerald-600"}`}>
+          <div className="flex items-center justify-center gap-3 sm:gap-6 text-xs font-bold text-slate-400 pt-2">
+            <div className={`flex items-center gap-2 ${currentStep === "details" ? "text-amber-400" : "text-emerald-400"}`}>
               <div
                 className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black ${
-                  currentStep === "details" ? "bg-brand-teal text-white" : "bg-emerald-500 text-white"
+                  currentStep === "details" ? "bg-amber-400 text-slate-950" : "bg-emerald-500 text-white"
                 }`}
               >
                 1
@@ -468,12 +468,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               <span>Renter & Itinerary</span>
             </div>
 
-            <div className="h-0.5 w-8 sm:w-16 bg-border" />
+            <div className="h-0.5 w-8 sm:w-16 bg-slate-800" />
 
-            <div className={`flex items-center gap-2 ${currentStep === "payment" ? "text-brand-teal" : "text-muted-foreground"}`}>
+            <div className={`flex items-center gap-2 ${currentStep === "payment" ? "text-amber-400" : "text-slate-400"}`}>
               <div
                 className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black ${
-                  currentStep === "payment" ? "bg-brand-teal text-white" : "bg-muted text-muted-foreground"
+                  currentStep === "payment" ? "bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-400"
                 }`}
               >
                 2
@@ -481,10 +481,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               <span>Payment & Gateway</span>
             </div>
 
-            <div className="h-0.5 w-8 sm:w-16 bg-border" />
+            <div className="h-0.5 w-8 sm:w-16 bg-slate-800" />
 
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <div className="h-7 w-7 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs font-black">
+            <div className="flex items-center gap-2 text-slate-400">
+              <div className="h-7 w-7 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs font-black">
                 3
               </div>
               <span>Instant Confirmation</span>
@@ -494,15 +494,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
         {/* STEP 3: CONFIRMATION VIEW */}
         {currentStep === "confirmed" && confirmedBookingData && (
-          <BookingConfirmationScreen
-            bookingData={confirmedBookingData}
-            onGoToDashboard={() => {
-              if (onNavigate) onNavigate("/dashboard");
-            }}
-            onGoHome={() => {
-              if (onNavigate) onNavigate("/");
-            }}
-          />
+          <div className="w-full">
+            <BookingConfirmationScreen
+              bookingData={confirmedBookingData}
+              onGoToDashboard={() => {
+                if (onNavigate) onNavigate("/dashboard");
+              }}
+              onGoHome={() => {
+                if (onNavigate) onNavigate("/");
+              }}
+            />
+          </div>
         )}
 
         {/* STEP 1 & 2: CHECKOUT FORM & SUMMARY */}
