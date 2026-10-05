@@ -12,6 +12,8 @@ import {
   Copy,
   Check,
   Compass,
+  CreditCard,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GstInvoiceModal } from "../dashboard/trips/GstInvoiceModal";
@@ -79,9 +81,107 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
   const returnInfo = formatDateTimeDisplay(bookingData.endDate, bookingData.endTime);
 
   const grandTotal = Number(bookingData.grandTotal || bookingData.amount || 0);
-  const paidAmount = Number(bookingData.paidAmount !== undefined ? bookingData.paidAmount : (bookingData.advancePaid || grandTotal));
-  const balanceDue = Number(bookingData.balanceDue !== undefined ? bookingData.balanceDue : Math.max(0, grandTotal - paidAmount));
+  const initialPaid = Number(bookingData.paidAmount !== undefined ? bookingData.paidAmount : (bookingData.advancePaid || grandTotal));
+  const initialBalance = Number(bookingData.balanceDue !== undefined ? bookingData.balanceDue : Math.max(0, grandTotal - initialPaid));
   const rentalDays = Number(bookingData.totalDays || bookingData.rentalDays || 2);
+
+  // Online Balance Settlement States
+  const [currentPaid, setCurrentPaid] = useState<number>(initialPaid);
+  const [currentBalance, setCurrentBalance] = useState<number>(initialBalance);
+  const [isPayingBalance, setIsPayingBalance] = useState<boolean>(false);
+  const [balancePaidSuccess, setBalancePaidSuccess] = useState<boolean>(false);
+
+  // Helper: Dynamically load Razorpay SDK
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayBalanceOnline = async () => {
+    if (isPayingBalance || currentBalance <= 0) return;
+    setIsPayingBalance(true);
+
+    try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert("Failed to connect to Razorpay payment gateway. Please check your internet connection.");
+        setIsPayingBalance(false);
+        return;
+      }
+
+      const amountInPaise = Math.max(100, Math.round(currentBalance * 100));
+      const cleanPhone = (bookingData.customerPhone || "").replace(/\D/g, "");
+
+      const options = {
+        key: "rzp_test_SwedUUn1KgRMs0",
+        amount: amountInPaise,
+        currency: "INR",
+        name: "MOAR CARS",
+        description: `Pay Remaining Balance: Booking #${bookingId}`,
+        image: "https://moarcars.com/assets/moarcars-logo-DK578w77.png",
+        prefill: {
+          name: bookingData.customerName || "Valued Customer",
+          email: bookingData.customerEmail || "",
+          contact: cleanPhone,
+        },
+        notes: {
+          bookingId,
+          carName: bookingData.carName || "Vehicle",
+          type: "balance_settlement",
+        },
+        theme: {
+          color: "#0b1426",
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPayingBalance(false);
+          },
+        },
+        handler: async function (response: any) {
+          const paymentId = response.razorpay_payment_id || `rzp_bal_${Date.now()}`;
+          try {
+            await fetch("/api/bookings/pay-balance", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                bookingId,
+                transactionId: paymentId,
+                amountPaid: currentBalance,
+                paymentMethod: "Razorpay",
+              }),
+            });
+            setCurrentPaid((prev) => prev + currentBalance);
+            setCurrentBalance(0);
+            setBalancePaidSuccess(true);
+            setEmailSentNotice(true);
+          } catch (e) {
+            console.error("Balance settle api error:", e);
+          }
+          setIsPayingBalance(false);
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setIsPayingBalance(false);
+        alert(`Payment failed: ${response.error?.description || "Transaction declined by gateway"}`);
+      });
+      rzp.open();
+    } catch (err: any) {
+      setIsPayingBalance(false);
+      alert(err?.message || "Failed to initialize Razorpay checkout.");
+    }
+  };
 
   const handleCopyBookingId = () => {
     navigator.clipboard.writeText(bookingId);
@@ -132,51 +232,62 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 sm:space-y-7 animate-in fade-in duration-300 pb-16 pt-2">
-      {/* 1. Header Confirmation Badge & Hero */}
-      <div className="text-center space-y-3">
-        {/* Visible Success Ring */}
-        <div className="mx-auto w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-50 border-2 border-emerald-500 text-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/15 animate-in zoom-in duration-500">
-          <CheckCircle2 className="w-9 h-9 sm:w-11 sm:h-11" />
-        </div>
+      {/* 1. Header Confirmation Banner (Clean Left-Aligned Executive Design) */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="space-y-2 text-left">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-0.5 rounded-full">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              Reservation Confirmed &amp; Secured
+            </span>
+            <span className="text-[11px] font-bold text-slate-400">• Official Digital Pass</span>
+          </div>
 
-        <div className="space-y-1 sm:space-y-1.5">
-          <span className="inline-block text-[11px] sm:text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100/80 border border-emerald-300/80 px-3 py-1 rounded-full">
-            Reservation Confirmed & Secured
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight leading-snug">
             You're All Set to Drive,{" "}
             <span className="bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] bg-clip-text text-transparent">
               {bookingData.customerName?.split(" ")[0] || "Guest"}
             </span>
             !
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
+
+          <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
             Your self-drive booking is confirmed in our dispatch system. Your vehicle is sanitized and ready for handover.
           </p>
+
+          {/* Reference Badges Strip - Left Aligned */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <button
+              onClick={handleCopyBookingId}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-mono font-bold text-[#b57d14] transition-all active:scale-95 cursor-pointer shadow-2xs"
+              title="Click to copy Booking ID"
+            >
+              <span>Ref: #{bookingId}</span>
+              {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 opacity-60" />}
+            </button>
+
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-700 truncate max-w-[200px] sm:max-w-none shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">Txn: {transactionId}</span>
+            </span>
+
+            {bookingData.customerEmail && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium shadow-2xs">
+                <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Invoice sent to email</span>
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Reference Badges Strip */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-          <button
-            onClick={handleCopyBookingId}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-xs font-mono font-bold text-[#b57d14] shadow-xs transition-all active:scale-95"
-            title="Click to copy Booking ID"
-          >
-            <span>Ref: #{bookingId}</span>
-            {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 opacity-60" />}
-          </button>
-
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-300 text-xs font-mono text-slate-700 shadow-xs truncate max-w-[220px] sm:max-w-none">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="truncate">Txn: {transactionId}</span>
+        {/* Right Side Status / Quick Action Badge */}
+        <div className="hidden md:flex flex-col items-end gap-2 shrink-0 border-l border-slate-100 pl-6">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border-2 border-emerald-500/80 text-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/10">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            Dispatch Ready
           </span>
-
-          {bookingData.customerEmail && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium shadow-xs">
-              <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Voucher sent to email</span>
-            </span>
-          )}
         </div>
       </div>
 
@@ -310,24 +421,65 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
           </div>
 
           {/* Section C: Payment & Escrow Chips */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            <div className="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-1 shadow-2xs">
-              <span className="text-slate-500 text-[11px] block font-medium">Total Trip Fare (incl. 18% GST)</span>
-              <p className="text-xl font-black text-slate-900">₹{grandTotal.toLocaleString("en-IN")}</p>
-              <span className="text-[10px] text-slate-400 block font-medium">All-inclusive rate</span>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-1 shadow-2xs">
+                <span className="text-slate-500 text-[11px] block font-medium">Total Trip Fare (incl. 18% GST)</span>
+                <p className="text-xl font-black text-slate-900">₹{grandTotal.toLocaleString("en-IN")}</p>
+                <span className="text-[10px] text-slate-400 block font-medium">All-inclusive rate</span>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
+                <span className="text-emerald-800 font-bold text-[11px] flex items-center gap-1">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Advance Paid Online
+                </span>
+                <p className="text-xl font-black text-emerald-700">₹{currentPaid.toLocaleString("en-IN")}</p>
+                <span className="text-[10px] text-emerald-600 block font-medium">Secured via Razorpay</span>
+              </div>
+              <div className={`p-3.5 rounded-2xl border space-y-1 ${currentBalance > 0 ? "bg-amber-50 border-amber-200" : "bg-emerald-50 border-emerald-200"}`}>
+                <span className={`font-bold text-[11px] block ${currentBalance > 0 ? "text-amber-900" : "text-emerald-900"}`}>
+                  {currentBalance > 0 ? "Balance at Handover" : "Remaining Balance"}
+                </span>
+                <p className={`text-xl font-black ${currentBalance > 0 ? "text-amber-800" : "text-emerald-700"}`}>
+                  ₹{currentBalance.toLocaleString("en-IN")}
+                </p>
+                <span className={`text-[10px] block font-medium ${currentBalance > 0 ? "text-amber-700" : "text-emerald-600"}`}>
+                  {currentBalance > 0 ? "UPI / Card at Station Hub" : "Fully Settled"}
+                </span>
+              </div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
-              <span className="text-emerald-800 font-bold text-[11px] flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Advance Paid Online
-              </span>
-              <p className="text-xl font-black text-emerald-700">₹{paidAmount.toLocaleString("en-IN")}</p>
-              <span className="text-[10px] text-emerald-600 block font-medium">Secured via Razorpay</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 space-y-1">
-              <span className="text-amber-900 font-bold text-[11px] block">Balance at Handover</span>
-              <p className="text-xl font-black text-amber-800">₹{balanceDue.toLocaleString("en-IN")}</p>
-              <span className="text-[10px] text-amber-700 block font-medium">UPI / Card at Station Hub</span>
-            </div>
+
+            {/* Direct Razorpay Settlement Card if Balance Due */}
+            {currentBalance > 0 ? (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50/90 via-orange-50/70 to-amber-100/50 border border-amber-300/80 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                <div className="space-y-0.5 text-left w-full sm:w-auto">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    Pay Remaining Balance Online
+                  </span>
+                  <p className="text-xs text-slate-700">
+                    Settle <strong className="text-slate-900 font-bold">₹{currentBalance.toLocaleString("en-IN")}</strong> instantly via Razorpay UPI or Cards to skip station payment.
+                  </p>
+                </div>
+                <Button
+                  onClick={handlePayBalanceOnline}
+                  disabled={isPayingBalance}
+                  className="w-full sm:w-auto h-11 px-5 rounded-xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] hover:opacity-95 text-slate-950 font-black text-xs shadow-md flex items-center justify-center gap-2 shrink-0 cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <CreditCard className="w-4 h-4 text-slate-950" />
+                  {isPayingBalance ? "Connecting Razorpay..." : `Pay ₹${currentBalance.toLocaleString("en-IN")} via Razorpay`}
+                </Button>
+              </div>
+            ) : balancePaidSuccess ? (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between text-xs text-emerald-800 font-bold animate-in fade-in">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  Remaining Balance Paid Successfully! Full payment verified and updated voucher emailed.
+                </span>
+                <span className="text-[10px] text-emerald-700 font-mono bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                  100% Cleared
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs text-slate-700 flex-wrap gap-2">

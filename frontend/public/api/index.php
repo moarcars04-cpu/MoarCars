@@ -361,6 +361,341 @@ function sendRealSmtpEmail($toEmail, $subject, $htmlBody, $plainText = '', &$deb
     return $mailRes;
 }
 
+// ----------------------------------------------------------------------
+// AUTOMATED BOOKING CONFIRMATION & TAX INVOICE MAILER (GMAIL SMTP 465)
+// ----------------------------------------------------------------------
+function sendBookingConfirmationVoucher($pdo, $booking, &$debugLogs = []) {
+    $custEmail = strtolower(trim($booking['customerEmail'] ?? ($booking['email'] ?? '')));
+    if (empty($custEmail)) {
+        $debugLogs[] = "No customer email provided for booking voucher.";
+        return false;
+    }
+
+    $custName = htmlspecialchars(trim($booking['customerName'] ?? 'Valued Guest'));
+    $bookingId = htmlspecialchars(trim($booking['bookingId'] ?? ('MC-2026-' . ($booking['id'] ?? ''))));
+    $carName = htmlspecialchars(trim($booking['carName'] ?? 'Premium Self-Drive Vehicle'));
+    $pickupStation = htmlspecialchars(trim($booking['pickupLocation'] ?? ($booking['pickup'] ?? 'Tirupati Central Station Hub')));
+    $dropStation = htmlspecialchars(trim($booking['dropLocation'] ?? $pickupStation));
+    $startDate = htmlspecialchars(trim($booking['startDate'] ?? 'Scheduled'));
+    $endDate = htmlspecialchars(trim($booking['endDate'] ?? 'Scheduled'));
+    $duration = htmlspecialchars(trim((string)($booking['totalDays'] ?? ($booking['duration'] ?? '1 Day'))));
+    if (is_numeric($duration)) $duration = $duration . ' ' . ($duration == 1 ? 'Day' : 'Days');
+    $txnId = htmlspecialchars(trim($booking['transactionId'] ?? ('pay_' . bin2hex(random_bytes(6)))));
+    $keyPin = htmlspecialchars(trim($booking['pickupOtp'] ?? sprintf('%04d', rand(1111, 9999))));
+
+    // Financial calculations
+    $grandTotal = (int)($booking['grandTotal'] ?? ($booking['amount'] ?? 0));
+    $paidAmount = (int)($booking['paidAmount'] ?? 0);
+    $balanceDue = (int)($booking['balanceDue'] ?? max(0, $grandTotal - $paidAmount));
+    $baseFare = (int)($booking['baseFare'] ?? 0);
+    $gstAmount = (int)($booking['gstAmount'] ?? 0);
+
+    if ($grandTotal > 0 && $baseFare == 0) {
+        $baseFare = (int)round($grandTotal / 1.18);
+        $gstAmount = $grandTotal - $baseFare;
+    }
+    $cgst = (int)round($gstAmount / 2);
+    $sgst = $gstAmount - $cgst;
+
+    $invoiceNo = 'INV-' . date('Y') . '-' . sprintf('%04d', is_numeric($booking['id'] ?? null) ? $booking['id'] : rand(1000, 9999));
+    $invoiceDate = date('d M Y');
+
+    // Dynamic base URL for direct Razorpay balance payment
+    $host = (!empty($_SERVER['HTTP_HOST'])) ? ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST']) : 'https://moarcars.com';
+    $payBalanceUrl = $host . "/pay-balance?id=" . urlencode($bookingId) . "&amount=" . $balanceDue;
+
+    $subject = "Confirmed: Booking #{$bookingId} - {$carName} | Moar Cars Digital Pass & Tax Invoice";
+
+    $htmlBody = "
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+      <meta charset='UTF-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>Booking Confirmation</title>
+      <style>
+        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        table { border-collapse: collapse; }
+      </style>
+    </head>
+    <body style='margin: 0; padding: 20px 10px; background-color: #f8fafc;'>
+      <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0;'>
+        <!-- Top Luxury Ribbon -->
+        <tr>
+          <td style='background: linear-gradient(135deg, #0b1426 0%, #172554 100%); padding: 28px 30px; border-bottom: 3px solid #d49b29;'>
+            <table width='100%' cellpadding='0' cellspacing='0'>
+              <tr>
+                <td>
+                  <h1 style='color: #ffffff; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 0.5px;'>
+                    MOAR <span style='color: #d49b29;'>CARS</span>
+                  </h1>
+                  <p style='color: #94a3b8; font-size: 11px; margin: 4px 0 0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;'>
+                    Self-Drive Fleet &amp; Luxury Mobility
+                  </p>
+                </td>
+                <td align='right'>
+                  <span style='display: inline-block; background-color: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #34d399; font-size: 11px; font-weight: 800; padding: 6px 14px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;'>
+                    ✓ CONFIRMED
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Greeting & Trip Hero -->
+        <tr>
+          <td style='padding: 28px 30px 20px;'>
+            <p style='color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 6px;'>
+              Official Booking Confirmation &amp; Tax Invoice
+            </p>
+            <h2 style='color: #0f172a; font-size: 22px; font-weight: 800; margin: 0 0 12px; line-height: 1.3;'>
+              Dear {$custName}, you're all set to drive!
+            </h2>
+            <p style='color: #475569; font-size: 14px; line-height: 1.6; margin: 0;'>
+              Your reservation for <strong>{$carName}</strong> is confirmed in our dispatch system. Your vehicle is sanitized, inspected, and ready for pickup.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Digital Trip Pass Card -->
+        <tr>
+          <td style='padding: 0 30px 24px;'>
+            <table width='100%' cellpadding='0' cellspacing='0' style='background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
+              <tr>
+                <td style='background: #0f172a; padding: 12px 20px; color: #ffffff;'>
+                  <table width='100%' cellpadding='0' cellspacing='0'>
+                    <tr>
+                      <td style='font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #d49b29;'>
+                        DIGITAL TRIP PASS
+                      </td>
+                      <td align='right' style='font-family: monospace; font-size: 13px; font-weight: 800; color: #ffffff;'>
+                        Ref: #{$bookingId}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style='padding: 20px;'>
+                  <table width='100%' cellpadding='0' cellspacing='0'>
+                    <tr>
+                      <td width='50%' style='padding-bottom: 14px; vertical-align: top;'>
+                        <span style='font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block;'>Vehicle Model</span>
+                        <strong style='font-size: 15px; color: #0f172a;'>{$carName}</strong>
+                      </td>
+                      <td width='50%' style='padding-bottom: 14px; vertical-align: top;'>
+                        <span style='font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block;'>Trip Duration</span>
+                        <strong style='font-size: 15px; color: #0f172a;'>{$duration} (Unlimited KM)</strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td width='50%' style='padding-bottom: 14px; vertical-align: top;'>
+                        <span style='font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block;'>Pickup Station</span>
+                        <strong style='font-size: 13px; color: #0f172a;'>{$pickupStation}</strong>
+                        <span style='font-size: 11px; color: #64748b; display: block; margin-top: 2px;'>{$startDate}</span>
+                      </td>
+                      <td width='50%' style='padding-bottom: 14px; vertical-align: top;'>
+                        <span style='font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block;'>Dropoff Station</span>
+                        <strong style='font-size: 13px; color: #0f172a;'>{$dropStation}</strong>
+                        <span style='font-size: 11px; color: #64748b; display: block; margin-top: 2px;'>{$endDate}</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colspan='2' style='padding-top: 12px; border-top: 1px dashed #cbd5e1;'>
+                        <table width='100%' cellpadding='0' cellspacing='0'>
+                          <tr>
+                            <td>
+                              <span style='font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; display: block;'>Handover Key Box PIN</span>
+                              <span style='font-size: 12px; color: #475569;'>Quote this security PIN at station hub</span>
+                            </td>
+                            <td align='right'>
+                              <div style='background: #0f172a; color: #f59e0b; font-family: monospace; font-size: 20px; font-weight: 900; letter-spacing: 4px; padding: 6px 16px; border-radius: 8px; display: inline-block;'>
+                                {$keyPin}
+                              </div>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- GST Tax Invoice Breakdown -->
+        <tr>
+          <td style='padding: 0 30px 24px;'>
+            <table width='100%' cellpadding='0' cellspacing='0' style='border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;'>
+              <tr style='background-color: #f8fafc;'>
+                <td colspan='2' style='padding: 14px 20px; border-bottom: 1px solid #e2e8f0;'>
+                  <table width='100%' cellpadding='0' cellspacing='0'>
+                    <tr>
+                      <td>
+                        <strong style='font-size: 13px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;'>
+                          TAX INVOICE &amp; PAYMENT BREAKDOWN
+                        </strong>
+                        <span style='display: block; font-size: 11px; color: #64748b; margin-top: 2px;'>
+                          Invoice: {$invoiceNo} &bull; Date: {$invoiceDate}
+                        </span>
+                      </td>
+                      <td align='right'>
+                        <span style='font-size: 10px; font-weight: 800; color: #0f172a; background: #e2e8f0; padding: 3px 8px; border-radius: 6px;'>
+                          GSTIN: 37AAECM9410P1ZF
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <tr>
+                <td style='padding: 12px 20px; color: #475569; font-size: 13px; border-bottom: 1px solid #f1f5f9;'>
+                  Base Rental Tariff ({$duration})
+                </td>
+                <td align='right' style='padding: 12px 20px; color: #0f172a; font-size: 13px; font-weight: 600; border-bottom: 1px solid #f1f5f9;'>
+                  ₹" . number_format($baseFare) . "
+                </td>
+              </tr>
+
+              <tr>
+                <td style='padding: 10px 20px; color: #64748b; font-size: 12px; border-bottom: 1px solid #f1f5f9;'>
+                  Central GST (CGST 9%)
+                </td>
+                <td align='right' style='padding: 10px 20px; color: #475569; font-size: 12px; border-bottom: 1px solid #f1f5f9;'>
+                  ₹" . number_format($cgst) . "
+                </td>
+              </tr>
+
+              <tr>
+                <td style='padding: 10px 20px; color: #64748b; font-size: 12px; border-bottom: 1px solid #f1f5f9;'>
+                  State GST (SGST 9%)
+                </td>
+                <td align='right' style='padding: 10px 20px; color: #475569; font-size: 12px; border-bottom: 1px solid #f1f5f9;'>
+                  ₹" . number_format($sgst) . "
+                </td>
+              </tr>
+
+              <tr style='background-color: #f8fafc;'>
+                <td style='padding: 14px 20px; color: #0f172a; font-size: 14px; font-weight: 800; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;'>
+                  Total Trip Fare (incl. 18% GST)
+                </td>
+                <td align='right' style='padding: 14px 20px; color: #0f172a; font-size: 16px; font-weight: 900; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;'>
+                  ₹" . number_format($grandTotal) . "
+                </td>
+              </tr>
+
+              <tr style='background-color: #ecfdf5;'>
+                <td style='padding: 12px 20px; color: #065f46; font-size: 13px; font-weight: 700;'>
+                  ✓ Advance Paid Online (Razorpay)
+                  <span style='display: block; font-size: 10px; font-weight: normal; color: #047857;'>Txn ID: {$txnId}</span>
+                </td>
+                <td align='right' style='padding: 12px 20px; color: #047857; font-size: 15px; font-weight: 800;'>
+                  ₹" . number_format($paidAmount) . "
+                </td>
+              </tr>
+
+              <tr style='background-color: " . ($balanceDue > 0 ? "#fffbeb" : "#f8fafc") . ";'>
+                <td style='padding: 14px 20px; color: " . ($balanceDue > 0 ? "#92400e" : "#0f172a") . "; font-size: 14px; font-weight: 800; border-top: 1px solid #e2e8f0;'>
+                  " . ($balanceDue > 0 ? "Remaining Balance Payable" : "Remaining Balance Due") . "
+                  <span style='display: block; font-size: 11px; font-weight: normal; color: " . ($balanceDue > 0 ? "#b45309" : "#64748b") . ";'>
+                    " . ($balanceDue > 0 ? "Pay online now via Razorpay or upon handover at hub" : "Fully Settled - Zero balance") . "
+                  </span>
+                </td>
+                <td align='right' style='padding: 14px 20px; color: " . ($balanceDue > 0 ? "#b45309" : "#10b981") . "; font-size: 18px; font-weight: 900; border-top: 1px solid #e2e8f0;'>
+                  ₹" . number_format($balanceDue) . "
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Pay Balance Online Action Box (If balance > 0) -->
+        " . ($balanceDue > 0 ? "
+        <tr>
+          <td style='padding: 0 30px 28px; text-align: center;'>
+            <div style='background: linear-gradient(135deg, #0b1426 0%, #1e293b 100%); padding: 24px; border-radius: 16px; border: 1px solid #d49b29; box-shadow: 0 8px 20px rgba(212, 155, 41, 0.15);'>
+              <h3 style='color: #ffffff; margin: 0 0 6px; font-size: 17px; font-weight: 800;'>
+                Pay Remaining Balance Online
+              </h3>
+              <p style='color: #94a3b8; font-size: 13px; margin: 0 0 18px; line-height: 1.5;'>
+                You can settle your balance of <strong style='color: #f59e0b;'>₹" . number_format($balanceDue) . "</strong> securely online right now using Razorpay (UPI, Google Pay, PhonePe, Cards, NetBanking).
+              </p>
+              <a href='{$payBalanceUrl}' target='_blank' style='display: inline-block; background: linear-gradient(135deg, #d49b29 0%, #b57d14 100%); color: #0b1426; font-size: 15px; font-weight: 900; padding: 14px 32px; border-radius: 12px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(212, 155, 41, 0.4);'>
+                ⚡ Pay Balance Online: ₹" . number_format($balanceDue) . "
+              </a>
+              <p style='color: #64748b; font-size: 11px; margin: 12px 0 0;'>
+                🔒 256-Bit Encrypted Razorpay Gateway &bull; Instant Settlement Confirmation
+              </p>
+            </div>
+          </td>
+        </tr>
+        " : "
+        <tr>
+          <td style='padding: 0 30px 24px; text-align: center;'>
+            <div style='background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px; color: #065f46; font-size: 13px; font-weight: 700;'>
+              ✓ Full Payment Received Online. No pending balance at vehicle handover!
+            </div>
+          </td>
+        </tr>
+        ") . "
+
+        <!-- Mandatory Verification Documents Notice -->
+        <tr>
+          <td style='padding: 0 30px 24px;'>
+            <div style='background-color: #f8fafc; border-left: 4px solid #d49b29; padding: 14px 18px; border-radius: 0 12px 12px 0;'>
+              <strong style='color: #0f172a; font-size: 12px; display: block; margin-bottom: 4px; text-transform: uppercase;'>
+                Mandatory Handover Checklist:
+              </strong>
+              <ul style='margin: 0; padding-left: 18px; color: #475569; font-size: 12px; line-height: 1.6;'>
+                <li>Original Physical Driving License (Learner licenses not accepted).</li>
+                <li>Original Aadhaar Card or Passport for identity verification.</li>
+                <li>Zero security deposit policy: No credit card pre-auth freeze required.</li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style='background-color: #0f172a; padding: 24px 30px; text-align: center; border-top: 1px solid #1e293b;'>
+            <p style='color: #ffffff; font-size: 13px; font-weight: 700; margin: 0 0 6px;'>
+              Need assistance or early pickup?
+            </p>
+            <p style='color: #94a3b8; font-size: 12px; margin: 0 0 14px;'>
+              Station Helpline: <a href='tel:+918500012345' style='color: #d49b29; text-decoration: none; font-weight: bold;'>+91 85000 12345</a> &bull;
+              WhatsApp: <a href='https://wa.me/918500012345' style='color: #34d399; text-decoration: none; font-weight: bold;'>Chat Support</a>
+            </p>
+            <p style='color: #475569; font-size: 11px; margin: 0; line-height: 1.5;'>
+              &copy; " . date('Y') . " Moar Cars Fleet Services PVT LTD. All rights reserved.<br>
+              Tirupati Central Station Hub, Tirupati, Andhra Pradesh 517501.
+            </p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    ";
+
+    $plainText = "MOAR CARS - BOOKING CONFIRMATION & TAX INVOICE\n"
+               . "Booking Ref: #{$bookingId}\n"
+               . "Vehicle: {$carName}\n"
+               . "Pickup Station: {$pickupStation} ({$startDate})\n"
+               . "Dropoff Station: {$dropStation} ({$endDate})\n"
+               . "Station Key Box PIN: {$keyPin}\n\n"
+               . "TAX INVOICE:\n"
+               . "Total Fare: INR {$grandTotal}\n"
+               . "Advance Paid: INR {$paidAmount} (Txn: {$txnId})\n"
+               . "Balance Due: INR {$balanceDue}\n\n"
+               . ($balanceDue > 0 ? "Pay Remaining Balance Online: {$payBalanceUrl}\n\n" : "Fully Settled!\n\n")
+               . "Helpline: +91 85000 12345 | moarcars04@gmail.com";
+
+    $debugLogs = [];
+    return sendRealSmtpEmail($custEmail, $subject, $htmlBody, $plainText, $debugLogs);
+}
+
 // Standard Real Fleet Models
 function getDefaultCars() {
     return [
@@ -3610,11 +3945,24 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
                     ]);
                 } catch (Exception $pe) {}
 
+                // Automatically send Luxury Booking Confirmation & Tax Invoice Email from admin
+                $emailLogs = [];
+                $emailSent = false;
+                if (!empty($input['customerEmail'])) {
+                    try {
+                        $emailSent = sendBookingConfirmationVoucher($pdo, $input, $emailLogs);
+                    } catch (Exception $emE) {
+                        $emailLogs[] = "Mail exception: " . $emE->getMessage();
+                    }
+                }
+
                 echo json_encode([
                     "success" => true,
                     "message" => "Booking saved successfully!",
                     "data" => $input,
-                    "user" => $custUser
+                    "user" => $custUser,
+                    "emailSent" => $emailSent,
+                    "emailLogs" => $emailLogs
                 ]);
                 exit();
             }
@@ -3625,7 +3973,205 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
         }
     }
 
-    echo json_encode(["success" => true, "message" => "Booking saved!", "data" => $input]);
+    // Fallback if PDO not available
+    $emailLogs = [];
+    $emailSent = false;
+    if (!empty($input['customerEmail'])) {
+        $emailSent = sendBookingConfirmationVoucher(null, $input, $emailLogs);
+    }
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Booking saved!",
+        "data" => $input,
+        "emailSent" => $emailSent,
+        "emailLogs" => $emailLogs
+    ]);
+    exit();
+}
+
+// POST /api/bookings/resend-voucher
+if (($route === 'bookings/resend-voucher' || $route === 'admin/bookings/resend-voucher') && $method === 'POST') {
+    $bookingId = trim($input['bookingId'] ?? ($input['id'] ?? ''));
+    $email = strtolower(trim($input['customerEmail'] ?? ($input['email'] ?? '')));
+    $bookingData = $input;
+
+    if (isset($pdo) && !empty($bookingId)) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM Bookings WHERE bookingId = ? OR id = ? LIMIT 1");
+            $cleanId = preg_replace('/[^0-9]/', '', $bookingId);
+            $stmt->execute([$bookingId, $cleanId ?: 0]);
+            $dbBooking = $stmt->fetch();
+            if ($dbBooking) {
+                $bookingData = array_merge($dbBooking, $input);
+            }
+        } catch (Exception $e) {}
+    }
+
+    $emailLogs = [];
+    $sent = sendBookingConfirmationVoucher($pdo, $bookingData, $emailLogs);
+
+    echo json_encode([
+        "success" => true,
+        "message" => $sent ? "Confirmation voucher & invoice sent to your email!" : "Voucher dispatch logged.",
+        "emailSent" => $sent,
+        "logs" => $emailLogs
+    ]);
+    exit();
+}
+
+// GET /api/bookings/lookup
+if (($route === 'bookings/lookup' || $route === 'bookings/detail') && $method === 'GET') {
+    $id = trim($_GET['id'] ?? ($_GET['bookingId'] ?? ''));
+    $phone = trim($_GET['phone'] ?? '');
+    $email = strtolower(trim($_GET['email'] ?? ''));
+
+    if (empty($id) && empty($phone) && empty($email)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Please provide a booking ID, phone, or email to lookup."]);
+        exit();
+    }
+
+    if (isset($pdo)) {
+        try {
+            $cleanId = preg_replace('/[^0-9]/', '', $id);
+            $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+            $stmt = $pdo->prepare("
+                SELECT * FROM Bookings 
+                WHERE (bookingId = ? AND bookingId != '')
+                   OR (id = ? AND id > 0)
+                   OR (REPLACE(REPLACE(customerPhone, ' ', ''), '+91', '') = ? AND customerPhone != '')
+                   OR (customerEmail = ? AND customerEmail != '')
+                ORDER BY id DESC LIMIT 1
+            ");
+            $stmt->execute([$id, $cleanId ?: 0, $cleanPhone, $email]);
+            $booking = $stmt->fetch();
+
+            if ($booking) {
+                $booking['id'] = (int)$booking['id'];
+                $booking['extras'] = safeJsonDecode($booking['extras'] ?? null, []);
+                $booking['pickupPhotos'] = safeJsonDecode($booking['pickupPhotos'] ?? null, []);
+                $booking['returnPhotos'] = safeJsonDecode($booking['returnPhotos'] ?? null, []);
+
+                // Attach car thumbnail if exists
+                if (!empty($booking['carId'])) {
+                    $cStmt = $pdo->prepare("SELECT * FROM Cars WHERE id = ? LIMIT 1");
+                    $cStmt->execute([$booking['carId']]);
+                    $car = $cStmt->fetch();
+                    if ($car) {
+                        $car['galleryImages'] = safeJsonDecode($car['galleryImages'] ?? null, []);
+                        $booking['car'] = $car;
+                    }
+                }
+
+                echo json_encode([
+                    "success" => true,
+                    "data" => $booking
+                ]);
+                exit();
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Lookup error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    http_response_code(404);
+    echo json_encode(["success" => false, "message" => "Booking reference not found. Please verify the ID."]);
+    exit();
+}
+
+// POST /api/bookings/pay-balance
+if (($route === 'bookings/pay-balance' || $route === 'admin/bookings/pay-balance') && $method === 'POST') {
+    $bookingId = trim($input['bookingId'] ?? ($input['id'] ?? ''));
+    $txnId = trim($input['transactionId'] ?? ('rzp_bal_' . time()));
+    $amountPaid = (int)($input['amountPaid'] ?? ($input['amount'] ?? 0));
+    $paymentMethod = $input['paymentMethod'] ?? 'Razorpay';
+
+    if (empty($bookingId)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Booking ID is required to settle balance."]);
+        exit();
+    }
+
+    if (isset($pdo)) {
+        try {
+            $cleanId = preg_replace('/[^0-9]/', '', $bookingId);
+            $stmt = $pdo->prepare("SELECT * FROM Bookings WHERE bookingId = ? OR id = ? LIMIT 1");
+            $stmt->execute([$bookingId, $cleanId ?: 0]);
+            $booking = $stmt->fetch();
+
+            if ($booking) {
+                $currentBal = (int)($booking['balanceDue'] ?? 0);
+                $settleAmt = ($amountPaid > 0) ? $amountPaid : $currentBal;
+                $newPaid = (int)($booking['paidAmount'] ?? 0) + $settleAmt;
+                $newBal = max(0, $currentBal - $settleAmt);
+
+                $upd = $pdo->prepare("
+                    UPDATE Bookings SET 
+                        paidAmount = ?,
+                        balanceDue = ?,
+                        paymentStatus = 'Paid',
+                        transactionId = ?
+                    WHERE id = ?
+                ");
+                $upd->execute([$newPaid, $newBal, $txnId, $booking['id']]);
+
+                // Record payment in Payments table
+                try {
+                    $payId = 'PAY-BAL-' . $booking['id'] . '-' . rand(100, 999);
+                    $insPay = $pdo->prepare("
+                        INSERT INTO Payments (id, bookingId, customerName, amount, advancePaid, balanceDue, gateway, status, date, transactionId, notes)
+                        VALUES (?, ?, ?, ?, ?, 0, ?, 'Captured', ?, ?, 'Remaining balance paid online via Razorpay')
+                    ");
+                    $insPay->execute([
+                        $payId,
+                        $booking['id'],
+                        $booking['customerName'] ?? 'Valued Customer',
+                        $settleAmt,
+                        $settleAmt,
+                        $paymentMethod,
+                        date('Y-m-d H:i'),
+                        $txnId
+                    ]);
+                } catch (Exception $pe) {}
+
+                // Send updated full-settlement receipt email to user!
+                $booking['paidAmount'] = $newPaid;
+                $booking['balanceDue'] = $newBal;
+                $booking['transactionId'] = $txnId;
+                $booking['paymentStatus'] = 'Paid';
+                
+                $emailLogs = [];
+                sendBookingConfirmationVoucher($pdo, $booking, $emailLogs);
+
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Remaining balance of ₹" . number_format($settleAmt) . " successfully paid via Razorpay! Confirmation voucher emailed.",
+                    "data" => [
+                        "bookingId" => $booking['bookingId'] ?: $booking['id'],
+                        "paidAmount" => $newPaid,
+                        "balanceDue" => $newBal,
+                        "paymentStatus" => "Paid",
+                        "transactionId" => $txnId
+                    ]
+                ]);
+                exit();
+            } else {
+                http_response_code(404);
+                echo json_encode(["success" => false, "message" => "Booking not found in database."]);
+                exit();
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Payment error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode(["success" => true, "message" => "Balance marked as paid."]);
     exit();
 }
 

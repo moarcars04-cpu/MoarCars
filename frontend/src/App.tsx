@@ -5,6 +5,7 @@ import { UserDashboard } from "./components/dashboard/UserDashboard.tsx";
 import { CarDetailsPage } from "./CarDetailsPage.tsx";
 import { CarsPage } from "./CarsPage.tsx";
 import { CheckoutPage } from "./CheckoutPage.tsx";
+import { PayBalancePage } from "./PayBalancePage.tsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.tsx";
 import { AuthModal } from "./components/auth/AuthModal.tsx";
 
@@ -58,6 +59,8 @@ function AppContent() {
       document.title = "My Trips & Account | Moar Cars";
     } else if (path === "/checkout" || path.startsWith("/checkout")) {
       document.title = "Booking Checkout & Verification | Moar Cars";
+    } else if (path === "/pay-balance" || path.startsWith("/pay-balance")) {
+      document.title = "Pay Remaining Balance Online | Moar Cars";
     } else if (path === "/cars" || path === "/cars/" || path === "/fleet") {
       document.title = "Available Fleet & Rental Cars in Tirupati | Moar Cars";
     } else if (path.startsWith("/car/")) {
@@ -115,6 +118,8 @@ function AppContent() {
           initialParams={checkoutParams}
           onNavigate={navigateTo}
         />
+      ) : path === "/pay-balance" || path.startsWith("/pay-balance") ? (
+        <PayBalancePage onNavigate={navigateTo} />
       ) : path === "/cars" || path === "/cars/" || path === "/fleet" ? (
         <CarsPage
           onNavigate={(p, st) => {
