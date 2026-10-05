@@ -13,6 +13,8 @@ import {
   Wallet,
   Gift,
   Coins,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 
 interface BookingSummaryCardProps {
@@ -72,186 +74,208 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
   securityDeposit,
   grandTotal,
   paymentMode,
-  advancePaymentPercent,
+  advancePaymentPercent = 10,
   payableNow,
   balanceDue,
 }) => {
   const isSplit = paymentMode === "split" || (balanceDue !== undefined && balanceDue > 0);
-  const finalPayableNow = payableNow !== undefined ? payableNow : (isSplit ? Math.round(grandTotal * 0.3) : grandTotal);
+  const finalPayableNow = payableNow !== undefined ? payableNow : (isSplit ? Math.round(grandTotal * 0.1) : grandTotal);
   const finalBalanceDue = balanceDue !== undefined ? balanceDue : Math.max(0, grandTotal - finalPayableNow);
-  const displayAdvancePercent = advancePaymentPercent || (isSplit ? 30 : 100);
+  const displayAdvancePercent = advancePaymentPercent || 10;
+
+  const defaultCarImage =
+    car?.image ||
+    car?.galleryImages?.[0] ||
+    "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80";
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-xl space-y-6">
-      {/* Card Header: Vehicle Snapshot */}
-      <div className="flex gap-4 items-start border-b border-border pb-5">
-        <div className="relative h-20 w-28 rounded-2xl overflow-hidden bg-slate-900 shrink-0 border border-border flex items-center justify-center">
-          {car.image ? (
-            <img
-              src={car.image}
-              alt={car.name}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <Car className="h-8 w-8 text-slate-600" />
-          )}
+    <div className="rounded-3xl border border-slate-800/90 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] p-5 sm:p-6 shadow-2xl space-y-5 text-white backdrop-blur-xl">
+      {/* 1. Header: Vehicle Card */}
+      <div className="flex gap-4 items-start pb-4 border-b border-slate-800/80">
+        <div className="relative h-20 w-28 sm:h-24 sm:w-32 rounded-2xl overflow-hidden bg-slate-950 shrink-0 border border-amber-500/20 shadow-lg group">
+          <img
+            src={defaultCarImage}
+            alt={car?.name || "Vehicle"}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src =
+                "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80";
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
         </div>
-        <div className="flex-1 space-y-1">
-          <div className="flex items-center gap-1.5">
-            <span className="px-2 py-0.5 rounded-md bg-brand-gold text-brand-navy text-[9px] font-black uppercase tracking-wider">
-              {car.tag || car.category || "Premium"}
+
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 text-[9px] font-black uppercase tracking-wider shadow-sm">
+              {car?.tag || car?.category || "Self Drive"}
             </span>
-            <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+            <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30">
               <ShieldCheck className="h-3 w-3" /> Ghat Certified
             </span>
           </div>
-          <h3 className="text-base font-black text-brand-navy leading-tight">{car.name}</h3>
-          <p className="text-xs text-muted-foreground">{car.variant || "Self-Drive Fleet Edition"}</p>
 
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-1">
-            <span className="flex items-center gap-1">
-              <Users className="h-3 w-3 text-brand-teal" /> {car.seats || 5} Seats
+          <h3 className="text-base sm:text-lg font-black text-white leading-tight truncate">
+            {car?.name || "Self-Drive Vehicle"}
+          </h3>
+          <p className="text-[11px] text-slate-400 truncate">
+            {car?.variant || "Tirupati Self-Drive Fleet Edition"}
+          </p>
+
+          <div className="flex items-center gap-2.5 text-[10px] sm:text-[11px] text-slate-300 pt-0.5">
+            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+              <Users className="h-3 w-3 text-[#c88d18]" /> {car?.seats || 5} Seats
             </span>
-            <span className="flex items-center gap-1">
-              <Fuel className="h-3 w-3 text-brand-teal" /> {car.fuelType || "Petrol"}
+            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+              <Fuel className="h-3 w-3 text-[#c88d18]" /> {car?.fuelType || "Petrol"}
             </span>
-            <span className="flex items-center gap-1">
-              <Gauge className="h-3 w-3 text-brand-teal" /> {car.transmission || "Automatic"}
+            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+              <Gauge className="h-3 w-3 text-[#c88d18]" /> {car?.transmission || "Automatic"}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Itinerary Timeline */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs font-bold text-brand-navy">
-          <span>Trip Timeline</span>
-          <span className="text-brand-teal">
-            {rentalDays} {rentalDays === 1 ? "Day" : "Days"} ({rentalDays * 24} Hours)
+      {/* 2. Trip Timeline (Itinerary) */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+          <span className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-[#c88d18]" /> Reserved Itinerary
+          </span>
+          <span className="text-[#c88d18] font-mono text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+            {rentalDays} {rentalDays === 1 ? "Day" : "Days"} ({rentalDays * 24}h)
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-brand-mist/50 border border-border">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-brand-teal" /> Pickup
-            </span>
-            <p className="text-xs font-bold text-brand-navy">{startDate}</p>
-            <p className="text-[11px] text-muted-foreground">{startTime}</p>
-            <p className="text-[10px] text-brand-teal font-medium truncate" title={pickupLocation}>
+        <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-[#070e1c]/80 border border-slate-800">
+          <div className="space-y-1 min-w-0">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Pickup
+            </div>
+            <p className="text-xs font-black text-white">{startDate}</p>
+            <p className="text-[11px] text-slate-400 font-mono">{startTime}</p>
+            <p className="text-[10px] text-slate-300 font-medium truncate" title={pickupLocation}>
               📍 {pickupLocation}
             </p>
           </div>
 
-          <div className="space-y-1 sm:border-l sm:border-border sm:pl-3">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1">
-              <Clock className="h-3 w-3 text-brand-teal" /> Return
-            </span>
-            <p className="text-xs font-bold text-brand-navy">{endDate}</p>
-            <p className="text-[11px] text-muted-foreground">{endTime}</p>
-            <p className="text-[10px] text-brand-teal font-medium truncate" title={dropLocation}>
+          <div className="space-y-1 min-w-0 border-l border-slate-800/80 pl-2.5">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Return
+            </div>
+            <p className="text-xs font-black text-white">{endDate}</p>
+            <p className="text-[11px] text-slate-400 font-mono">{endTime}</p>
+            <p className="text-[10px] text-slate-300 font-medium truncate" title={dropLocation}>
               📍 {dropLocation}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground px-1">
+        <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
           <span>Booking Mode:</span>
-          <span className="font-bold text-brand-navy">
-            Self Drive (Unlimited KM)
+          <span className="font-bold text-emerald-400 flex items-center gap-1">
+            <CheckCircle2 className="h-3 w-3" /> Self Drive (Unlimited KM)
           </span>
         </div>
       </div>
 
-      {/* Itemized Price Breakdown */}
-      <div className="space-y-2.5 pt-3 border-t border-border text-xs">
-        <div className="flex justify-between text-muted-foreground">
+      {/* 3. Itemized Tariff Breakdown */}
+      <div className="space-y-2 pt-3 border-t border-slate-800/80 text-xs">
+        <div className="flex justify-between text-slate-400">
           <span>Base Tariff ({rentalDays} Days)</span>
-          <span className="font-semibold text-brand-navy">₹{baseFare.toLocaleString("en-IN")}</span>
+          <span className="font-bold text-white">₹{baseFare.toLocaleString("en-IN")}</span>
         </div>
 
         {deliveryFee > 0 && (
-          <div className="flex justify-between text-muted-foreground">
+          <div className="flex justify-between text-slate-400">
             <span>Express Doorstep Delivery</span>
-            <span className="font-semibold text-brand-navy">₹{deliveryFee}</span>
+            <span className="font-bold text-white">₹{deliveryFee.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {/* Discounts */}
         {couponDiscount > 0 && (
-          <div className="flex justify-between text-emerald-600 font-bold bg-emerald-500/10 p-1.5 rounded-lg">
-            <span className="flex items-center gap-1">
-              <Tag className="h-3.5 w-3.5" /> Coupon ({couponCode})
+          <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
+            <span className="flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5 text-emerald-400" /> Promo Code ({couponCode})
             </span>
             <span>-₹{couponDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {walletDeduction > 0 && (
-          <div className="flex justify-between text-emerald-600 font-bold bg-emerald-500/10 p-1.5 rounded-lg">
-            <span className="flex items-center gap-1">
-              <Wallet className="h-3.5 w-3.5" /> Moar Wallet Balance
+          <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
+            <span className="flex items-center gap-1.5">
+              <Wallet className="h-3.5 w-3.5 text-emerald-400" /> Wallet Balance
             </span>
             <span>-₹{walletDeduction.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {rewardDeduction > 0 && (
-          <div className="flex justify-between text-emerald-600 font-bold bg-emerald-500/10 p-1.5 rounded-lg">
-            <span className="flex items-center gap-1">
-              <Coins className="h-3.5 w-3.5" /> Reward Points Redeemed
+          <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
+            <span className="flex items-center gap-1.5">
+              <Coins className="h-3.5 w-3.5 text-emerald-400" /> Reward Points
             </span>
             <span>-₹{rewardDeduction.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {referralDiscount > 0 && (
-          <div className="flex justify-between text-emerald-600 font-bold bg-emerald-500/10 p-1.5 rounded-lg">
-            <span className="flex items-center gap-1">
-              <Gift className="h-3.5 w-3.5" /> Referral Discount
+          <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
+            <span className="flex items-center gap-1.5">
+              <Gift className="h-3.5 w-3.5 text-emerald-400" /> Referral Discount
             </span>
             <span>-₹{referralDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
 
-        <div className="flex justify-between text-muted-foreground">
+        <div className="flex justify-between text-slate-400">
           <span>Taxes & GST ({gstRate}%)</span>
-          <span className="font-semibold text-brand-navy">₹{gstAmount.toLocaleString("en-IN")}</span>
+          <span className="font-bold text-white">₹{gstAmount.toLocaleString("en-IN")}</span>
         </div>
 
-        {/* Grand Total */}
-        <div className="pt-3 border-t border-border flex items-center justify-between text-base font-black text-brand-navy">
-          <span>Total Booking Amount</span>
-          <span className="text-xl text-brand-teal">₹{grandTotal.toLocaleString("en-IN")}</span>
+        {/* Total Grand Amount */}
+        <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-sm sm:text-base font-black text-white">
+          <span>Total Rental Fare</span>
+          <span className="text-xl sm:text-2xl text-emerald-400 font-black">
+            ₹{grandTotal.toLocaleString("en-IN")}
+          </span>
         </div>
 
-        {/* Dynamic Advance Payment & Balance Breakdown */}
+        {/* 4. Luxury Advance Payment Callout Box */}
         {finalBalanceDue > 0 ? (
-          <div className="p-3.5 rounded-2xl bg-brand-gold/10 border border-brand-gold/30 space-y-1.5 text-xs">
-            <div className="flex justify-between font-extrabold text-brand-navy">
-              <span>Pay {displayAdvancePercent}% Advance Online Now:</span>
-              <span className="text-brand-teal font-black">₹{finalPayableNow.toLocaleString("en-IN")}</span>
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 via-[#c88d18]/20 to-amber-500/10 border border-amber-400/40 space-y-2 text-xs shadow-lg shadow-amber-500/10">
+            <div className="flex items-center justify-between font-black text-white">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-[#c88d18]" />
+                <span>Pay {displayAdvancePercent}% Advance Online Now:</span>
+              </span>
+              <span className="text-lg sm:text-xl text-[#c88d18] font-black">
+                ₹{finalPayableNow.toLocaleString("en-IN")}
+              </span>
             </div>
-            <div className="flex justify-between text-amber-700 font-bold text-[11px] pt-1 border-t border-brand-gold/20">
+            <div className="flex items-center justify-between text-slate-300 font-semibold text-[11px] pt-1.5 border-t border-amber-400/20">
               <span>Remaining Balance Payable at Handover:</span>
-              <span>₹{finalBalanceDue.toLocaleString("en-IN")}</span>
+              <span className="text-white font-bold">₹{finalBalanceDue.toLocaleString("en-IN")}</span>
             </div>
           </div>
         ) : (
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-bold flex items-center justify-between">
+          <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-between">
             <span>Payment Mode:</span>
             <span>100% Full Payment Online</span>
           </div>
         )}
       </div>
 
-      {/* Verified Reservation Note */}
-      <div className="p-3 rounded-2xl bg-brand-mist/60 border border-border flex items-center gap-2.5 text-xs text-muted-foreground">
-        <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+      {/* 5. Verified Reservation Note */}
+      <div className="p-3 rounded-2xl bg-[#070e1c]/80 border border-slate-800/90 flex items-center gap-2.5 text-[11px] text-slate-400">
+        <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
         <span>
-          Instant booking confirmed with {displayAdvancePercent}% advance payment. Balance collected at vehicle handover.
+          Instant booking confirmed with <strong className="text-white">{displayAdvancePercent}%</strong> online advance. Balance payable at car handover. Zero hidden charges.
         </span>
       </div>
     </div>
   );
 };
+

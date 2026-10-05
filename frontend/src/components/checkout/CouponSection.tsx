@@ -94,25 +94,25 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
   };
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+    <div className="rounded-3xl border border-slate-800/90 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] p-5 sm:p-6 shadow-2xl space-y-4 text-white backdrop-blur-xl">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border pb-3">
-        <h3 className="text-base font-extrabold text-brand-navy flex items-center gap-2">
+      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+        <h3 className="text-base font-extrabold text-white flex items-center gap-2">
           <Tag className="h-4 w-4 text-[#c88d18]" /> Apply Promo Coupon
         </h3>
-        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-          <Sparkles className="h-3.5 w-3.5" /> Official Discounts
+        <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+          <Sparkles className="h-3 w-3" /> Official Discounts
         </span>
       </div>
 
       {/* Coupon Application Interface */}
       {!appliedCoupon ? (
         <div className="space-y-3">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="ENTER COUPON CODE"
+                placeholder="ENTER COUPON CODE (E.G. MOAR10)"
                 value={couponInput}
                 onChange={(e) => {
                   setCouponInput(e.target.value.toUpperCase());
@@ -124,24 +124,24 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
                     handleApplyCouponCode();
                   }
                 }}
-                className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs font-bold uppercase tracking-wider text-brand-navy outline-none transition-all ${
+                className={`w-full px-4 py-3 rounded-2xl bg-[#070e1c] border text-xs font-mono font-bold uppercase tracking-wider text-white placeholder-slate-500 outline-none transition-all shadow-inner ${
                   couponError
-                    ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
-                    : "border-border focus:ring-1 focus:ring-brand-teal"
+                    ? "border-rose-500/80 bg-rose-500/10 focus:ring-1 focus:ring-rose-500"
+                    : "border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/20"
                 }`}
               />
             </div>
             <Button
               type="button"
               onClick={() => handleApplyCouponCode()}
-              className="px-6 h-11 rounded-2xl bg-[#c88d18] hover:bg-[#b07b14] text-white font-bold text-xs tracking-wider uppercase transition-transform active:scale-95 shadow-md"
+              className="h-11 px-7 rounded-2xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-slate-950 font-black text-xs tracking-wider uppercase transition-transform active:scale-95 shadow-lg shadow-amber-500/20 cursor-pointer"
             >
-              Apply
+              Apply Code
             </Button>
           </div>
 
           {couponError && (
-            <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
+            <p className="text-[11px] font-bold text-rose-400 flex items-center gap-1.5">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {couponError}
             </p>
           )}
@@ -149,8 +149,8 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
           {/* Admin Created Active Coupons */}
           {availableCoupons.length > 0 && (
             <div className="space-y-1.5 pt-1">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-                Available Admin Offers:
+              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                Available Special Offers (Click to Apply):
               </span>
               <div className="flex flex-wrap gap-2">
                 {availableCoupons.map((c) => (
@@ -158,13 +158,13 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
                     key={c.id || c.code}
                     type="button"
                     onClick={() => handleApplyCouponCode(c.code)}
-                    className="group px-3 py-1.5 rounded-xl bg-brand-mist/70 hover:bg-[#c88d18]/10 border border-border hover:border-[#c88d18]/50 transition-all text-left flex items-center gap-1.5 cursor-pointer"
+                    className="group px-3 py-1.5 rounded-xl bg-white/5 hover:bg-[#c88d18]/20 border border-slate-800 hover:border-amber-400/50 transition-all text-left flex items-center gap-1.5 cursor-pointer"
                   >
                     <Percent className="h-3 w-3 text-[#c88d18]" />
-                    <span className="text-[11px] font-black font-mono text-brand-navy group-hover:text-[#c88d18]">
+                    <span className="text-[11px] font-black font-mono text-white group-hover:text-[#c88d18]">
                       {c.code}
                     </span>
-                    <span className="text-[10px] text-muted-foreground font-semibold">
+                    <span className="text-[10px] text-slate-400 group-hover:text-slate-200 font-semibold">
                       ({c.value}% OFF {c.description ? `• ${c.description}` : ""})
                     </span>
                   </button>
@@ -175,21 +175,21 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
         </div>
       ) : (
         /* Applied Coupon State */
-        <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800">
+        <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-4 w-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black font-mono bg-emerald-500/20 px-2 py-0.5 rounded-md text-emerald-900 uppercase">
+                <span className="text-xs font-black font-mono bg-emerald-500/25 px-2 py-0.5 rounded-md text-emerald-300 uppercase border border-emerald-500/30">
                   {appliedCoupon.code}
                 </span>
-                <span className="text-xs font-bold text-emerald-700">
+                <span className="text-xs font-bold text-emerald-300">
                   {appliedCoupon.percent}% Discount Applied
                 </span>
               </div>
-              <p className="text-[11px] font-bold text-emerald-600 mt-0.5">
+              <p className="text-[11px] font-bold text-emerald-400 mt-0.5">
                 You saved ₹{appliedCoupon.discount.toLocaleString("en-IN")} on this booking!
               </p>
             </div>
@@ -198,7 +198,7 @@ export const CouponSection: React.FC<CouponSectionProps> = ({
           <button
             type="button"
             onClick={onRemoveCoupon}
-            className="text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer"
+            className="text-xs font-bold text-rose-400 hover:text-rose-300 hover:underline px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
           >
             Remove
           </button>

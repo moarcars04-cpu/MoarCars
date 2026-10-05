@@ -404,11 +404,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   return (
-    <main className={`min-h-screen transition-colors duration-300 pb-20 ${currentStep === "confirmed" ? "bg-[#070e1c] text-white" : "bg-[#070e1c] text-white"}`}>
+    <main className="min-h-screen bg-[#070e1c] text-white transition-colors duration-300 pb-32 lg:pb-16 selection:bg-[#c88d18] selection:text-slate-950">
       {/* Checkout Top Bar */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-[#070e1c]/95 backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/80 bg-[#070e1c]/90 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Button
               variant="ghost"
               size="sm"
@@ -417,9 +417,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 else if (onNavigate) onNavigate(`/car/${car?.id || car?.name}`);
                 else window.history.back();
               }}
-              className="text-white hover:text-amber-400 hover:bg-white/10 rounded-xl px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-bold"
+              className="text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-semibold border border-slate-700/50 transition-all"
             >
-              <ChevronLeft className="h-4 w-4" /> Back
+              <ChevronLeft className="h-4 w-4 text-[#c88d18]" /> Back
             </Button>
 
             <a
@@ -430,23 +430,24 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   onNavigate("/");
                 }
               }}
-              className="brand-mark flex items-center gap-2 text-xl font-black text-white"
+              className="brand-mark flex items-center gap-2 text-lg sm:text-xl font-black text-white tracking-wide"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-amber-400 text-sm text-amber-400 font-bold">
+              <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#c88d18] to-[#96640c] text-xs sm:text-sm text-slate-950 font-black shadow-md shadow-[#c88d18]/30">
                 M
               </span>
               <span>
-                MOAR <span className="text-amber-400">CARS</span>
+                MOAR <span className="text-[#c88d18]">CARS</span>
               </span>
             </a>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
-            <div className="hidden sm:flex items-center gap-1.5 text-emerald-400 font-bold bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+          <div className="flex items-center gap-3 sm:gap-5 text-xs">
+            <div className="hidden sm:flex items-center gap-1.5 text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
               <Lock className="h-3.5 w-3.5" /> 256-Bit SSL Checkout
             </div>
-            <a href="tel:+918500012345" className="flex items-center gap-1.5 text-white/80 hover:text-white font-medium">
-              <Phone className="h-3.5 w-3.5 text-amber-400" /> +91 85000 12345
+            <a href="tel:+918500012345" className="flex items-center gap-1.5 text-slate-300 hover:text-white font-medium transition-colors">
+              <Phone className="h-3.5 w-3.5 text-[#c88d18]" />
+              <span className="hidden sm:inline font-mono">+91 85000 12345</span>
             </a>
           </div>
         </div>
@@ -456,38 +457,38 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
         {/* Stepper Progress Bar */}
         {currentStep !== "confirmed" && (
-          <div className="flex items-center justify-center gap-3 sm:gap-6 text-xs font-bold text-slate-400 pt-2">
-            <div className={`flex items-center gap-2 ${currentStep === "details" ? "text-amber-400" : "text-emerald-400"}`}>
+          <div className="flex items-center justify-center gap-2 sm:gap-6 text-[11px] sm:text-xs font-bold pt-2 overflow-x-auto">
+            <div className={`flex items-center gap-2 shrink-0 ${currentStep === "details" ? "text-[#c88d18]" : "text-emerald-400"}`}>
               <div
-                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black ${
-                  currentStep === "details" ? "bg-amber-400 text-slate-950" : "bg-emerald-500 text-white"
+                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-sm ${
+                  currentStep === "details" ? "bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 ring-2 ring-[#c88d18]/30" : "bg-emerald-500 text-slate-950"
                 }`}
               >
                 1
               </div>
-              <span>Renter & Itinerary</span>
+              <span className="tracking-wide">Renter Details</span>
             </div>
 
-            <div className="h-0.5 w-8 sm:w-16 bg-slate-800" />
+            <div className="h-0.5 w-6 sm:w-16 bg-slate-800 shrink-0" />
 
-            <div className={`flex items-center gap-2 ${currentStep === "payment" ? "text-amber-400" : "text-slate-400"}`}>
+            <div className={`flex items-center gap-2 shrink-0 ${currentStep === "payment" ? "text-[#c88d18]" : "text-slate-400"}`}>
               <div
                 className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black ${
-                  currentStep === "payment" ? "bg-amber-400 text-slate-950" : "bg-slate-800 text-slate-400"
+                  currentStep === "payment" ? "bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 ring-2 ring-[#c88d18]/30" : "bg-slate-800/90 text-slate-400 border border-slate-700"
                 }`}
               >
                 2
               </div>
-              <span>Payment & Gateway</span>
+              <span className="tracking-wide">Payment & Gateway</span>
             </div>
 
-            <div className="h-0.5 w-8 sm:w-16 bg-slate-800" />
+            <div className="h-0.5 w-6 sm:w-16 bg-slate-800 shrink-0" />
 
-            <div className="flex items-center gap-2 text-slate-400">
-              <div className="h-7 w-7 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs font-black">
+            <div className="flex items-center gap-2 shrink-0 text-slate-400">
+              <div className="h-7 w-7 rounded-full bg-slate-800/90 text-slate-400 border border-slate-700 flex items-center justify-center text-xs font-black">
                 3
               </div>
-              <span>Instant Confirmation</span>
+              <span className="tracking-wide">Instant Confirmation</span>
             </div>
           </div>
         )}
@@ -509,12 +510,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
         {/* STEP 1 & 2: CHECKOUT FORM & SUMMARY */}
         {currentStep !== "confirmed" && !car && (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center space-y-4 shadow-sm">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-brand-gold">
+          <div className="rounded-3xl border border-slate-800 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] p-10 sm:p-14 text-center space-y-4 shadow-2xl">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c88d18]/10 border border-[#c88d18]/20 text-[#c88d18]">
               <Car className="h-8 w-8" />
             </div>
-            <h3 className="text-xl font-black text-brand-navy">No Vehicle Selected</h3>
-            <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            <h3 className="text-xl font-black text-white">No Vehicle Selected</h3>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
               Please choose a car from our live fleet to begin the reservation checkout.
             </p>
             <Button
@@ -522,7 +523,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 if (onNavigate) onNavigate("/cars");
                 else window.history.back();
               }}
-              className="h-10 px-6 rounded-xl bg-brand-gold text-brand-navy font-bold text-xs"
+              className="h-11 px-6 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 font-black text-xs shadow-lg shadow-[#c88d18]/20 hover:brightness-105"
             >
               Select a Vehicle
             </Button>
@@ -531,8 +532,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
         {/* AUTHENTICATION GATE: User must be signed in to book */}
         {currentStep !== "confirmed" && car && !user && (
-          <div className="rounded-3xl border border-[#c88d18]/40 bg-gradient-to-br from-[#070e1c] to-[#0c192e] text-white p-8 sm:p-12 shadow-2xl space-y-6 max-w-2xl mx-auto text-center animate-in fade-in duration-300">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c88d18]/20 border border-[#c88d18]/40 text-[#c88d18]">
+          <div className="rounded-3xl border border-[#c88d18]/40 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] text-white p-6 sm:p-12 shadow-2xl space-y-6 max-w-2xl mx-auto text-center animate-in fade-in duration-300">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#c88d18]/10 border border-[#c88d18]/30 text-[#c88d18]">
               <Lock className="h-8 w-8" />
             </div>
 
@@ -545,7 +546,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-left max-w-md mx-auto">
+            <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-700/80 flex items-center justify-between text-left max-w-md mx-auto">
               <div className="flex items-center gap-3">
                 {car.image ? (
                   <img src={car.image} alt={car.name} className="h-12 w-16 object-cover rounded-xl bg-slate-900 shrink-0" />
@@ -569,9 +570,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               </Button>
               <Button
                 onClick={() => openAuthModal("register")}
-                className="h-12 rounded-2xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-[#c88d18]/25 transition-transform active:scale-95"
+                className="h-12 rounded-2xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-[#c88d18]/25 transition-transform active:scale-95"
               >
-                <Sparkles className="h-4 w-4" /> New User (Create Profile)
+                <Sparkles className="h-4 w-4 text-slate-950" /> New User (Create Profile)
               </Button>
             </div>
 
@@ -582,28 +583,33 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         )}
 
         {currentStep !== "confirmed" && car && user && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Left Column (7 cols): Input Forms */}
             <div className="lg:col-span-7 space-y-6">
               {/* Error Notice */}
               {submissionError && (
-                <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
+                <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs font-semibold flex items-center gap-2.5 shadow-lg">
+                  <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />
                   <span>{submissionError}</span>
                 </div>
               )}
 
               {/* 1. RENTER & DRIVER IDENTIFICATION */}
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-5">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <h3 className="text-base font-extrabold text-brand-navy flex items-center gap-2">
-                    <User className="h-4 w-4 text-brand-teal" /> Primary Renter Details
-                  </h3>
+              <div className="rounded-3xl border border-slate-800/90 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] p-5 sm:p-7 shadow-2xl space-y-6 backdrop-blur-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800/80 gap-2">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                      <User className="h-5 w-5 text-[#c88d18]" /> Primary Renter Details
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Official driver details required for insurance coverage and vehicle handover
+                    </p>
+                  </div>
                   {!user && (
                     <button
                       type="button"
                       onClick={() => openAuthModal("login")}
-                      className="text-xs font-bold text-brand-teal hover:underline"
+                      className="text-xs font-bold text-[#c88d18] hover:underline self-start sm:self-auto"
                     >
                       Already have an account? Sign In
                     </button>
@@ -613,8 +619,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Full Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy flex items-center justify-between">
-                      <span>Full Legal Name (as per DL) <span className="text-rose-500">*</span></span>
+                    <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                      <span>Full Legal Name (as per DL) <span className="text-[#c88d18]">*</span></span>
                     </label>
                     <input
                       type="text"
@@ -624,15 +630,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         setCustomerName(e.target.value);
                         if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
                       }}
-                      className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs font-semibold text-brand-navy outline-none transition-all ${
+                      className={`w-full px-4 py-3.5 rounded-2xl bg-[#070e1c]/90 border text-sm text-white placeholder-slate-500 font-medium outline-none transition-all shadow-inner ${
                         fieldErrors.name
-                          ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
-                          : "border-border focus:ring-1 focus:ring-brand-teal"
+                          ? "border-rose-500 bg-rose-950/20 focus:ring-2 focus:ring-rose-500/30"
+                          : "border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/25"
                       }`}
                     />
                     {fieldErrors.name && (
-                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.name}
+                      <p className="text-xs font-medium text-rose-400 flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {fieldErrors.name}
                       </p>
                     )}
                   </div>
@@ -640,17 +646,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   {/* Mobile Number - Exactly 10 Digits */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-brand-navy">
-                        Mobile Number <span className="text-rose-500">*</span>
+                      <label className="text-xs font-semibold text-slate-300">
+                        Mobile Number <span className="text-[#c88d18]">*</span>
                       </label>
-                      <span className="text-[10px] font-mono font-bold text-muted-foreground">
+                      <span className="text-[11px] font-mono font-bold text-slate-400">
                         {customerPhone.length}/10 digits
                       </span>
                     </div>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground select-none">
-                        +91
-                      </span>
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs font-bold text-slate-300 select-none border-r border-slate-700/80 pr-2">
+                        <span className="text-[10px]">🇮🇳</span>
+                        <span>+91</span>
+                      </div>
                       <input
                         type="tel"
                         maxLength={10}
@@ -662,24 +669,24 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                           setCustomerPhone(digitsOnly);
                           if (fieldErrors.phone) setFieldErrors((prev) => ({ ...prev, phone: undefined }));
                         }}
-                        className={`w-full pl-12 pr-3 py-3 rounded-2xl bg-brand-mist/60 border text-xs font-semibold text-brand-navy outline-none tracking-wide transition-all ${
+                        className={`w-full pl-20 pr-4 py-3.5 rounded-2xl bg-[#070e1c]/90 border text-sm text-white placeholder-slate-500 font-medium outline-none tracking-wide transition-all shadow-inner ${
                           fieldErrors.phone
-                            ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
-                            : "border-border focus:ring-1 focus:ring-brand-teal"
+                            ? "border-rose-500 bg-rose-950/20 focus:ring-2 focus:ring-rose-500/30"
+                            : "border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/25"
                         }`}
                       />
                     </div>
                     {fieldErrors.phone && (
-                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.phone}
+                      <p className="text-xs font-medium text-rose-400 flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {fieldErrors.phone}
                       </p>
                     )}
                   </div>
 
                   {/* Email Address */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy flex items-center justify-between">
-                      <span>Email Address <span className="text-rose-500">*</span></span>
+                    <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                      <span>Email Address <span className="text-[#c88d18]">*</span></span>
                     </label>
                     <input
                       type="email"
@@ -689,23 +696,23 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         setCustomerEmail(e.target.value);
                         if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
                       }}
-                      className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs font-semibold text-brand-navy outline-none transition-all ${
+                      className={`w-full px-4 py-3.5 rounded-2xl bg-[#070e1c]/90 border text-sm text-white placeholder-slate-500 font-medium outline-none transition-all shadow-inner ${
                         fieldErrors.email
-                          ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
-                          : "border-border focus:ring-1 focus:ring-brand-teal"
+                          ? "border-rose-500 bg-rose-950/20 focus:ring-2 focus:ring-rose-500/30"
+                          : "border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/25"
                       }`}
                     />
                     {fieldErrors.email && (
-                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.email}
+                      <p className="text-xs font-medium text-rose-400 flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {fieldErrors.email}
                       </p>
                     )}
                   </div>
 
                   {/* Driving License */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-navy flex items-center justify-between">
-                      <span>Driving License Number <span className="text-rose-500">*</span></span>
+                    <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                      <span>Driving License Number <span className="text-[#c88d18]">*</span></span>
                     </label>
                     <input
                       type="text"
@@ -715,15 +722,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         setDrivingLicense(e.target.value.toUpperCase());
                         if (fieldErrors.dl) setFieldErrors((prev) => ({ ...prev, dl: undefined }));
                       }}
-                      className={`w-full p-3 rounded-2xl bg-brand-mist/60 border text-xs uppercase font-semibold text-brand-navy outline-none transition-all ${
+                      className={`w-full px-4 py-3.5 rounded-2xl bg-[#070e1c]/90 border text-sm uppercase text-white placeholder-slate-500 font-medium outline-none tracking-wider transition-all shadow-inner ${
                         fieldErrors.dl
-                          ? "border-rose-500 bg-rose-50/50 focus:ring-1 focus:ring-rose-500"
-                          : "border-border focus:ring-1 focus:ring-brand-teal"
+                          ? "border-rose-500 bg-rose-950/20 focus:ring-2 focus:ring-rose-500/30"
+                          : "border-slate-700/80 focus:border-[#c88d18] focus:ring-2 focus:ring-[#c88d18]/25"
                       }`}
                     />
                     {fieldErrors.dl && (
-                      <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3 shrink-0" /> {fieldErrors.dl}
+                      <p className="text-xs font-medium text-rose-400 flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {fieldErrors.dl}
                       </p>
                     )}
                   </div>
@@ -754,7 +761,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   size="lg"
                   disabled={isSubmitting}
                   onClick={handleConfirmAndPay}
-                  className="w-full h-14 rounded-2xl bg-[#c88d18] hover:bg-[#b07b14] text-white text-sm font-black uppercase tracking-wider shadow-2xl hover:shadow-[#c88d18]/25 flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] text-slate-950 text-sm font-black uppercase tracking-wider shadow-2xl shadow-[#c88d18]/25 hover:shadow-[#c88d18]/40 hover:brightness-105 flex items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
                 >
                   {isSubmitting ? (
                     "Processing Razorpay Checkout..."
@@ -769,17 +776,26 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </Button>
 
                 {balanceDue > 0 && (
-                  <p className="text-center text-xs font-bold text-amber-700 bg-amber-500/10 py-2 px-3 rounded-xl border border-amber-500/20">
-                    ℹ️ Advance of ₹{payableNow.toLocaleString("en-IN")} ({advancePaymentPercent}%) paid securely online now. Remaining balance ₹{balanceDue.toLocaleString("en-IN")} payable at car handover.
-                  </p>
+                  <div className="text-center text-xs font-semibold text-amber-300/90 bg-[#c88d18]/10 py-3 px-4 rounded-xl border border-[#c88d18]/20 flex items-center justify-center gap-2">
+                    <Sparkles className="h-4 w-4 text-[#c88d18] shrink-0" />
+                    <span>Advance of ₹{payableNow.toLocaleString("en-IN")} ({advancePaymentPercent}%) paid securely online now. Remaining balance ₹{balanceDue.toLocaleString("en-IN")} payable at car handover.</span>
+                  </div>
                 )}
 
-                <p className="text-center text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>
-                    256-Bit SSL Razorpay Gateway • Instant Trip Confirmation • Zero Hidden Charges
+                <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400 pt-1">
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                    256-Bit SSL Razorpay Gateway
                   </span>
-                </p>
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    Instant Trip Confirmation
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-[#c88d18]" />
+                    Zero Hidden Charges
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -819,7 +835,46 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Sticky Mobile Checkout Bar */}
+      {currentStep !== "confirmed" && car && user && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070e1c]/95 backdrop-blur-xl border-t border-slate-800/90 px-4 py-3 shadow-[0_-10px_25px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
+            <div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                Payable Advance ({advancePaymentPercent}%)
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-black text-emerald-400">
+                  ₹{payableNow.toLocaleString("en-IN")}
+                </span>
+                {balanceDue > 0 && (
+                  <span className="text-[10px] text-slate-400">
+                    (Bal: ₹{balanceDue.toLocaleString("en-IN")})
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <Button
+              disabled={isSubmitting}
+              onClick={handleConfirmAndPay}
+              className="h-11 px-5 rounded-xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/25 hover:brightness-105 active:scale-95 flex items-center gap-1.5 shrink-0"
+            >
+              {isSubmitting ? (
+                "Connecting..."
+              ) : (
+                <>
+                  <span>Pay Advance</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
 export default CheckoutPage;
+
