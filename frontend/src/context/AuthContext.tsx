@@ -136,25 +136,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Deduplication / In-flight request lock map
+  const inFlightAuthRequests = useRef<Map<string, Promise<any>>>(new Map());
+
   const sendRegistrationOtp = async (data: { name: string; email: string; phone: string; dlNumber?: string }) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/auth/send-registration-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      return {
-        success: json.success,
-        message: json.message || "Verification code sent to your email.",
-        demoOtp: json.demoOtp,
-      };
-    } catch (err: any) {
-      return { success: false, message: err?.message || "Failed to send email verification code." };
-    } finally {
-      setIsLoading(false);
+    const lockKey = `reg_otp_${(data.email || "").trim().toLowerCase()}`;
+    if (inFlightAuthRequests.current.has(lockKey)) {
+      return inFlightAuthRequests.current.get(lockKey)!;
     }
+
+    setIsLoading(true);
+    const requestPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/send-registration-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        return {
+          success: json.success,
+          message: json.message || "Verification code sent to your email.",
+          demoOtp: json.demoOtp,
+        };
+      } catch (err: any) {
+        return { success: false, message: err?.message || "Failed to send email verification code." };
+      } finally {
+        setIsLoading(false);
+        setTimeout(() => inFlightAuthRequests.current.delete(lockKey), 1000);
+      }
+    })();
+
+    inFlightAuthRequests.current.set(lockKey, requestPromise);
+    return requestPromise;
   };
 
   const verifyRegistrationOtp = async (data: {
@@ -188,21 +202,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const sendOtp = async (identifier: string, type: string = "SMS") => {
-    try {
-      const res = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, type }),
-      });
-      const data = await res.json();
-      return {
-        success: data.success,
-        message: data.message || "OTP sent successfully",
-        demoOtp: data.demoOtp,
-      };
-    } catch (err: any) {
-      return { success: false, message: err?.message || "Failed to send OTP." };
+    const cleanId = (identifier || "").trim().toLowerCase();
+    const lockKey = `send_otp_${cleanId}_${type}`;
+    if (inFlightAuthRequests.current.has(lockKey)) {
+      return inFlightAuthRequests.current.get(lockKey)!;
     }
+
+    setIsLoading(true);
+    const requestPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier, type }),
+        });
+        const data = await res.json();
+        return {
+          success: data.success,
+          message: data.message || "OTP sent successfully",
+          demoOtp: data.demoOtp,
+        };
+      } catch (err: any) {
+        return { success: false, message: err?.message || "Failed to send OTP." };
+      } finally {
+        setIsLoading(false);
+        setTimeout(() => inFlightAuthRequests.current.delete(lockKey), 1000);
+      }
+    })();
+
+    inFlightAuthRequests.current.set(lockKey, requestPromise);
+    return requestPromise;
   };
 
   const verifyOtp = async (identifier: string, otp: string, name?: string, referralCode?: string) => {
@@ -250,16 +279,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const forgotPassword = async (identifier: string) => {
-    try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier }),
-      });
-      return await res.json();
-    } catch (err: any) {
-      return { success: false, message: err?.message || "Failed to send reset code." };
+    const cleanId = (identifier || "").trim().toLowerCase();
+    const lockKey = `forgot_${cleanId}`;
+    if (inFlightAuthRequests.current.has(lockKey)) {
+      return inFlightAuthRequests.current.get(lockKey)!;
     }
+
+    setIsLoading(true);
+    const requestPromise = (async () => {
+      try {
+        const res = await fetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier }),
+        });
+        return await res.json();
+      } catch (err: any) {
+        return { success: false, message: err?.message || "Failed to send reset code." };
+      } finally {
+        setIsLoading(false);
+        setTimeout(() => inFlightAuthRequests.current.delete(lockKey), 1000);
+      }
+    })();
+
+    inFlightAuthRequests.current.set(lockKey, requestPromise);
+    return requestPromise;
   };
 
   const resetPassword = async (identifier: string, otp: string, newPassword: string) => {

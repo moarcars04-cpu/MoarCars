@@ -65,6 +65,7 @@ export const AuthModal: React.FC = () => {
   const [otpTarget, setOtpTarget] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isRegisterOtpSent, setIsRegisterOtpSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Feedback & errors
   const [errorMsg, setErrorMsg] = useState("");
@@ -182,6 +183,7 @@ export const AuthModal: React.FC = () => {
   // 2. Handle Requesting Email or Mobile OTP for Sign-In
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || isLoading) return;
     setErrorMsg("");
     setSuccessMsg("");
 
@@ -197,27 +199,33 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const res = await sendOtp(target, isEmail ? "EMAIL" : "SMS");
-    if (res.success) {
-      setOtpTarget(target);
-      setOtpDigits(["", "", "", "", "", ""]);
-      setOtpTimer(60);
-      setCanResendOtp(false);
-      setIsOtpSent(true);
-      setSuccessMsg(
-        isEmail
-          ? `Verification code sent to ${target}. Please check your inbox.`
-          : `OTP sent to +91 ${target}`
-      );
-      setTimeout(() => otpInputRefs.current[0]?.focus(), 250);
-    } else {
-      setErrorMsg(res.message);
+    setIsSubmitting(true);
+    try {
+      const res = await sendOtp(target, isEmail ? "EMAIL" : "SMS");
+      if (res.success) {
+        setOtpTarget(target);
+        setOtpDigits(["", "", "", "", "", ""]);
+        setOtpTimer(60);
+        setCanResendOtp(false);
+        setIsOtpSent(true);
+        setSuccessMsg(
+          isEmail
+            ? `Verification code sent to ${target}. Please check your inbox.`
+            : `OTP sent to +91 ${target}`
+        );
+        setTimeout(() => otpInputRefs.current[0]?.focus(), 250);
+      } else {
+        setErrorMsg(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // 3. Handle Verifying OTP
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || isLoading) return;
     setErrorMsg("");
     const otpCode = otpDigits.join("");
     if (otpCode.length !== 6) {
@@ -225,15 +233,21 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const res = await verifyOtp(otpTarget, otpCode, name, referralCode);
-    if (!res.success) {
-      setErrorMsg(res.message);
+    setIsSubmitting(true);
+    try {
+      const res = await verifyOtp(otpTarget, otpCode, name, referralCode);
+      if (!res.success) {
+        setErrorMsg(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // 4. Handle Registration - Step 1: Validate Mandatory Fields & Send Email OTP
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || isLoading) return;
     setErrorMsg("");
     setSuccessMsg("");
 
@@ -269,30 +283,36 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const res = await sendRegistrationOtp({
-      name: cleanName,
-      email: cleanEmail,
-      phone: cleanPhone,
-      dlNumber: cleanDl,
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await sendRegistrationOtp({
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        dlNumber: cleanDl,
+      });
 
-    if (res.success) {
-      setOtpTarget(cleanEmail);
-      setDemoOtpCode(res.demoOtp || "");
-      setOtpDigits(["", "", "", "", "", ""]);
-      setOtpTimer(60);
-      setCanResendOtp(false);
-      setIsRegisterOtpSent(true);
-      setSuccessMsg(`Verification code sent to ${cleanEmail}`);
-      setTimeout(() => otpInputRefs.current[0]?.focus(), 250);
-    } else {
-      setErrorMsg(res.message);
+      if (res.success) {
+        setOtpTarget(cleanEmail);
+        setDemoOtpCode(res.demoOtp || "");
+        setOtpDigits(["", "", "", "", "", ""]);
+        setOtpTimer(60);
+        setCanResendOtp(false);
+        setIsRegisterOtpSent(true);
+        setSuccessMsg(`Verification code sent to ${cleanEmail}`);
+        setTimeout(() => otpInputRefs.current[0]?.focus(), 250);
+      } else {
+        setErrorMsg(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // 4b. Handle Registration - Step 2: Verify Email OTP & Finalize Account Creation
   const handleVerifyRegisterOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || isLoading) return;
     setErrorMsg("");
     setSuccessMsg("");
 
@@ -302,40 +322,51 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const res = await verifyRegistrationOtp({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.replace(/\D/g, "").slice(0, 10),
-      dlNumber: dlNumber.trim().toUpperCase(),
-      password,
-      referralCode: referralCode.trim(),
-      otp: otpCode,
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await verifyRegistrationOtp({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.replace(/\D/g, "").slice(0, 10),
+        dlNumber: dlNumber.trim().toUpperCase(),
+        password,
+        referralCode: referralCode.trim(),
+        otp: otpCode,
+      });
 
-    if (res.success) {
-      setSuccessMsg(res.message || "Registration verified successfully! Welcome to Moar Cars.");
-    } else {
-      setErrorMsg(res.message);
+      if (res.success) {
+        setSuccessMsg(res.message || "Registration verified successfully! Welcome to Moar Cars.");
+      } else {
+        setErrorMsg(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleResendRegisterOtp = async () => {
+    if (isSubmitting || isLoading) return;
     setErrorMsg("");
     setSuccessMsg("");
-    const res = await sendRegistrationOtp({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.replace(/\D/g, "").slice(0, 10),
-      dlNumber: dlNumber.trim().toUpperCase(),
-    });
-    if (res.success) {
-      setDemoOtpCode(res.demoOtp || "");
-      setOtpDigits(["", "", "", "", "", ""]);
-      setOtpTimer(60);
-      setCanResendOtp(false);
-      setSuccessMsg(`New verification code sent to ${email.trim()}`);
-    } else {
-      setErrorMsg(res.message);
+    setIsSubmitting(true);
+    try {
+      const res = await sendRegistrationOtp({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.replace(/\D/g, "").slice(0, 10),
+        dlNumber: dlNumber.trim().toUpperCase(),
+      });
+      if (res.success) {
+        setDemoOtpCode(res.demoOtp || "");
+        setOtpDigits(["", "", "", "", "", ""]);
+        setOtpTimer(60);
+        setCanResendOtp(false);
+        setSuccessMsg(`New verification code sent to ${email.trim()}`);
+      } else {
+        setErrorMsg(res.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -945,10 +976,10 @@ export const AuthModal: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   className="w-full h-10 rounded-xl bg-[#c88d18] hover:bg-[#b57d14] text-white font-semibold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-60"
                 >
-                  {isLoading ? "Sending Verification Code..." : "Create Account & Verify Email"}
+                  {isLoading || isSubmitting ? "Sending Verification Code..." : "Create Account & Verify Email"}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </form>
@@ -1002,8 +1033,9 @@ export const AuthModal: React.FC = () => {
                   {canResendOtp ? (
                     <button
                       type="button"
+                      disabled={isSubmitting || isLoading}
                       onClick={handleResendRegisterOtp}
-                      className="text-[#c88d18] hover:underline font-semibold flex items-center gap-1"
+                      className="text-[#c88d18] hover:underline font-semibold flex items-center gap-1 disabled:opacity-50"
                     >
                       <RotateCcw className="h-3 w-3" /> Resend Code
                     </button>
@@ -1014,10 +1046,10 @@ export const AuthModal: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={isLoading || otpDigits.join("").length !== 6}
+                  disabled={isLoading || isSubmitting || otpDigits.join("").length !== 6}
                   className="w-full h-10 rounded-xl bg-[#c88d18] hover:bg-[#b57d14] text-white font-semibold text-xs tracking-wide transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-60"
                 >
-                  {isLoading ? "Verifying..." : "Verify & Complete Registration"}
+                  {isLoading || isSubmitting ? "Verifying..." : "Verify & Complete Registration"}
                   <CheckCircle2 className="h-3.5 w-3.5" />
                 </button>
               </form>

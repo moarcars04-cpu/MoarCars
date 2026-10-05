@@ -1322,10 +1322,22 @@ app.post("/api/admin/send-otp", async (req, res) => {
       return res.status(400).json({ success: false, message: "Please provide a valid admin email address." });
     }
 
+    // Deduplication check: If an OTP was already sent to this admin email within the last 15 seconds, avoid sending duplicate email
+    const existingOtp = otpStore.get(targetEmail);
+    if (existingOtp && existingOtp.lastSentAt && (Date.now() - existingOtp.lastSentAt < 15000)) {
+      console.log(`[AUTH] Throttling duplicate admin OTP email to ${targetEmail}`);
+      return res.json({
+        success: true,
+        message: `Real verification OTP sent directly to ${targetEmail}. Please check your inbox.`,
+        emailDelivered: true,
+      });
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 15 * 60 * 1000; // 15 mins
+    const now = Date.now();
 
-    otpStore.set(targetEmail, { otp, expiresAt, attempts: 0 });
+    otpStore.set(targetEmail, { otp, expiresAt, lastSentAt: now, attempts: 0 });
 
     try {
       await AdminOtp.destroy({ where: { email: targetEmail } });
@@ -1477,12 +1489,25 @@ app.post("/api/auth/send-registration-otp", async (req, res) => {
       });
     }
 
+    // Deduplication check: If an OTP was already sent to this email within the last 15 seconds, avoid sending duplicate email
+    const existingOtp = customerOtpStore.get(targetEmail);
+    if (existingOtp && existingOtp.lastSentAt && (Date.now() - existingOtp.lastSentAt < 15000)) {
+      console.log(`[AUTH] Throttling duplicate registration OTP email to ${targetEmail} (sent ${Date.now() - existingOtp.lastSentAt}ms ago)`);
+      return res.json({
+        success: true,
+        message: `Verification code sent to ${targetEmail}. Please check your inbox.`,
+        demoOtp: existingOtp.otp,
+      });
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000;
+    const now = Date.now();
 
     customerOtpStore.set(targetEmail, {
       otp,
       expiresAt,
+      lastSentAt: now,
       name: (name || "Member").trim(),
       phone: (phone || "").trim(),
       attempts: 0,
@@ -1616,10 +1641,30 @@ app.post("/api/auth/send-otp", async (req, res) => {
     if (!identifier) return res.status(400).json({ success: false, message: "Phone or Email is required." });
 
     const cleanIdentifier = identifier.trim().toLowerCase();
+
+    // Deduplication check: If an OTP was already sent to this identifier within the last 15 seconds, avoid sending duplicate email
+    const existingOtp = customerOtpStore.get(cleanIdentifier);
+    if (existingOtp && existingOtp.lastSentAt && (Date.now() - existingOtp.lastSentAt < 15000)) {
+      console.log(`[AUTH] Throttling duplicate sign-in OTP email to ${cleanIdentifier} (sent ${Date.now() - existingOtp.lastSentAt}ms ago)`);
+      return res.json({
+        success: true,
+        message: cleanIdentifier.includes("@")
+          ? `Verification code sent to ${cleanIdentifier}. Please check your inbox.`
+          : `OTP sent to +91 ${cleanIdentifier}`,
+        demoOtp: existingOtp.otp,
+      });
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 10 * 60 * 1000;
+    const now = Date.now();
 
-    customerOtpStore.set(cleanIdentifier, { otp, expiresAt, attempts: 0 });
+    customerOtpStore.set(cleanIdentifier, {
+      otp,
+      expiresAt,
+      lastSentAt: now,
+      attempts: 0,
+    });
 
     if (cleanIdentifier.includes("@")) {
       try {

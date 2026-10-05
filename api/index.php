@@ -1530,6 +1530,22 @@ if ($route === 'admin/send-otp' && $method === 'POST') {
 
     if (isset($pdo)) {
         try {
+            $checkStmt = $pdo->prepare("SELECT * FROM AdminOtps WHERE email = ? ORDER BY id DESC LIMIT 1");
+            $checkStmt->execute([$email]);
+            $existing = $checkStmt->fetch();
+            $nowMs = (int)(time() * 1000);
+            if ($existing && !empty($existing['otp'])) {
+                $createdMs = (int)$existing['expiresAt'] - (900 * 1000);
+                if (($nowMs - $createdMs) < 15000) {
+                    echo json_encode([
+                        "success" => true,
+                        "message" => "Real verification OTP code sent directly to $email. Please check your inbox.",
+                        "emailDelivered" => true,
+                        "debugLogs" => ["Throttled duplicate admin OTP request within 15 seconds."]
+                    ]);
+                    exit();
+                }
+            }
             $stmt = $pdo->prepare("DELETE FROM AdminOtps WHERE email = ?");
             $stmt->execute([$email]);
             $stmt = $pdo->prepare("INSERT INTO AdminOtps (email, otp, expiresAt, attempts) VALUES (?, ?, ?, 0)");
@@ -1795,6 +1811,21 @@ if ($route === 'auth/send-registration-otp' && $method === 'POST') {
 
     if (isset($pdo)) {
         try {
+            $checkStmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? ORDER BY id DESC LIMIT 1");
+            $checkStmt->execute([$email]);
+            $existing = $checkStmt->fetch();
+            if ($existing && !empty($existing['otp'])) {
+                $createdMs = (int)$existing['expiresAt'] - (600 * 1000);
+                if (($nowMs - $createdMs) < 15000) {
+                    echo json_encode([
+                        "success" => true,
+                        "message" => "Verification code sent to $email. Please check your inbox.",
+                        "demoOtp" => $existing['otp'],
+                        "expiresInSeconds" => 600
+                    ]);
+                    exit();
+                }
+            }
             $stmt = $pdo->prepare("DELETE FROM UserOtps WHERE identifier = ?");
             $stmt->execute([$email]);
             $stmt = $pdo->prepare("INSERT INTO UserOtps (identifier, otp, type, expiresAt, attempts) VALUES (?, ?, 'EMAIL_REGISTER', ?, 0)");
@@ -1977,6 +2008,23 @@ if ($route === 'auth/send-otp' && $method === 'POST') {
 
     if (isset($pdo)) {
         try {
+            $checkStmt = $pdo->prepare("SELECT * FROM UserOtps WHERE identifier = ? ORDER BY id DESC LIMIT 1");
+            $checkStmt->execute([$cleanIdentifier]);
+            $existing = $checkStmt->fetch();
+            if ($existing && !empty($existing['otp'])) {
+                $createdMs = (int)$existing['expiresAt'] - (600 * 1000);
+                if (($nowMs - $createdMs) < 15000) {
+                    echo json_encode([
+                        "success" => true,
+                        "message" => strpos($identifier, '@') !== false 
+                            ? "Verification code sent to $identifier. Please check your inbox." 
+                            : "6-digit OTP verification code sent to +91 $identifier",
+                        "demoOtp" => $existing['otp'],
+                        "expiresInSeconds" => 600
+                    ]);
+                    exit();
+                }
+            }
             $stmt = $pdo->prepare("DELETE FROM UserOtps WHERE identifier = ?");
             $stmt->execute([$cleanIdentifier]);
             $stmt = $pdo->prepare("INSERT INTO UserOtps (identifier, otp, type, expiresAt, attempts) VALUES (?, ?, ?, ?, 0)");
