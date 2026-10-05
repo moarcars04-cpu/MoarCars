@@ -108,8 +108,16 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             else if (/honda|city|amaze|elevate/.test(combinedName)) cleanBrand = "Honda";
             else if (/pandu|other|test/i.test(cleanBrand) || !cleanBrand) cleanBrand = "Maruti Suzuki";
 
+            let cleanCarName = (car.name || "Fleet Vehicle").trim();
+            if (/pandu/i.test(cleanCarName)) {
+              cleanCarName = "Mahindra Thar 4x4";
+              cleanBrand = "Mahindra";
+              cleanCat = "SUV";
+            }
+
             return {
               ...car,
+              name: cleanCarName,
               category: cleanCat,
               brand: cleanBrand,
               subCategory: car.subCategory || car.variant || `${cleanCat} Vehicle`,
@@ -401,18 +409,6 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               className="text-[#c88d18] font-black border-b-2 border-[#c88d18] pb-0.5 transition-colors"
             >
               CARS
-            </a>
-            <a
-              href="/#collections"
-              onClick={(e) => {
-                if (onNavigate) {
-                  e.preventDefault();
-                  onNavigate("/#collections");
-                }
-              }}
-              className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
-            >
-              LUXURY FLEET
             </a>
             <a
               href="/#weekend-deals"

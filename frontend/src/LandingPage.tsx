@@ -311,12 +311,6 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               CARS
             </a>
             <a
-              href="#collections"
-              className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
-            >
-              LUXURY FLEET
-            </a>
-            <a
               href="#weekend-deals"
               className="hover:text-[#c88d18] transition-colors pb-0.5 border-b-2 border-transparent hover:border-[#c88d18]"
             >
@@ -473,9 +467,6 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
               }}
             >
               CARS
-            </a>
-            <a href="#collections" onClick={() => setMenuOpen(false)}>
-              LUXURY FLEET
             </a>
             <a href="#weekend-deals" onClick={() => setMenuOpen(false)}>
               DEALS
