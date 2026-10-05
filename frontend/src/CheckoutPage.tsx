@@ -757,42 +757,34 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
               {/* Final Submit / Pay CTA */}
               <div className="space-y-3 pt-2">
+                {/* Desktop-only sleek CTA (Mobile uses the sticky bottom bar) */}
                 <Button
                   size="lg"
                   disabled={isSubmitting}
                   onClick={handleConfirmAndPay}
-                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] text-slate-950 text-sm font-black uppercase tracking-wider shadow-2xl shadow-[#c88d18]/25 hover:shadow-[#c88d18]/40 hover:brightness-105 flex items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
+                  className="hidden lg:flex w-full h-12 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-slate-950 text-sm font-bold shadow-lg shadow-[#c88d18]/20 hover:brightness-105 items-center justify-center gap-2 transition-all active:scale-[0.99] cursor-pointer"
                 >
                   {isSubmitting ? (
                     "Processing Razorpay Checkout..."
                   ) : (
                     <>
-                      <span>
-                        Pay ₹{payableNow.toLocaleString("en-IN")} Advance via Razorpay
-                      </span>
+                      <span>Pay ₹{payableNow.toLocaleString("en-IN")} Advance via Razorpay</span>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </Button>
 
-                {balanceDue > 0 && (
-                  <div className="text-center text-xs font-semibold text-amber-300/90 bg-[#c88d18]/10 py-3 px-4 rounded-xl border border-[#c88d18]/20 flex items-center justify-center gap-2">
-                    <Sparkles className="h-4 w-4 text-[#c88d18] shrink-0" />
-                    <span>Advance of ₹{payableNow.toLocaleString("en-IN")} ({advancePaymentPercent}%) paid securely online now. Remaining balance ₹{balanceDue.toLocaleString("en-IN")} payable at car handover.</span>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-400 pt-1">
+                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] text-slate-400 pt-1">
                   <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                     256-Bit SSL Razorpay Gateway
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                    Instant Trip Confirmation
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    Instant Confirmation
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-[#c88d18]" />
+                    <Sparkles className="h-3.5 w-3.5 text-[#c88d18] shrink-0" />
                     Zero Hidden Charges
                   </span>
                 </div>
@@ -836,20 +828,20 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         )}
       </div>
 
-      {/* Sticky Mobile Checkout Bar */}
+      {/* Sticky Mobile Checkout Bar - Compact & Clean */}
       {currentStep !== "confirmed" && car && user && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070e1c]/95 backdrop-blur-xl border-t border-slate-800/90 px-4 py-3 shadow-[0_-10px_25px_rgba(0,0,0,0.6)]">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070e1c]/95 backdrop-blur-xl border-t border-slate-800/90 px-4 py-2.5 shadow-[0_-10px_25px_rgba(0,0,0,0.6)]">
           <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
-            <div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                Payable Advance ({advancePaymentPercent}%)
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 truncate">
+                Advance ({advancePaymentPercent}%)
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-black text-emerald-400">
+                <span className="text-lg font-black text-emerald-400">
                   ₹{payableNow.toLocaleString("en-IN")}
                 </span>
                 {balanceDue > 0 && (
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] text-slate-400 font-medium truncate">
                     (Bal: ₹{balanceDue.toLocaleString("en-IN")})
                   </span>
                 )}
@@ -859,14 +851,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <Button
               disabled={isSubmitting}
               onClick={handleConfirmAndPay}
-              className="h-11 px-5 rounded-xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/25 hover:brightness-105 active:scale-95 flex items-center gap-1.5 shrink-0"
+              className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 font-bold text-xs shadow-md shadow-[#c88d18]/25 hover:brightness-105 active:scale-95 flex items-center gap-1.5 shrink-0"
             >
               {isSubmitting ? (
                 "Connecting..."
               ) : (
                 <>
                   <span>Pay Advance</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </>
               )}
             </Button>

@@ -114,34 +114,28 @@ export const PaymentMethodsSection: React.FC<PaymentMethodsSectionProps> = ({
       </div>
 
       {/* Payment Split & Transparency Alert */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 space-y-1">
-          <span className="font-bold block text-emerald-300 flex items-center gap-1.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Instant Online Advance:
+      {balanceDue > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+            <span className="text-slate-300 font-medium">
+              Pay <strong className="text-emerald-400">₹{payableNow.toLocaleString("en-IN")}</strong> online advance
+            </span>
+          </div>
+          <span className="text-slate-400 text-[11px]">
+            Remaining ₹{balanceDue.toLocaleString("en-IN")} at handover
           </span>
-          <p className="text-[11px] text-slate-300">
-            ₹{payableNow.toLocaleString("en-IN")} is charged now to reserve and lock the vehicle for your trip.
-          </p>
         </div>
-
-        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 space-y-1">
-          <span className="font-bold block text-amber-300 flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-[#c88d18]" /> Remaining Balance at Handover:
-          </span>
-          <p className="text-[11px] text-slate-300">
-            ₹{balanceDue.toLocaleString("en-IN")} payable directly at vehicle inspection & key handover.
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Security Assurance */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-[11px] text-slate-400 border-t border-slate-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[10px] sm:text-[11px] text-slate-400 border-t border-slate-800/80">
         <div className="flex items-center gap-1.5">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          <span>PCI-DSS Level 1 Compliant 256-Bit SSL Encrypted Gateway</span>
+          <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+          <span>PCI-DSS 256-Bit SSL Encrypted Gateway</span>
         </div>
-        <div className="flex items-center gap-1.5 font-medium">
-          <span>Razorpay Instant Refund Protection Active</span>
+        <div className="flex items-center gap-1.5 font-medium text-slate-400">
+          <span>Razorpay Refund Protection Active</span>
         </div>
       </div>
     </div>
