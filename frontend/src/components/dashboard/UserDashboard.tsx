@@ -68,9 +68,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
     fetchDashboardData,
   } = useAuth();
 
-  // Simplified, clear primary tabs: trips | wallet | support | profile
-  const [primaryTab, setPrimaryTab] = useState<"trips" | "wallet" | "support" | "profile">("trips");
-  const [walletSubTab, setWalletSubTab] = useState<"wallet" | "rewards" | "referral">("wallet");
+  // Simplified, clear primary tabs: trips | support | profile
+  const [primaryTab, setPrimaryTab] = useState<"trips" | "support" | "profile">("trips");
   const [profileSubTab, setProfileSubTab] = useState<"profile" | "saved" | "reviews" | "settings" | "legal">("profile");
 
   const [dashboardData, setDashboardData] = useState<UserDashboardData | null>(null);
@@ -129,17 +128,28 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
 
   // Backwards-compatible tab router for notifications
   const handleTabSwitch = (tab: string) => {
-    if (tab === "bookings" || tab === "overview" || tab === "trips" || tab === "kyc") setPrimaryTab("trips");
-    else if (tab === "wallet") { setPrimaryTab("wallet"); setWalletSubTab("wallet"); }
-    else if (tab === "rewards") { setPrimaryTab("wallet"); setWalletSubTab("rewards"); }
-    else if (tab === "referral") { setPrimaryTab("wallet"); setWalletSubTab("referral"); }
-    else if (tab === "support") setPrimaryTab("support");
-    else if (tab === "profile") { setPrimaryTab("profile"); setProfileSubTab("profile"); }
-    else if (tab === "saved") { setPrimaryTab("profile"); setProfileSubTab("saved"); }
-    else if (tab === "reviews") { setPrimaryTab("profile"); setProfileSubTab("reviews"); }
-    else if (tab === "settings") { setPrimaryTab("profile"); setProfileSubTab("settings"); }
-    else if (tab === "legal") { setPrimaryTab("profile"); setProfileSubTab("legal"); }
-    else setPrimaryTab("trips");
+    if (tab === "bookings" || tab === "overview" || tab === "trips" || tab === "kyc" || tab === "wallet" || tab === "rewards" || tab === "referral") {
+      setPrimaryTab("trips");
+    } else if (tab === "support") {
+      setPrimaryTab("support");
+    } else if (tab === "profile") {
+      setPrimaryTab("profile");
+      setProfileSubTab("profile");
+    } else if (tab === "saved") {
+      setPrimaryTab("profile");
+      setProfileSubTab("saved");
+    } else if (tab === "reviews") {
+      setPrimaryTab("profile");
+      setProfileSubTab("reviews");
+    } else if (tab === "settings") {
+      setPrimaryTab("profile");
+      setProfileSubTab("settings");
+    } else if (tab === "legal") {
+      setPrimaryTab("profile");
+      setProfileSubTab("legal");
+    } else {
+      setPrimaryTab("trips");
+    }
   };
 
   if (!user) {
@@ -151,7 +161,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
           </div>
           <h2 className="text-2xl font-black text-slate-900">Sign In Required</h2>
           <p className="text-xs sm:text-sm text-slate-600">
-            Please log in or register to access your personal Moar Cars customer portal, digital trip pass, KYC vault, and wallet.
+            Please log in or register to access your personal Moar Cars customer portal, digital trip pass, and bookings.
           </p>
           <div className="pt-2">
             <Button
@@ -376,7 +386,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                 Namaste, {currentUser.name}! 🙏
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
-                Manage your self-drive bookings, digital trip pass, Moar Wallet funds, and rewards.
+                Manage your self-drive bookings, digital trip pass, GST tax invoices, and 24/7 roadside assistance.
               </p>
             </div>
 
@@ -407,7 +417,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
             </div>
           </div>
 
-          {/* 3 Stat Highlights Grid */}
+          {/* 3 Real Stat Highlights Grid */}
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-5 border-t border-slate-100">
             {/* Stat 1: Active Trips */}
             <button
@@ -423,68 +433,53 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
               </span>
               <p className="mt-1 text-sm sm:text-base font-black text-slate-900 flex items-center gap-1.5">
                 <Car className="h-4 w-4 text-[#b57d14] shrink-0" />
-                {upcomingBookings.length} Booked
+                {upcomingBookings.length} Upcoming
               </p>
             </button>
 
-            {/* Stat 2: Moar Wallet */}
+            {/* Stat 2: Total Bookings */}
             <button
-              onClick={() => {
-                setPrimaryTab("wallet");
-                setWalletSubTab("wallet");
-              }}
+              onClick={() => setPrimaryTab("trips")}
+              className="text-left p-3.5 sm:p-4 rounded-2xl border bg-slate-50 hover:bg-slate-100/70 border-slate-200 transition-all cursor-pointer"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                Total Bookings
+              </span>
+              <p className="mt-1 text-sm sm:text-base font-black text-slate-900 flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4 text-[#b57d14] shrink-0" />
+                {totalTripsCount} Trips Registered
+              </p>
+            </button>
+
+            {/* Stat 3: 24/7 Tirupati RSA Support */}
+            <button
+              onClick={() => setPrimaryTab("support")}
               className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
-                primaryTab === "wallet" && walletSubTab === "wallet"
+                primaryTab === "support"
                   ? "bg-amber-50/60 border-amber-300 shadow-xs"
                   : "bg-slate-50 hover:bg-slate-100/70 border-slate-200"
               }`}
             >
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                Moar Wallet
+                24/7 Roadside Assistance
               </span>
-              <p className="mt-1 text-sm sm:text-base font-black text-[#b57d14] flex items-center gap-1.5">
-                <Wallet className="h-4 w-4 text-[#b57d14] shrink-0" />
-                ₹{(currentUser.walletBalance || 0).toLocaleString("en-IN")}
-              </p>
-            </button>
-
-            {/* Stat 3: Reward Coins */}
-            <button
-              onClick={() => {
-                setPrimaryTab("wallet");
-                setWalletSubTab("rewards");
-              }}
-              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
-                primaryTab === "wallet" && walletSubTab === "rewards"
-                  ? "bg-amber-50/60 border-amber-300 shadow-xs"
-                  : "bg-slate-50 hover:bg-slate-100/70 border-slate-200"
-              }`}
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                Moar Coins
-              </span>
-              <p className="mt-1 text-sm sm:text-base font-black text-amber-700 flex items-center gap-1.5">
-                <Coins className="h-4 w-4 text-amber-600 shrink-0" />
-                {(currentUser.rewardPoints || 100).toLocaleString("en-IN")}
+              <p className="mt-1 text-sm sm:text-base font-black text-emerald-700 flex items-center gap-1.5">
+                <Headphones className="h-4 w-4 text-emerald-600 shrink-0" />
+                Helpline Active
               </p>
             </button>
           </div>
         </div>
 
-        {/* 3. Streamlined Primary Tab Navigation (Clear & Anti-Confusion) */}
+        {/* 3. Streamlined Primary Tab Navigation (Clear & Real) */}
         <div className="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-2xs overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:grid sm:grid-cols-4">
+          <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:grid sm:grid-cols-3">
             {[
               {
                 id: "trips",
-                label: "My Trips",
+                label: "My Trips & Passes",
                 count: totalTripsCount,
                 icon: Car,
-              },
-              {
-                id: "wallet",
-                label: "Wallet & Rewards",
-                icon: Wallet,
               },
               {
                 id: "support",
@@ -518,17 +513,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                       }`}
                     >
                       {tabItem.count}
-                    </span>
-                  )}
-                  {tabItem.badge && (
-                    <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
-                        tabItem.badge === "✓"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {tabItem.badge}
                     </span>
                   )}
                 </button>
@@ -699,62 +683,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
           </div>
         )}
 
-        {/* TAB 2: WALLET & REWARDS (UNIFIED HUB) */}
-        {primaryTab === "wallet" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            {/* Sub-Tabs for Wallet Hub */}
-            <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-              {[
-                { id: "wallet", label: "Moar Wallet", icon: Wallet },
-                { id: "rewards", label: "Coins & Rewards", icon: Coins },
-                { id: "referral", label: "Refer & Earn ₹500", icon: Gift },
-              ].map((subItem) => {
-                const SubIcon = subItem.icon;
-                const isSubActive = walletSubTab === subItem.id;
-                return (
-                  <button
-                    key={subItem.id}
-                    onClick={() => setWalletSubTab(subItem.id as any)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      isSubActive
-                        ? "bg-[#b57d14] text-white shadow-xs font-extrabold"
-                        : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    <SubIcon className="w-3.5 h-3.5" />
-                    <span>{subItem.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {walletSubTab === "wallet" && (
-              <WalletSection
-                user={currentUser}
-                onAddFunds={addWalletFunds}
-                onRedeemCoins={redeemRewards}
-              />
-            )}
-
-            {walletSubTab === "rewards" && (
-              <RewardsSection
-                user={currentUser}
-                onRedeemCoins={redeemRewards}
-                onClaimBirthday={claimBirthdayReward}
-                onBookFleet={() => onNavigate("/#fleet")}
-              />
-            )}
-
-            {walletSubTab === "referral" && (
-              <ReferralSection
-                user={currentUser}
-                onBrowseFleet={() => onNavigate("/#fleet")}
-              />
-            )}
-          </div>
-        )}
-
-        {/* TAB 4: 24/7 SUPPORT & RSA */}
+        {/* TAB 2: 24/7 SUPPORT & RSA */}
         {primaryTab === "support" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <SupportSection
