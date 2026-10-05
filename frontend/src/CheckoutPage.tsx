@@ -213,10 +213,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     setSubmissionError("");
 
     const cleanPhone = customerPhone.replace(/\D/g, "");
+    const keyPin = String(Math.floor(1000 + (Math.abs(bookingId.split("").reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 9000)));
 
     const bookingPayload = {
       bookingId,
       transactionId,
+      keyPin,
+      pickupOtp: keyPin,
       pickup: pickupLocation,
       pickupLocation,
       dropLocation,
@@ -278,11 +281,14 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         loyaltyTier: user?.loyaltyTier || "Gold VIP",
       };
 
-      saveSession(generatedUser, generatedUser.token || user?.token || `session_${Date.now()}`);
+      const finalBookingId = data.data?.bookingId || (data.data?.id ? `MC-2026-${data.data.id}` : bookingId);
+      const finalPin = data.data?.pickupOtp || data.data?.keyPin || keyPin;
 
       setConfirmedBookingData({
         ...bookingPayload,
-        bookingId: data.data?.id ? `MC-2026-${data.data.id}` : bookingId,
+        bookingId: finalBookingId,
+        keyPin: finalPin,
+        pickupOtp: finalPin,
       });
       setCurrentStep("confirmed");
       window.scrollTo({ top: 0, behavior: "smooth" });

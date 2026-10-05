@@ -379,9 +379,29 @@ function sendBookingConfirmationVoucher($pdo, $booking, &$debugLogs = []) {
     $startDate = htmlspecialchars(trim($booking['startDate'] ?? 'Scheduled'));
     $endDate = htmlspecialchars(trim($booking['endDate'] ?? 'Scheduled'));
     $duration = htmlspecialchars(trim((string)($booking['totalDays'] ?? ($booking['duration'] ?? '1 Day'))));
-    if (is_numeric($duration)) $duration = $duration . ' ' . ($duration == 1 ? 'Day' : 'Days');
     $txnId = htmlspecialchars(trim($booking['transactionId'] ?? ('pay_' . bin2hex(random_bytes(6)))));
-    $keyPin = htmlspecialchars(trim($booking['pickupOtp'] ?? sprintf('%04d', rand(1111, 9999))));
+    
+    // Consistent Handover Key PIN across all platforms
+    $rawKeyPin = trim((string)($booking['pickupOtp'] ?? ($booking['keyPin'] ?? '')));
+    if (empty($rawKeyPin) && isset($pdo) && !empty($booking['id'])) {
+        try {
+            $stmtPin = $pdo->prepare("SELECT pickupOtp FROM Bookings WHERE id = ? LIMIT 1");
+            $stmtPin->execute([$booking['id']]);
+            $dbPinRow = $stmtPin->fetch();
+            if (!empty($dbPinRow['pickupOtp'])) {
+                $rawKeyPin = (string)$dbPinRow['pickupOtp'];
+            }
+        } catch (Exception $e) {}
+    }
+    if (empty($rawKeyPin)) {
+        $hash = 0;
+        $seedId = !empty($booking['bookingId']) ? $booking['bookingId'] : ('MC-2026-' . ($booking['id'] ?? '1024'));
+        for ($i = 0; $i < strlen($seedId); $i++) {
+            $hash += ord($seedId[$i]);
+        }
+        $rawKeyPin = (string)(1000 + ($hash % 9000));
+    }
+    $keyPin = htmlspecialchars($rawKeyPin);
 
     // Financial calculations
     $grandTotal = (int)($booking['grandTotal'] ?? ($booking['amount'] ?? 0));
@@ -3855,6 +3875,21 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
             $placeholders = [];
             $values = [];
 
+            // Guarantee consistent handover key PIN across database, email and confirmation
+            if (empty($input['pickupOtp'])) {
+                if (!empty($input['keyPin'])) {
+                    $input['pickupOtp'] = (string)$input['keyPin'];
+                } else {
+                    $seedId = !empty($input['bookingId']) ? $input['bookingId'] : ('MC-2026-' . rand(1000, 9999));
+                    $hash = 0;
+                    for ($i = 0; $i < strlen($seedId); $i++) {
+                        $hash += ord($seedId[$i]);
+                    }
+                    $input['pickupOtp'] = (string)(1000 + ($hash % 9000));
+                }
+            }
+            $input['keyPin'] = $input['pickupOtp'];
+
             foreach ($input as $k => $v) {
                 if ($k !== 'id' && in_array(strtolower($k), $validCols)) {
                     $fields[] = "`$k`";
@@ -3869,6 +3904,9 @@ if (($route === 'bookings' || $route === 'admin/bookings') && $method === 'POST'
                 $stmt->execute($values);
                 $id = (int)$pdo->lastInsertId();
                 $input['id'] = $id;
+                if (empty($input['bookingId'])) {
+                    $input['bookingId'] = "MC-2026-$id";
+                }
 
                 // Auto-sync or create customer record in Customers table
                 $custEmail = trim($input['customerEmail'] ?? '');

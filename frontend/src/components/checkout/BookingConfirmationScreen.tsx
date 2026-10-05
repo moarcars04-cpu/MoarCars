@@ -75,7 +75,11 @@ export const BookingConfirmationScreen: React.FC<BookingConfirmationScreenProps>
   const rawBookingId = bookingData.bookingId || `MC-2026-${bookingData.id || Math.floor(10000 + Math.random() * 90000)}`;
   const bookingId = String(rawBookingId).replace(/^#+/, "");
   const transactionId = bookingData.transactionId || `pay_live_${Date.now().toString().slice(-8)}`;
-  const keyPin = bookingData.keyPin || Math.floor(1000 + (Math.abs(bookingId.split("").reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 9000));
+  const keyPin = String(
+    bookingData.pickupOtp ||
+    bookingData.keyPin ||
+    Math.floor(1000 + (Math.abs(bookingId.split("").reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 9000))
+  );
 
   const pickupInfo = formatDateTimeDisplay(bookingData.startDate, bookingData.startTime);
   const returnInfo = formatDateTimeDisplay(bookingData.endDate, bookingData.endTime);

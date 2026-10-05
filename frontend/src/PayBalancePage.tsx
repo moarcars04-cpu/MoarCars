@@ -357,7 +357,7 @@ export const PayBalancePage: React.FC<PayBalancePageProps> = ({ onNavigate }) =>
                       <Clock className="w-3.5 h-3.5 text-amber-600" /> Security PIN
                     </span>
                     <strong className="text-amber-800 block text-sm font-mono font-black">
-                      #{booking.pickupOtp || "8492"} (For Handover Concierge)
+                      #{booking.pickupOtp || booking.keyPin || String(Math.floor(1000 + (Math.abs(String(booking.bookingId || booking.id || "").split("").reduce((a: number, b: string) => a + b.charCodeAt(0), 0)) % 9000)))} (For Handover Concierge)
                     </strong>
                   </div>
                 </div>
