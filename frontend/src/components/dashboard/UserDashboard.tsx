@@ -68,8 +68,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
     fetchDashboardData,
   } = useAuth();
 
-  // Simplified, clear primary tabs: trips | kyc | wallet | support | profile
-  const [primaryTab, setPrimaryTab] = useState<"trips" | "kyc" | "wallet" | "support" | "profile">("trips");
+  // Simplified, clear primary tabs: trips | wallet | support | profile
+  const [primaryTab, setPrimaryTab] = useState<"trips" | "wallet" | "support" | "profile">("trips");
   const [walletSubTab, setWalletSubTab] = useState<"wallet" | "rewards" | "referral">("wallet");
   const [profileSubTab, setProfileSubTab] = useState<"profile" | "saved" | "reviews" | "settings" | "legal">("profile");
 
@@ -129,8 +129,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
 
   // Backwards-compatible tab router for notifications
   const handleTabSwitch = (tab: string) => {
-    if (tab === "bookings" || tab === "overview" || tab === "trips") setPrimaryTab("trips");
-    else if (tab === "kyc") setPrimaryTab("kyc");
+    if (tab === "bookings" || tab === "overview" || tab === "trips" || tab === "kyc") setPrimaryTab("trips");
     else if (tab === "wallet") { setPrimaryTab("wallet"); setWalletSubTab("wallet"); }
     else if (tab === "rewards") { setPrimaryTab("wallet"); setWalletSubTab("rewards"); }
     else if (tab === "referral") { setPrimaryTab("wallet"); setWalletSubTab("referral"); }
@@ -377,7 +376,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                 Namaste, {currentUser.name}! 🙏
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed">
-                Manage your self-drive bookings, digital trip pass, KYC documents, Moar Wallet funds, and rewards.
+                Manage your self-drive bookings, digital trip pass, Moar Wallet funds, and rewards.
               </p>
             </div>
 
@@ -408,12 +407,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
             </div>
           </div>
 
-          {/* 4 Stat Highlights Grid */}
-          <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 pt-5 border-t border-slate-100">
+          {/* 3 Stat Highlights Grid */}
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-5 border-t border-slate-100">
             {/* Stat 1: Active Trips */}
             <button
               onClick={() => setPrimaryTab("trips")}
-              className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
                 primaryTab === "trips"
                   ? "bg-amber-50/60 border-amber-300 shadow-xs"
                   : "bg-slate-50 hover:bg-slate-100/70 border-slate-200"
@@ -434,7 +433,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                 setPrimaryTab("wallet");
                 setWalletSubTab("wallet");
               }}
-              className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
                 primaryTab === "wallet" && walletSubTab === "wallet"
                   ? "bg-amber-50/60 border-amber-300 shadow-xs"
                   : "bg-slate-50 hover:bg-slate-100/70 border-slate-200"
@@ -455,7 +454,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                 setPrimaryTab("wallet");
                 setWalletSubTab("rewards");
               }}
-              className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
+              className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer ${
                 primaryTab === "wallet" && walletSubTab === "rewards"
                   ? "bg-amber-50/60 border-amber-300 shadow-xs"
                   : "bg-slate-50 hover:bg-slate-100/70 border-slate-200"
@@ -469,56 +468,18 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                 {(currentUser.rewardPoints || 100).toLocaleString("en-IN")}
               </p>
             </button>
-
-            {/* Stat 4: KYC Status */}
-            <button
-              onClick={() => setPrimaryTab("kyc")}
-              className={`text-left p-3 sm:p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                primaryTab === "kyc"
-                  ? "bg-amber-50/60 border-amber-300 shadow-xs"
-                  : "bg-slate-50 hover:bg-slate-100/70 border-slate-200"
-              }`}
-            >
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                KYC Status
-              </span>
-              <div className="mt-1 flex items-center gap-1.5">
-                <ShieldCheck
-                  className={`h-4 w-4 shrink-0 ${
-                    currentUser.kycStatus === "Verified"
-                      ? "text-emerald-600"
-                      : currentUser.kycStatus === "Under Review"
-                      ? "text-amber-600"
-                      : "text-amber-500"
-                  }`}
-                />
-                <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                  {currentUser.kycStatus === "Verified"
-                    ? "Verified"
-                    : currentUser.kycStatus === "Under Review"
-                    ? "In Review"
-                    : "Pending"}
-                </span>
-              </div>
-            </button>
           </div>
         </div>
 
         {/* 3. Streamlined Primary Tab Navigation (Clear & Anti-Confusion) */}
         <div className="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-2xs overflow-x-auto scrollbar-none">
-          <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:grid sm:grid-cols-5">
+          <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:grid sm:grid-cols-4">
             {[
               {
                 id: "trips",
                 label: "My Trips",
                 count: totalTripsCount,
                 icon: Car,
-              },
-              {
-                id: "kyc",
-                label: "KYC Documents",
-                badge: currentUser.kycStatus === "Verified" ? "✓" : "!",
-                icon: ShieldCheck,
               },
               {
                 id: "wallet",
@@ -738,18 +699,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
           </div>
         )}
 
-        {/* TAB 2: KYC & VERIFICATION */}
-        {primaryTab === "kyc" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <KycSection
-              user={currentUser}
-              onKycUpdated={(updated) => setDashboardData((prev) => (prev ? { ...prev, user: updated } : null))}
-              onUploadKyc={uploadKyc}
-            />
-          </div>
-        )}
-
-        {/* TAB 3: WALLET & REWARDS (UNIFIED HUB) */}
+        {/* TAB 2: WALLET & REWARDS (UNIFIED HUB) */}
         {primaryTab === "wallet" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* Sub-Tabs for Wallet Hub */}
