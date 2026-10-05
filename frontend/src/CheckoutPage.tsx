@@ -414,6 +414,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
               size="sm"
               onClick={() => {
                 if (currentStep === "payment") setCurrentStep("details");
+                else if (currentStep === "confirmed") {
+                  if (onNavigate) onNavigate("/");
+                  else window.location.href = "/";
+                }
                 else if (onNavigate) onNavigate(`/car/${car?.id || car?.name}`);
                 else window.history.back();
               }}
@@ -454,7 +458,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       </header>
 
       {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 space-y-6 min-w-0 w-full">
+      <div className={`max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pb-8 space-y-6 min-w-0 w-full ${
+        currentStep === "confirmed" ? "pt-24 sm:pt-28" : "pt-20 sm:pt-24"
+      }`}>
         {/* Stepper Progress Bar */}
         {currentStep !== "confirmed" && (
           <div className="flex items-center justify-center gap-2 sm:gap-6 text-[11px] sm:text-xs font-bold pt-2 overflow-x-auto">
