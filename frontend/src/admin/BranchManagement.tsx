@@ -70,7 +70,10 @@ export default function BranchManagement({
         prev.map((b) => (b.id === editingBranch.id ? updated : b))
       );
       setNotice({ type: "success", text: `Location "${formData.name || editingBranch.name}" updated!` });
-      await adminApi.updateBranch(editingBranch.id, formData);
+      const res = await adminApi.updateBranch(editingBranch.id, formData);
+      if (!res) {
+        setNotice({ type: "error", text: `Server error: Could not save updates for "${editingBranch.name}".` });
+      }
     } else {
       const payload: Partial<BranchItem> = {
         name: formData.name || "New Location",
@@ -81,19 +84,19 @@ export default function BranchManagement({
         status: formData.status || "Active",
         isActive: true,
       };
+      setNotice({ type: "info", text: "Saving location to database..." });
       const created = await adminApi.createBranch(payload);
-      const newB: BranchItem = {
-        id: created?.id || Math.floor(10 + Math.random() * 90),
-        name: payload.name!,
-        city: payload.city!,
-        state: payload.state!,
-        address: payload.address!,
-        mapCoordinates: payload.mapCoordinates || "13.6288° N, 79.4192° E",
-        status: "Active",
-        isActive: true,
-      };
-      setBranches([newB, ...(branches || [])]);
-      setNotice({ type: "success", text: `Pickup Location "${newB.name}" saved in database!` });
+      if (created && created.id) {
+        const newB: BranchItem = {
+          ...payload,
+          ...created,
+          id: Number(created.id),
+        } as BranchItem;
+        setBranches((prev) => [newB, ...(prev || [])]);
+        setNotice({ type: "success", text: `Pickup Location "${newB.name}" saved in database!` });
+      } else {
+        setNotice({ type: "error", text: "Failed to save pickup location to database! Please check server connection." });
+      }
     }
     setIsAddEditModalOpen(false);
     setEditingBranch(null);
@@ -102,9 +105,16 @@ export default function BranchManagement({
 
   const handleDeleteBranch = async (id: number) => {
     if (confirm("Are you sure you want to remove this pickup/drop location?")) {
+      const prevBranches = [...(branches || [])];
       setBranches((prev) => prev.filter((b) => b.id !== id));
-      setNotice({ type: "info", text: `Location #${id} removed.` });
-      await adminApi.deleteBranch(id);
+      setNotice({ type: "info", text: `Removing Location #${id}...` });
+      const success = await adminApi.deleteBranch(id);
+      if (success) {
+        setNotice({ type: "success", text: `Location #${id} deleted from database.` });
+      } else {
+        setBranches(prevBranches);
+        setNotice({ type: "error", text: `Failed to delete Location #${id} from database.` });
+      }
     }
   };
 

@@ -24,10 +24,18 @@ const API_BASE = "/api";
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), 15000);
     const res = await fetch(url, { ...options, signal: controller.signal });
     clearTimeout(timeout);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      try {
+        const errJson = await res.json();
+        console.error(`[API Error ${res.status}] ${url}:`, errJson);
+      } catch {
+        console.error(`[API Error ${res.status}] ${url}`);
+      }
+      return null;
+    }
     const json = await res.json();
     return json.data !== undefined ? json.data : json;
   } catch (err) {

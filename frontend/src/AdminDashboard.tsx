@@ -913,10 +913,10 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
 
   // ----------------------------------------------------------------------
   return (
-    <div className={`min-h-screen flex font-sans antialiased transition-colors duration-200 ${isDark ? "admin-dark dark bg-[#070e1c] text-slate-100" : "admin-light bg-[#f8fafc] text-slate-900"}`}>
-      {/* SIDEBAR NAVIGATION */}
-      <aside className={`w-72 border-r flex flex-col shrink-0 z-40 h-screen sticky top-0 transition-colors duration-200 ${isDark ? "bg-[#070e1c] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"}`}>
-        <div className={`p-6 border-b flex items-center justify-between transition-colors ${isDark ? "border-slate-800" : "border-slate-200"}`}>
+    <div className={`h-screen w-full flex overflow-hidden font-sans antialiased transition-colors duration-200 ${isDark ? "admin-dark dark bg-[#070e1c] text-slate-100" : "admin-light bg-[#f8fafc] text-slate-900"}`}>
+      {/* SIDEBAR NAVIGATION - FIXED & STICKY FULL HEIGHT */}
+      <aside className={`w-72 border-r flex flex-col shrink-0 z-40 h-full select-none transition-colors duration-200 ${isDark ? "bg-[#070e1c] border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900 shadow-sm"}`}>
+        <div className={`p-6 border-b shrink-0 flex items-center justify-between transition-colors ${isDark ? "border-slate-800" : "border-slate-200"}`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#c88d18] to-[#d49b29] flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/25">M</div>
             <div>
@@ -1132,7 +1132,7 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           </div>
         </div>
 
-        <div className={`p-4 border-t flex items-center justify-between transition-colors ${isDark ? "border-slate-800 bg-[#0b1426]/80 text-white" : "border-slate-200 bg-slate-50 text-slate-900"}`}>
+        <div className={`p-4 border-t shrink-0 flex items-center justify-between transition-colors ${isDark ? "border-slate-800 bg-[#0b1426]/80 text-white" : "border-slate-200 bg-slate-50 text-slate-900"}`}>
           <div className="truncate">
             <p className="text-xs font-bold truncate">{currentUser.username}</p>
             <p className="text-[10px] text-emerald-500 font-bold">All Modules Active</p>
@@ -1154,10 +1154,10 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
         </div>
       </aside>
 
-      {/* MAIN VIEWPORT */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        {/* TOP HEADER */}
-        <header className={`h-20 border-b px-8 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl transition-colors ${isDark ? "border-slate-800 bg-[#070e1c]/95 text-white" : "border-slate-200 bg-white/95 text-slate-900 shadow-sm"}`}>
+      {/* MAIN VIEWPORT - INDEPENDENT SMOOTH SCROLLING */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+        {/* TOP HEADER - STICKY AT TOP OF MAIN VIEWPORT */}
+        <header className={`h-20 border-b px-8 flex items-center justify-between sticky top-0 z-30 shrink-0 backdrop-blur-xl transition-colors ${isDark ? "border-slate-800 bg-[#070e1c]/95 text-white" : "border-slate-200 bg-white/95 text-slate-900 shadow-sm"}`}>
           <div className="relative w-96">
             <Search className={`w-4 h-4 absolute left-3.5 top-3 ${isDark ? "text-slate-400" : "text-slate-500"}`} />
             <input

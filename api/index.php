@@ -60,7 +60,13 @@ function getTableColumns($pdo, $table) {
             $cols = $pdo->query("SHOW COLUMNS FROM `$table`")->fetchAll(PDO::FETCH_COLUMN);
             $cache[$table] = array_map('strtolower', $cols);
         } catch (Exception $e) {
-            $cache[$table] = [];
+            try {
+                $lower = strtolower($table);
+                $cols = $pdo->query("SHOW COLUMNS FROM `$lower`")->fetchAll(PDO::FETCH_COLUMN);
+                $cache[$table] = array_map('strtolower', $cols);
+            } catch (Exception $e2) {
+                $cache[$table] = [];
+            }
         }
     }
     return $cache[$table];
@@ -4023,6 +4029,9 @@ if ($route === 'admin/branches' && $method === 'POST') {
     if (isset($pdo)) {
         try {
             $validCols = getTableColumns($pdo, 'Branches');
+            if (empty($validCols)) {
+                $validCols = ['name', 'city', 'state', 'address', 'phone', 'managername', 'managerphone', 'manageremail', 'operatinghours', 'totalcars', 'fleetcount', 'staffcount', 'monthlyrevenue', 'mapcoordinates', 'status', 'isactive'];
+            }
             $fields = [];
             $placeholders = [];
             $values = [];
@@ -4042,6 +4051,10 @@ if ($route === 'admin/branches' && $method === 'POST') {
                 $input['id'] = (int)$pdo->lastInsertId();
                 echo json_encode(["success" => true, "message" => "Branch added!", "data" => $input]);
                 exit();
+            } else {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "No valid fields provided for location."]);
+                exit();
             }
         } catch (Exception $e) {
             http_response_code(500);
@@ -4049,7 +4062,8 @@ if ($route === 'admin/branches' && $method === 'POST') {
             exit();
         }
     }
-    echo json_encode(["success" => true, "data" => $input]);
+    http_response_code(500);
+    echo json_encode(["success" => false, "message" => "Database not connected"]);
     exit();
 }
 
@@ -4058,6 +4072,9 @@ if (preg_match('#^admin/branches/([0-9]+)$#', $route, $matches) && ($method === 
     if (isset($pdo)) {
         try {
             $validCols = getTableColumns($pdo, 'Branches');
+            if (empty($validCols)) {
+                $validCols = ['name', 'city', 'state', 'address', 'phone', 'managername', 'managerphone', 'manageremail', 'operatinghours', 'totalcars', 'fleetcount', 'staffcount', 'monthlyrevenue', 'mapcoordinates', 'status', 'isactive'];
+            }
             $fields = [];
             $params = [];
             foreach ($input as $k => $v) {
@@ -4070,12 +4087,21 @@ if (preg_match('#^admin/branches/([0-9]+)$#', $route, $matches) && ($method === 
                 $params[] = $bid;
                 $stmt = $pdo->prepare("UPDATE Branches SET " . implode(", ", $fields) . " WHERE id = ?");
                 $stmt->execute($params);
+                echo json_encode(["success" => true, "message" => "Branch updated!", "data" => $input]);
+                exit();
+            } else {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "No valid fields to update."]);
+                exit();
             }
-            echo json_encode(["success" => true, "message" => "Branch updated!"]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => $e->getMessage()]);
             exit();
-        } catch (Exception $e) {}
+        }
     }
-    echo json_encode(["success" => true, "message" => "Branch updated!"]);
+    http_response_code(500);
+    echo json_encode(["success" => false, "message" => "Database not connected"]);
     exit();
 }
 

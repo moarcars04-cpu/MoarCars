@@ -55,6 +55,14 @@ const Branch = sequelize.define("Branch", {
     type: DataTypes.INTEGER,
     defaultValue: 285000,
   },
+  mapCoordinates: {
+    type: DataTypes.STRING,
+    defaultValue: "13.6288° N, 79.4192° E",
+  },
+  status: {
+    type: DataTypes.STRING,
+    defaultValue: "Active",
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
