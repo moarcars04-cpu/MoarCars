@@ -745,16 +745,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 onRemoveCoupon={() => setAppliedCoupon(null)}
               />
 
-              {/* 3. PAYMENT METHOD SELECTOR */}
-              <PaymentMethodsSection
-                grandTotal={grandTotal}
-                payableNow={payableNow}
-                balanceDue={balanceDue}
-                advancePaymentPercent={advancePaymentPercent}
-                selectedMethod={selectedPaymentMethod}
-                onSelectMethod={setSelectedPaymentMethod}
-              />
-
               {/* Final Submit / Pay CTA */}
               <div className="space-y-3 pt-2">
                 {/* Desktop-only sleek CTA (Mobile uses the sticky bottom bar) */}
