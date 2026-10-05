@@ -89,10 +89,11 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
     "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80";
 
   return (
-    <div className="rounded-3xl border border-slate-800/90 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] p-5 sm:p-6 shadow-2xl space-y-5 text-white backdrop-blur-xl">
-      {/* 1. Header: Vehicle Card */}
-      <div className="flex gap-4 items-start pb-4 border-b border-slate-800/80">
-        <div className="relative h-20 w-28 sm:h-24 sm:w-32 rounded-2xl overflow-hidden bg-slate-950 shrink-0 border border-amber-500/20 shadow-lg group">
+    <div className="rounded-3xl border border-slate-800/90 bg-gradient-to-b from-[#0e1c31] via-[#0b1526] to-[#070e1c] p-4 sm:p-6 shadow-2xl space-y-4 sm:space-y-5 text-white backdrop-blur-xl w-full min-w-0 max-w-full overflow-hidden">
+      {/* 1. Header: Vehicle Card (Mobile stacked banner, Tablet/Desktop side-by-side) */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start pb-4 border-b border-slate-800/80 min-w-0 w-full">
+        {/* Car Image Preview */}
+        <div className="relative w-full sm:w-32 h-44 sm:h-24 rounded-2xl overflow-hidden bg-slate-950 shrink-0 border border-amber-500/20 shadow-lg group">
           <img
             src={defaultCarImage}
             alt={car?.name || "Vehicle"}
@@ -102,11 +103,22 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
                 "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80";
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+          {/* Mobile Overlay Badges on Image */}
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex flex-wrap items-center gap-1.5 sm:hidden">
+            <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 text-[9px] font-black uppercase tracking-wider shadow-sm">
+              {car?.tag || car?.category || "Self Drive"}
+            </span>
+            <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-950/85 backdrop-blur-md border border-emerald-500/30">
+              <ShieldCheck className="h-3 w-3" /> Ghat Certified
+            </span>
+          </div>
         </div>
 
-        <div className="flex-1 min-w-0 space-y-1">
-          <div className="flex flex-wrap items-center gap-1.5">
+        {/* Vehicle Metadata & Specs */}
+        <div className="flex-1 min-w-0 w-full space-y-1.5">
+          {/* Desktop/Tablet Badges */}
+          <div className="hidden sm:flex flex-wrap items-center gap-1.5">
             <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 text-[9px] font-black uppercase tracking-wider shadow-sm">
               {car?.tag || car?.category || "Self Drive"}
             </span>
@@ -115,21 +127,22 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
             </span>
           </div>
 
-          <h3 className="text-base sm:text-lg font-black text-white leading-tight truncate">
+          <h3 className="text-base sm:text-lg font-black text-white leading-tight break-words">
             {car?.name || "Self-Drive Vehicle"}
           </h3>
           <p className="text-[11px] text-slate-400 truncate">
             {car?.variant || "Tirupati Self-Drive Fleet Edition"}
           </p>
 
-          <div className="flex items-center gap-2.5 text-[10px] sm:text-[11px] text-slate-300 pt-0.5">
-            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+          {/* Specs Pills (Cleanly wraps on any screen width) */}
+          <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] text-slate-300 pt-0.5">
+            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5 whitespace-nowrap">
               <Users className="h-3 w-3 text-[#c88d18]" /> {car?.seats || 5} Seats
             </span>
-            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5 whitespace-nowrap">
               <Fuel className="h-3 w-3 text-[#c88d18]" /> {car?.fuelType || "Petrol"}
             </span>
-            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-md border border-white/5">
+            <span className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5 whitespace-nowrap">
               <Gauge className="h-3 w-3 text-[#c88d18]" /> {car?.transmission || "Automatic"}
             </span>
           </div>
@@ -137,17 +150,17 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
       </div>
 
       {/* 2. Trip Timeline (Itinerary) */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+      <div className="space-y-2.5 min-w-0 w-full">
+        <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs font-bold text-slate-300">
           <span className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-[#c88d18]" /> Reserved Itinerary
           </span>
-          <span className="text-[#c88d18] font-mono text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+          <span className="text-[#c88d18] font-mono text-[11px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 whitespace-nowrap">
             {rentalDays} {rentalDays === 1 ? "Day" : "Days"} ({rentalDays * 24}h)
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 p-3 rounded-2xl bg-[#070e1c]/80 border border-slate-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 rounded-2xl bg-[#070e1c]/80 border border-slate-800 min-w-0">
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-1 text-[10px] font-bold text-amber-400 uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> Pickup
@@ -159,7 +172,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
             </p>
           </div>
 
-          <div className="space-y-1 min-w-0 border-l border-slate-800/80 pl-2.5">
+          <div className="space-y-1 min-w-0 sm:border-l sm:border-slate-800/80 sm:pl-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-800/60">
             <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Return
             </div>
@@ -171,7 +184,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+        <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 px-1">
           <span>Booking Mode:</span>
           <span className="font-bold text-emerald-400 flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" /> Self Drive (Unlimited KM)
@@ -180,7 +193,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
       </div>
 
       {/* 3. Itemized Tariff Breakdown */}
-      <div className="space-y-2 pt-3 border-t border-slate-800/80 text-xs">
+      <div className="space-y-2 pt-3 border-t border-slate-800/80 text-xs min-w-0 w-full">
         <div className="flex justify-between text-slate-400">
           <span>Base Tariff ({rentalDays} Days)</span>
           <span className="font-bold text-white">₹{baseFare.toLocaleString("en-IN")}</span>
@@ -196,37 +209,37 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         {/* Discounts */}
         {couponDiscount > 0 && (
           <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
-            <span className="flex items-center gap-1.5">
-              <Tag className="h-3.5 w-3.5 text-emerald-400" /> Promo Code ({couponCode})
+            <span className="flex items-center gap-1.5 truncate">
+              <Tag className="h-3.5 w-3.5 text-emerald-400 shrink-0" /> Promo ({couponCode})
             </span>
-            <span>-₹{couponDiscount.toLocaleString("en-IN")}</span>
+            <span className="shrink-0">-₹{couponDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {walletDeduction > 0 && (
           <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
             <span className="flex items-center gap-1.5">
-              <Wallet className="h-3.5 w-3.5 text-emerald-400" /> Wallet Balance
+              <Wallet className="h-3.5 w-3.5 text-emerald-400 shrink-0" /> Wallet Balance
             </span>
-            <span>-₹{walletDeduction.toLocaleString("en-IN")}</span>
+            <span className="shrink-0">-₹{walletDeduction.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {rewardDeduction > 0 && (
           <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
             <span className="flex items-center gap-1.5">
-              <Coins className="h-3.5 w-3.5 text-emerald-400" /> Reward Points
+              <Coins className="h-3.5 w-3.5 text-emerald-400 shrink-0" /> Reward Points
             </span>
-            <span>-₹{rewardDeduction.toLocaleString("en-IN")}</span>
+            <span className="shrink-0">-₹{rewardDeduction.toLocaleString("en-IN")}</span>
           </div>
         )}
 
         {referralDiscount > 0 && (
           <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
             <span className="flex items-center gap-1.5">
-              <Gift className="h-3.5 w-3.5 text-emerald-400" /> Referral Discount
+              <Gift className="h-3.5 w-3.5 text-emerald-400 shrink-0" /> Referral Discount
             </span>
-            <span>-₹{referralDiscount.toLocaleString("en-IN")}</span>
+            <span className="shrink-0">-₹{referralDiscount.toLocaleString("en-IN")}</span>
           </div>
         )}
 
@@ -245,18 +258,18 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
 
         {/* 4. Luxury Advance Payment Callout Box */}
         {finalBalanceDue > 0 ? (
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 via-[#c88d18]/20 to-amber-500/10 border border-amber-400/40 space-y-2 text-xs shadow-lg shadow-amber-500/10">
-            <div className="flex items-center justify-between font-black text-white">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 via-[#c88d18]/20 to-amber-500/10 border border-amber-400/40 space-y-2 text-xs shadow-lg shadow-amber-500/10 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-1 font-black text-white">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-[#c88d18]" />
-                <span>Pay {displayAdvancePercent}% Advance Online Now:</span>
+                <Sparkles className="h-4 w-4 text-[#c88d18] shrink-0" />
+                <span className="text-[11px] sm:text-xs">Pay {displayAdvancePercent}% Advance Online:</span>
               </span>
-              <span className="text-lg sm:text-xl text-[#c88d18] font-black">
+              <span className="text-base sm:text-xl text-[#c88d18] font-black">
                 ₹{finalPayableNow.toLocaleString("en-IN")}
               </span>
             </div>
-            <div className="flex items-center justify-between text-slate-300 font-semibold text-[11px] pt-1.5 border-t border-amber-400/20">
-              <span>Remaining Balance Payable at Handover:</span>
+            <div className="flex flex-wrap items-center justify-between gap-1 text-slate-300 font-semibold text-[10px] sm:text-[11px] pt-1.5 border-t border-amber-400/20">
+              <span>Balance at Handover:</span>
               <span className="text-white font-bold">₹{finalBalanceDue.toLocaleString("en-IN")}</span>
             </div>
           </div>
@@ -269,10 +282,10 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
       </div>
 
       {/* 5. Verified Reservation Note */}
-      <div className="p-3 rounded-2xl bg-[#070e1c]/80 border border-slate-800/90 flex items-center gap-2.5 text-[11px] text-slate-400">
+      <div className="p-3 rounded-2xl bg-[#070e1c]/80 border border-slate-800/90 flex items-center gap-2.5 text-[10px] sm:text-[11px] text-slate-400 min-w-0">
         <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
         <span>
-          Instant booking confirmed with <strong className="text-white">{displayAdvancePercent}%</strong> online advance. Balance payable at car handover. Zero hidden charges.
+          Instant booking confirmed with <strong className="text-white">{displayAdvancePercent}%</strong> advance. Balance payable at vehicle handover.
         </span>
       </div>
     </div>

@@ -404,7 +404,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   return (
-    <main className="min-h-screen bg-[#070e1c] text-white transition-colors duration-300 pb-32 lg:pb-16 selection:bg-[#c88d18] selection:text-slate-950">
+    <main className="min-h-screen bg-[#070e1c] text-white transition-colors duration-300 pb-32 lg:pb-16 selection:bg-[#c88d18] selection:text-slate-950 overflow-x-hidden w-full max-w-full">
       {/* Checkout Top Bar */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-800/80 bg-[#070e1c]/90 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
@@ -454,7 +454,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       </header>
 
       {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-8 space-y-6 min-w-0 w-full">
         {/* Stepper Progress Bar */}
         {currentStep !== "confirmed" && (
           <div className="flex items-center justify-center gap-2 sm:gap-6 text-[11px] sm:text-xs font-bold pt-2 overflow-x-auto">
