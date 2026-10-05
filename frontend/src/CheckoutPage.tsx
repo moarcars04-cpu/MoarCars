@@ -58,6 +58,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [customerName, setCustomerName] = useState(user?.name || "");
   const [customerPhone, setCustomerPhone] = useState(user?.phone ? user.phone.replace(/\D/g, "").slice(-10) : "");
   const [customerEmail, setCustomerEmail] = useState(user?.email || "");
+  const [customerAddress, setCustomerAddress] = useState(user?.address || "");
+  const [customerCity, setCustomerCity] = useState(user?.city || "Tirupati");
   const [drivingLicense, setDrivingLicense] = useState(user?.dlNumber || "");
   const [emergencyContact, setEmergencyContact] = useState("");
 
@@ -66,6 +68,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     name?: string;
     phone?: string;
     email?: string;
+    address?: string;
     dl?: string;
   }>({});
 
@@ -109,22 +112,34 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       if (!customerName) setCustomerName(user.name || "");
       if (!customerPhone && user.phone) setCustomerPhone(user.phone.replace(/\D/g, "").slice(-10));
       if (!customerEmail) setCustomerEmail(user.email || "");
+      if (!customerAddress && user.address) setCustomerAddress(user.address);
+      if (!customerCity && user.city) setCustomerCity(user.city);
       if (!drivingLicense && user.dlNumber) setDrivingLicense(user.dlNumber);
     }
   }, [user]);
 
-  // Duration in Days
-  const rentalDays = useMemo(() => {
+  // Accurate Duration Calculation (Exact Hours & 24h Days Tariff)
+  const rentalDuration = useMemo(() => {
     try {
       const start = new Date(`${startDate}T${startTime}`);
       const end = new Date(`${endDate}T${endTime}`);
       const diffMs = end.getTime() - start.getTime();
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      return Math.max(1, diffDays);
+      if (isNaN(diffMs) || diffMs <= 0) {
+        return { totalHours: 24, totalDays: 1, durationLabel: "24 Hours (1 Day Tariff)" };
+      }
+      const totalHours = Math.max(1, Math.round(diffMs / (1000 * 60 * 60)));
+      const totalDays = Math.max(1, Math.ceil(totalHours / 24));
+      return {
+        totalHours,
+        totalDays,
+        durationLabel: `${totalHours} Hours (${totalDays} ${totalDays === 1 ? "Day" : "Days"} Tariff)`,
+      };
     } catch {
-      return 2;
+      return { totalHours: 48, totalDays: 2, durationLabel: "48 Hours (2 Days Tariff)" };
     }
   }, [startDate, startTime, endDate, endTime]);
+
+  const rentalDays = rentalDuration.totalDays;
 
   // Live System Financial Settings
   const [systemSettings, setSystemSettings] = useState<{
@@ -178,17 +193,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   // Grand Total based strictly on Daily Rental Days + Extras + GST - Discounts
   const grandTotal = subtotalAfterDiscounts + gstAmount;
 
-  // Dynamic Advance Payment Calculation (Customer pays admin configured % online)
-  const advancePaymentPercent =
-    car?.advancePaymentPercent !== undefined && car?.advancePaymentPercent !== null && car?.advancePaymentPercent !== ""
-      ? Number(car.advancePaymentPercent)
-      : Number(systemSettings.advancePaymentPercent ?? 20);
-
-  const payableNow =
-    advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0
-      ? Math.round(grandTotal * (advancePaymentPercent / 100))
-      : grandTotal;
-
+  // Exact 10% Non-Refundable Booking Advance Calculation
+  const advancePaymentPercent = 10;
+  const payableNow = Math.round(grandTotal * (advancePaymentPercent / 100));
   const balanceDue = Math.max(0, grandTotal - payableNow);
   const securityDeposit = 0;
 
@@ -232,6 +239,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       customerName: customerName.trim(),
       customerPhone: cleanPhone,
       customerEmail: customerEmail.trim().toLowerCase(),
+      customerAddress: customerAddress.trim(),
+      customerCity: customerCity.trim(),
       drivingLicense: drivingLicense.trim().toUpperCase(),
       emergencyContact,
       status: "Confirmed",
@@ -239,6 +248,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       paymentMethod: "Razorpay",
       bookingSource: "Web Checkout Gateway",
       totalDays: rentalDays,
+      totalHours: rentalDuration.totalHours,
+      duration: rentalDuration.durationLabel,
       amount: grandTotal,
       baseFare,
       deliveryFee,
@@ -253,7 +264,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       gstAmount,
       securityDeposit: 0,
       grandTotal,
-      advancePaymentPercent,
+      advancePaymentPercent: 10,
       paidAmount: payableNow,
       balanceDue,
       signatureData: "ONLINE_VERIFIED",
@@ -319,8 +330,15 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Final Payment & Reservation Submission with Razorpay & Strict Form Validation
   const handleConfirmAndPay = async () => {
+    // 0. Mandatory Authentication Check
+    if (!user) {
+      openAuthModal("login");
+      setSubmissionError("Authentication required: Please sign in or create an account to proceed with your booking.");
+      return;
+    }
+
     // 1. Strict Form Validations
-    const errors: { name?: string; phone?: string; email?: string; dl?: string } = {};
+    const errors: { name?: string; phone?: string; email?: string; address?: string; dl?: string } = {};
 
     if (!customerName || customerName.trim().length < 3) {
       errors.name = "Full Legal Name is required (minimum 3 characters).";
@@ -334,6 +352,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!customerEmail || !emailRegex.test(customerEmail.trim())) {
       errors.email = "Please enter a valid email address (e.g. name@example.com).";
+    }
+
+    if (!customerAddress || customerAddress.trim().length < 5) {
+      errors.address = "Full Street Address is required (minimum 5 characters).";
     }
 
     if (!drivingLicense || drivingLicense.trim().length < 5) {
@@ -744,6 +766,42 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       </p>
                     )}
                   </div>
+
+                  {/* Customer Address & City */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                      <span>Full Residential Address <span className="text-amber-600">*</span></span>
+                      <span className="text-[10px] text-slate-400">Required for self-drive insurance</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        placeholder="House / Flat / Street / Landmark"
+                        value={customerAddress}
+                        onChange={(e) => {
+                          setCustomerAddress(e.target.value);
+                          if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: undefined }));
+                        }}
+                        className={`sm:col-span-2 w-full px-4 py-3.5 rounded-2xl bg-slate-50 border text-sm text-slate-900 placeholder-slate-400 font-medium outline-none transition-all shadow-2xs ${
+                          fieldErrors.address
+                            ? "border-rose-500 bg-rose-50 focus:ring-2 focus:ring-rose-500/20"
+                            : "border-slate-300 focus:border-[#b57d14] focus:bg-white focus:ring-2 focus:ring-[#b57d14]/20"
+                        }`}
+                      />
+                      <input
+                        type="text"
+                        placeholder="City (e.g. Tirupati)"
+                        value={customerCity}
+                        onChange={(e) => setCustomerCity(e.target.value)}
+                        className="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-300 focus:border-[#b57d14] focus:bg-white focus:ring-2 focus:ring-[#b57d14]/20 text-sm text-slate-900 placeholder-slate-400 font-medium outline-none transition-all shadow-2xs"
+                      />
+                    </div>
+                    {fieldErrors.address && (
+                      <p className="text-xs font-medium text-rose-600 flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {fieldErrors.address}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -755,8 +813,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 onRemoveCoupon={() => setAppliedCoupon(null)}
               />
 
+              {/* 10% Non-Refundable Advance Callout Notice */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/60 border border-amber-300 text-slate-900 text-xs space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-amber-900">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-slate-950 text-xs font-black">
+                    10%
+                  </span>
+                  <span>10% Non-Refundable Booking Advance</span>
+                </div>
+                <p className="text-[11px] text-slate-700 leading-relaxed">
+                  You are paying <strong className="text-slate-950 font-bold">₹{payableNow.toLocaleString("en-IN")}</strong> online via Razorpay to reserve this car exclusively. The remaining 90% balance of <strong className="text-slate-950 font-bold">₹{balanceDue.toLocaleString("en-IN")}</strong> is paid at vehicle handover or online via your digital pass. The 10% advance is non-refundable upon vehicle allocation.
+                </p>
+              </div>
+
               {/* Final Submit / Pay CTA */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-1">
                 {/* Desktop-only sleek CTA (Mobile uses the sticky bottom bar) */}
                 <Button
                   size="lg"
@@ -768,7 +839,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     "Processing Razorpay Checkout..."
                   ) : (
                     <>
-                      <span>Pay ₹{payableNow.toLocaleString("en-IN")} Advance via Razorpay</span>
+                      <span>Pay ₹{payableNow.toLocaleString("en-IN")} (10% Advance) via Razorpay</span>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}

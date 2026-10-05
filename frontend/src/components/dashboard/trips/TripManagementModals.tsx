@@ -178,21 +178,39 @@ export const ExtendBookingModal: React.FC<ModalProps> = ({
 
   const handleConfirmExtension = async () => {
     setIsExtending(true);
+    let calculatedEnd = booking.endDate;
+    try {
+      const baseDate = new Date(booking.endDate ? booking.endDate.replace(/-/g, "/") : Date.now());
+      if (!isNaN(baseDate.getTime())) {
+        if (selectedExtension === "4h") baseDate.setHours(baseDate.getHours() + 4);
+        else if (selectedExtension === "1d") baseDate.setDate(baseDate.getDate() + 1);
+        else if (selectedExtension === "2d") baseDate.setDate(baseDate.getDate() + 2);
+        calculatedEnd = baseDate.toISOString().slice(0, 16).replace("T", " ");
+      }
+    } catch {}
+
     const updatedData = {
       ...booking,
-      amount: (booking.amount || booking.grandTotal || 2499) + currentPlan.price,
-      grandTotal: (booking.grandTotal || booking.amount || 2499) + currentPlan.price,
-      notes: `${booking.notes || ""} [Extended by ${currentPlan.title}]`,
+      extensionStatus: "Requested",
+      extensionRequestedEndDate: calculatedEnd,
+      extensionExtraFare: currentPlan.price,
+      extensionReason: currentPlan.desc,
+      notes: `${booking.notes || ""} [Extension requested: ${currentPlan.title} (+₹${currentPlan.price})]`,
     };
 
     try {
-      await fetch(`/api/bookings/${booking.id}`, {
-        method: "PUT",
+      await fetch("/api/bookings/extend", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData),
+        body: JSON.stringify({
+          bookingId: booking.bookingId || booking.id,
+          requestedEndDate: calculatedEnd,
+          extraFare: currentPlan.price,
+          reason: currentPlan.desc,
+        }),
       });
     } catch (e) {
-      console.warn("Extend booking error:", e);
+      console.warn("Extend booking request error:", e);
     } finally {
       setIsExtending(false);
       onSuccess(updatedData);
@@ -205,12 +223,16 @@ export const ExtendBookingModal: React.FC<ModalProps> = ({
       <div className="relative w-full max-w-md rounded-3xl bg-card border border-border p-6 shadow-2xl space-y-5 text-brand-ink">
         <div className="flex items-center justify-between border-b border-border pb-3">
           <h3 className="text-base font-extrabold text-brand-navy flex items-center gap-2">
-            <Clock className="h-4 w-4 text-brand-teal" /> Extend Your Rental Duration
+            <Clock className="h-4 w-4 text-brand-teal" /> Request Trip Extension from Admin
           </h3>
           <button onClick={onClose} className="h-7 w-7 rounded-full bg-brand-mist flex items-center justify-center">
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        <p className="text-xs text-muted-foreground">
+          Need extra time for your Tirupati trip? Select an extension duration below. Admin will review and approve your request in real time.
+        </p>
 
         <div className="space-y-3">
           {extensionPlans.map((plan) => (
@@ -244,9 +266,9 @@ export const ExtendBookingModal: React.FC<ModalProps> = ({
           <Button
             onClick={handleConfirmExtension}
             disabled={isExtending}
-            className="rounded-xl bg-brand-teal text-white font-bold text-xs px-5 shadow"
+            className="rounded-xl bg-brand-teal text-white font-bold text-xs px-5 shadow cursor-pointer active:scale-95"
           >
-            {isExtending ? "Authorizing Extension..." : `Extend & Pay ₹${currentPlan.price}`}
+            {isExtending ? "Submitting Request..." : `Request Extension (+₹${currentPlan.price.toLocaleString("en-IN")})`}
           </Button>
         </div>
       </div>

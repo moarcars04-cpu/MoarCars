@@ -116,6 +116,20 @@ export const adminApi = {
       body: JSON.stringify(booking),
     });
   },
+  async approveExtension(bookingId: string | number): Promise<any | null> {
+    return fetchJson<any>(`${API_BASE}/admin/bookings/approve-extension`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId }),
+    });
+  },
+  async rejectExtension(bookingId: string | number, reason?: string): Promise<any | null> {
+    return fetchJson<any>(`${API_BASE}/admin/bookings/reject-extension`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId, reason }),
+    });
+  },
   async deleteBooking(id: number): Promise<boolean> {
     const res = await fetchJson<{ success: boolean }>(`${API_BASE}/admin/bookings/${id}`, {
       method: "DELETE",

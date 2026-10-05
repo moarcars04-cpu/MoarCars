@@ -262,14 +262,14 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-1 font-black text-slate-900">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="h-4 w-4 text-[#b57d14] shrink-0" />
-                <span className="text-[11px] sm:text-xs">Pay {displayAdvancePercent}% Advance Online:</span>
+                <span className="text-[11px] sm:text-xs">10% Non-Refundable Advance Online:</span>
               </span>
               <span className="text-base sm:text-xl text-amber-800 font-black">
                 ₹{finalPayableNow.toLocaleString("en-IN")}
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-1 text-slate-700 font-semibold text-[10px] sm:text-[11px] pt-1.5 border-t border-amber-300/80">
-              <span>Balance at Handover:</span>
+              <span>Remaining 90% Balance at Handover:</span>
               <span className="text-slate-900 font-bold">₹{finalBalanceDue.toLocaleString("en-IN")}</span>
             </div>
           </div>
@@ -285,7 +285,7 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
       <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2.5 text-[10px] sm:text-[11px] text-slate-600 min-w-0">
         <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
         <span>
-          Instant booking confirmed with <strong className="text-slate-900">{displayAdvancePercent}%</strong> advance. Balance payable at vehicle handover.
+          Instant confirmation with <strong className="text-slate-900">10% Non-Refundable Advance</strong>. 90% balance payable at station handover or online.
         </span>
       </div>
     </div>

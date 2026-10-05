@@ -113,7 +113,7 @@ function formatCarResponse($c) {
     $c['pricePerMonth'] = isset($c['pricePerMonth']) ? (int)$c['pricePerMonth'] : ($c['pricePerDay'] * 22);
     $c['securityDeposit'] = isset($c['securityDeposit']) ? (int)$c['securityDeposit'] : 3000;
     $c['lateFeePerHour'] = isset($c['lateFeePerHour']) ? (int)$c['lateFeePerHour'] : 150;
-    $c['advancePaymentPercent'] = (isset($c['advancePaymentPercent']) && $c['advancePaymentPercent'] !== null && $c['advancePaymentPercent'] !== '') ? (int)$c['advancePaymentPercent'] : 20;
+    $c['advancePaymentPercent'] = (isset($c['advancePaymentPercent']) && $c['advancePaymentPercent'] !== null && $c['advancePaymentPercent'] !== '') ? (int)$c['advancePaymentPercent'] : 10;
     $c['hasSunroof'] = isset($c['hasSunroof']) ? (bool)$c['hasSunroof'] : false;
     $c['hasCarPlay'] = isset($c['hasCarPlay']) ? (bool)$c['hasCarPlay'] : true;
     $c['hasAC'] = isset($c['hasAC']) ? (bool)$c['hasAC'] : true;
@@ -654,8 +654,8 @@ function sendBookingConfirmationVoucher($pdo, $booking, &$debugLogs = []) {
 
               <tr style='background-color: #ecfdf5;'>
                 <td style='padding: 12px 20px; color: #065f46; font-size: 13px; font-weight: 700;'>
-                  ✓ Advance Paid Online (Razorpay)
-                  <span style='display: block; font-size: 10px; font-weight: normal; color: #047857;'>Txn ID: {$txnId}</span>
+                  ✓ 10% Non-Refundable Booking Advance Paid Online
+                  <span style='display: block; font-size: 10px; font-weight: normal; color: #047857;'>Razorpay Txn: {$txnId} &bull; Vehicle Reserved Exclusively</span>
                 </td>
                 <td align='right' style='padding: 12px 20px; color: #047857; font-size: 15px; font-weight: 800;'>
                   ₹" . number_format($paidAmount) . "
@@ -1410,7 +1410,7 @@ function ensureTablesExist($pdo, $force = false) {
                 'pricePerWeek' => "INT DEFAULT 9999",
                 'pricePerMonth' => "INT DEFAULT 34999",
                 'securityDeposit' => "INT DEFAULT 3000",
-                'advancePaymentPercent' => "INT DEFAULT NULL",
+                'advancePaymentPercent' => "INT DEFAULT 10",
                 'lateFeePerHour' => "INT DEFAULT 150",
                 'tag' => "VARCHAR(100) DEFAULT 'Everyday'",
                 'category' => "VARCHAR(100) DEFAULT 'Hatchback'",
@@ -1488,7 +1488,7 @@ function ensureTablesExist($pdo, $force = false) {
                 'gstRate' => "INT DEFAULT 18",
                 'gstAmount' => "INT DEFAULT 0",
                 'grandTotal' => "INT DEFAULT 0",
-                'advancePaymentPercent' => "INT DEFAULT 30",
+                'advancePaymentPercent' => "INT DEFAULT 10",
                 'paidAmount' => "INT DEFAULT 0",
                 'balanceDue' => "INT DEFAULT 0",
                 'drivingLicense' => "VARCHAR(100) DEFAULT NULL",
@@ -1496,6 +1496,13 @@ function ensureTablesExist($pdo, $force = false) {
                 'signatureData' => "LONGTEXT DEFAULT NULL",
                 'pickupLocation' => "VARCHAR(255) DEFAULT NULL",
                 'dropLocation' => "VARCHAR(255) DEFAULT NULL",
+                'customerAddress' => "TEXT DEFAULT NULL",
+                'extensionStatus' => "VARCHAR(50) DEFAULT NULL",
+                'extensionRequestedEndDate' => "VARCHAR(100) DEFAULT NULL",
+                'extensionExtraFare' => "INT DEFAULT 0",
+                'extensionReason' => "TEXT DEFAULT NULL",
+                'userRating' => "INT DEFAULT NULL",
+                'userReview' => "TEXT DEFAULT NULL",
                 'paymentMethod' => "VARCHAR(50) DEFAULT 'UPI'",
                 'paymentStatus' => "VARCHAR(50) DEFAULT 'Paid'",
                 'bookingSource' => "VARCHAR(100) DEFAULT 'Web Portal'",
@@ -1770,7 +1777,7 @@ function ensureTablesExist($pdo, $force = false) {
                     'smtpPort' => '465',
                     'smtpUser' => 'moarcars04@gmail.com',
                     'gstRate' => '18',
-                    'advancePaymentPercent' => '30',
+                    'advancePaymentPercent' => '10',
                     'defaultSecurityDeposit' => '3000',
                     'currency' => 'INR (₹)',
                     'timezone' => 'Asia/Kolkata (IST +5:30)',
@@ -4309,6 +4316,204 @@ if (($route === 'bookings/pickup-inspection' || $route === 'admin/bookings/picku
     exit();
 }
 
+// ----------------------------------------------------------------------
+// TRIP EXTENSION REQUESTS & ADMIN APPROVAL APIS
+// ----------------------------------------------------------------------
+
+// POST /api/bookings/extend (User raises trip extension request to admin)
+if (($route === 'bookings/extend' || $route === 'admin/bookings/extend') && $method === 'POST') {
+    $bookingId = trim($input['bookingId'] ?? ($input['id'] ?? ''));
+    $requestedEndDate = trim($input['requestedEndDate'] ?? ($input['newEndDate'] ?? ''));
+    $requestedEndTime = trim($input['requestedEndTime'] ?? ($input['newEndTime'] ?? ''));
+    $extraFare = (int)($input['extraFare'] ?? 0);
+    $reason = trim($input['reason'] ?? 'Customer requested rental extension for road trip');
+
+    if (empty($bookingId) || empty($requestedEndDate)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Booking reference and requested extension date are required."]);
+        exit();
+    }
+
+    $combinedRequestedEnd = !empty($requestedEndTime) ? "$requestedEndDate $requestedEndTime" : $requestedEndDate;
+
+    if (isset($pdo)) {
+        try {
+            $cleanId = preg_replace('/[^0-9]/', '', $bookingId);
+            $stmt = $pdo->prepare("SELECT * FROM Bookings WHERE bookingId = ? OR id = ? LIMIT 1");
+            $stmt->execute([$bookingId, $cleanId ?: 0]);
+            $b = $stmt->fetch();
+
+            if ($b) {
+                $upd = $pdo->prepare("
+                    UPDATE Bookings SET 
+                        extensionStatus = 'Requested',
+                        extensionRequestedEndDate = ?,
+                        extensionExtraFare = ?,
+                        extensionReason = ?
+                    WHERE id = ?
+                ");
+                $upd->execute([$combinedRequestedEnd, $extraFare, $reason, $b['id']]);
+
+                // Create admin alert notification
+                try {
+                    $nid = 'NOTIF-EXT-' . time() . '-' . rand(100, 999);
+                    $carName = $b['carName'] ?? 'Vehicle';
+                    $custName = $b['customerName'] ?? 'Customer';
+                    $insNotif = $pdo->prepare("
+                        INSERT INTO Notifications (id, title, message, type, time, isRead, link)
+                        VALUES (?, ?, ?, 'warning', ?, 0, 'bookings')
+                    ");
+                    $insNotif->execute([
+                        $nid,
+                        "⚡ Trip Extension Requested: #{$b['id']}",
+                        "$custName requested extending $carName to $combinedRequestedEnd (+₹" . number_format($extraFare) . "). Reason: $reason",
+                        date('Y-m-d H:i')
+                    ]);
+                } catch (Exception $ne) {}
+
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Trip extension request submitted successfully to admin! Your request is pending approval.",
+                    "data" => [
+                        "bookingId" => $b['bookingId'] ?: $b['id'],
+                        "extensionStatus" => "Requested",
+                        "extensionRequestedEndDate" => $combinedRequestedEnd,
+                        "extensionExtraFare" => $extraFare
+                    ]
+                ]);
+                exit();
+            } else {
+                http_response_code(404);
+                echo json_encode(["success" => false, "message" => "Booking reference not found."]);
+                exit();
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Extension error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode(["success" => true, "message" => "Extension request recorded."]);
+    exit();
+}
+
+// POST /api/admin/bookings/approve-extension (Admin approves extension)
+if (($route === 'admin/bookings/approve-extension' || $route === 'bookings/approve-extension') && $method === 'POST') {
+    $bookingId = trim($input['bookingId'] ?? ($input['id'] ?? ''));
+    if (empty($bookingId)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Booking ID is required."]);
+        exit();
+    }
+
+    if (isset($pdo)) {
+        try {
+            $cleanId = preg_replace('/[^0-9]/', '', $bookingId);
+            $stmt = $pdo->prepare("SELECT * FROM Bookings WHERE bookingId = ? OR id = ? LIMIT 1");
+            $stmt->execute([$bookingId, $cleanId ?: 0]);
+            $b = $stmt->fetch();
+
+            if ($b) {
+                $newEnd = !empty($b['extensionRequestedEndDate']) ? $b['extensionRequestedEndDate'] : ($input['newEndDate'] ?? $b['endDate']);
+                $extraFare = (int)($b['extensionExtraFare'] ?? ($input['extraFare'] ?? 0));
+                $newTotal = (int)($b['grandTotal'] ?? $b['amount'] ?? 0) + $extraFare;
+                $newBal = (int)($b['balanceDue'] ?? 0) + $extraFare;
+
+                $upd = $pdo->prepare("
+                    UPDATE Bookings SET 
+                        endDate = ?,
+                        grandTotal = ?,
+                        amount = ?,
+                        balanceDue = ?,
+                        extensionStatus = 'Approved',
+                        notes = CONCAT(IFNULL(notes, ''), ' [Admin approved extension to ', ?, ' (+₹', ?, ')]')
+                    WHERE id = ?
+                ");
+                $upd->execute([$newEnd, $newTotal, $newTotal, $newBal, $newEnd, $extraFare, $b['id']]);
+
+                // Create customer notification
+                try {
+                    $nid = 'NOTIF-EXT-APP-' . time() . '-' . rand(100, 999);
+                    $insNotif = $pdo->prepare("
+                        INSERT INTO Notifications (id, title, message, type, time, isRead, link)
+                        VALUES (?, ?, ?, 'success', ?, 0, 'trips')
+                    ");
+                    $insNotif->execute([
+                        $nid,
+                        "✅ Trip Extension Approved!",
+                        "Your trip extension for {$b['carName']} to $newEnd has been approved by admin.",
+                        date('Y-m-d H:i')
+                    ]);
+                } catch (Exception $ne) {}
+
+                // Send email update to customer with updated return time and balance
+                $updatedBooking = array_merge($b, [
+                    'endDate' => $newEnd,
+                    'grandTotal' => $newTotal,
+                    'balanceDue' => $newBal,
+                    'extensionStatus' => 'Approved'
+                ]);
+                $emailLogs = [];
+                sendBookingConfirmationVoucher($pdo, $updatedBooking, $emailLogs);
+
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Extension approved! Trip return date updated to $newEnd.",
+                    "data" => $updatedBooking
+                ]);
+                exit();
+            } else {
+                http_response_code(404);
+                echo json_encode(["success" => false, "message" => "Booking not found."]);
+                exit();
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Approval error: " . $e->getMessage()]);
+            exit();
+        }
+    }
+
+    echo json_encode(["success" => true, "message" => "Extension approved."]);
+    exit();
+}
+
+// POST /api/admin/bookings/reject-extension (Admin declines extension)
+if (($route === 'admin/bookings/reject-extension' || $route === 'bookings/reject-extension') && $method === 'POST') {
+    $bookingId = trim($input['bookingId'] ?? ($input['id'] ?? ''));
+    $reason = trim($input['reason'] ?? 'Vehicle is reserved for another customer after scheduled dropoff.');
+
+    if (isset($pdo)) {
+        try {
+            $cleanId = preg_replace('/[^0-9]/', '', $bookingId);
+            $stmt = $pdo->prepare("SELECT * FROM Bookings WHERE bookingId = ? OR id = ? LIMIT 1");
+            $stmt->execute([$bookingId, $cleanId ?: 0]);
+            $b = $stmt->fetch();
+
+            if ($b) {
+                $upd = $pdo->prepare("
+                    UPDATE Bookings SET 
+                        extensionStatus = 'Rejected',
+                        notes = CONCAT(IFNULL(notes, ''), ' [Extension declined: ', ?, ']')
+                    WHERE id = ?
+                ");
+                $upd->execute([$reason, $b['id']]);
+
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Extension request declined.",
+                    "data" => ["id" => $b['id'], "extensionStatus" => "Rejected"]
+                ]);
+                exit();
+            }
+        } catch (Exception $e) {}
+    }
+
+    echo json_encode(["success" => true, "message" => "Extension request declined."]);
+    exit();
+}
+
 // POST /api/bookings/return-inspection
 if (($route === 'bookings/return-inspection' || $route === 'admin/bookings/return-inspection') && $method === 'POST') {
     $bookingId = (int)($input['id'] ?? ($input['bookingId'] ?? 0));
@@ -5016,7 +5221,38 @@ if (($route === 'reviews' || $route === 'admin/reviews') && $method === 'POST') 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($values);
                 $input['id'] = (int)$pdo->lastInsertId();
-                echo json_encode(["success" => true, "message" => "Review submitted successfully!", "data" => $input]);
+
+                // Link to Bookings table if bookingId is provided
+                if (!empty($input['bookingId'])) {
+                    try {
+                        $bId = $input['bookingId'];
+                        $cleanBId = preg_replace('/[^0-9]/', '', $bId);
+                        $uRating = (int)($input['rating'] ?? 5);
+                        $uReview = trim($input['comment'] ?? ($input['reviewText'] ?? ($input['review'] ?? '')));
+                        $bStmt = $pdo->prepare("UPDATE Bookings SET userRating = ?, userReview = ? WHERE bookingId = ? OR id = ?");
+                        $bStmt->execute([$uRating, $uReview, $bId, $cleanBId ?: 0]);
+                    } catch (Exception $be) {}
+                }
+
+                // Add Admin Notification
+                try {
+                    $nid = 'NOTIF-REV-' . time() . '-' . rand(100, 999);
+                    $carName = $input['carName'] ?? 'Vehicle';
+                    $custName = $input['author'] ?? ($input['customerName'] ?? 'Customer');
+                    $rating = (int)($input['rating'] ?? 5);
+                    $insNotif = $pdo->prepare("
+                        INSERT INTO Notifications (id, title, message, type, time, isRead, link)
+                        VALUES (?, ?, ?, 'info', ?, 0, 'reviews')
+                    ");
+                    $insNotif->execute([
+                        $nid,
+                        "⭐ New Customer Review: $rating Stars",
+                        "$custName rated $carName $rating/5 stars. Check Customer Reviews tab.",
+                        date('Y-m-d H:i')
+                    ]);
+                } catch (Exception $ne) {}
+
+                echo json_encode(["success" => true, "message" => "Review submitted successfully! Thank you for your feedback.", "data" => $input]);
                 exit();
             }
         } catch (Exception $e) {

@@ -48,6 +48,8 @@ import { SettingsSection } from "./SettingsSection";
 import { LegalSection } from "./LegalSection";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { GstInvoiceModal } from "./trips/GstInvoiceModal";
+import { ExtendBookingModal } from "./trips/TripManagementModals";
+import { ReviewModal } from "./ReviewModal";
 import { Button } from "@/components/ui/button";
 
 interface UserDashboardProps {
@@ -76,6 +78,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState<any>(null);
+  const [selectedBookingForExtend, setSelectedBookingForExtend] = useState<any>(null);
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState<any>(null);
   const [copiedPin, setCopiedPin] = useState(false);
   const [copiedBookingId, setCopiedBookingId] = useState(false);
 
@@ -621,6 +625,24 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                     </div>
                   </div>
 
+                  {/* Trip Extension Status Banner if active */}
+                  {activeTrip.extensionStatus === "Requested" && (
+                    <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0 animate-pulse" />
+                        <span>Extension Requested to <strong>{activeTrip.extensionRequestedEndDate}</strong> (+₹{Number(activeTrip.extensionExtraFare || 0).toLocaleString("en-IN")}) — Awaiting Admin Approval</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full">Pending</span>
+                    </div>
+                  )}
+
+                  {activeTrip.extensionStatus === "Approved" && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Trip Extension Approved! Return date updated to <strong>{activeTrip.endDate}</strong>.</span>
+                    </div>
+                  )}
+
                   {/* Payment Status Bar */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-0.5">
@@ -642,7 +664,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                   </div>
 
                   {/* Direct Action Buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
                     {activeBalance > 0 ? (
                       <Button
                         onClick={() => handlePayActiveBalance(activeTrip)}
@@ -657,17 +679,24 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
                     )}
 
                     <Button
+                      onClick={() => setSelectedBookingForExtend(activeTrip)}
+                      className="h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                    >
+                      <Clock className="w-4 h-4 text-amber-400" /> Request Extension
+                    </Button>
+
+                    <Button
                       onClick={() => setSelectedInvoiceBooking(activeTrip)}
                       className="h-11 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
                     >
-                      <FileText className="w-4 h-4 text-amber-600" /> View GST Tax Invoice
+                      <FileText className="w-4 h-4 text-amber-600" /> GST Tax Invoice
                     </Button>
 
                     <Button
                       onClick={() => handleShareWhatsApp(activeTrip, activeBookingId, activeKeyPin)}
                       className="h-11 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 cursor-pointer"
                     >
-                      <Share2 className="w-4 h-4 text-white" /> Save on WhatsApp
+                      <Share2 className="w-4 h-4 text-white" /> WhatsApp Pass
                     </Button>
                   </div>
                 </div>
@@ -772,6 +801,34 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
           isOpen={!!selectedInvoiceBooking}
           onClose={() => setSelectedInvoiceBooking(null)}
           booking={selectedInvoiceBooking}
+        />
+      )}
+
+      {/* 6. Trip Extension Request Modal */}
+      {selectedBookingForExtend && (
+        <ExtendBookingModal
+          isOpen={!!selectedBookingForExtend}
+          onClose={() => setSelectedBookingForExtend(null)}
+          booking={selectedBookingForExtend}
+          onSuccess={(updated) => {
+            setSelectedBookingForExtend(null);
+            loadData();
+            alert("Trip extension request submitted to Admin! You will be notified once approved.");
+          }}
+        />
+      )}
+
+      {/* 7. Trip Review Modal */}
+      {selectedBookingForReview && (
+        <ReviewModal
+          isOpen={!!selectedBookingForReview}
+          onClose={() => setSelectedBookingForReview(null)}
+          booking={selectedBookingForReview}
+          onSuccess={() => {
+            setSelectedBookingForReview(null);
+            loadData();
+            alert("Thank you! Your trip review and rating has been submitted to Admin.");
+          }}
         />
       )}
     </div>
