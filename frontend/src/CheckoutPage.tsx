@@ -433,9 +433,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 pb-28 lg:pb-16 selection:bg-[#c88d18] selection:text-slate-950 overflow-x-hidden w-full max-w-full">
-      {/* Checkout Top Bar - Clean White Sticky Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-md shadow-2xs">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      {/* Checkout Top Bar - Clean White Sticky Header across all devices */}
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs transition-all w-full">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
             <Button
               variant="ghost"

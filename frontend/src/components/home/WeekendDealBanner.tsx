@@ -52,7 +52,7 @@ export const WeekendDealBanner: React.FC<WeekendDealBannerProps> = ({ onGrabDeal
               <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-[#d49b29] flex items-center gap-1.5">
                 LIMITED TIME OFFER
               </span>
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
                 Weekend Luxury Deals
               </h2>
               <p className="text-xs sm:text-sm md:text-base text-slate-300 font-medium">

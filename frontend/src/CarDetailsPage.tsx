@@ -22,6 +22,7 @@ import {
   Car,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MoarLogo } from "@/components/common/MoarLogo";
 import { useAuth } from "./context/AuthContext";
 import { CarGallerySection } from "./components/car-details/CarGallerySection";
 import { CarInfoSpecsSection } from "./components/car-details/CarInfoSpecsSection";
@@ -218,22 +219,23 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
   };
 
   return (
-    <main className="min-h-screen bg-brand-cream text-brand-ink">
-      {/* Top Luxury Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-primary-foreground/10 bg-brand-navy/95 backdrop-blur-md">
-        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 py-3.5 flex items-center justify-between">
+    <main className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+      {/* Top Luxury Navigation Header - Sticky across all devices */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 h-16 sm:h-18 flex items-center justify-between">
           {/* Logo & Back button */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
-                if (onNavigate) onNavigate("/");
+                if (onNavigate) onNavigate("/cars");
                 else window.history.back();
               }}
-              className="text-white hover:text-brand-gold hover:bg-white/10 rounded-xl px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-bold"
+              className="text-slate-700 hover:text-[#c88d18] hover:bg-slate-100 rounded-xl px-2 sm:px-2.5 py-1.5 h-auto flex items-center gap-1 text-xs font-bold transition-colors"
             >
-              <ChevronLeft className="h-4 w-4" /> Back to Fleet
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back to Fleet</span>
             </Button>
 
             <a
@@ -244,25 +246,21 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
                   onNavigate("/");
                 }
               }}
-              className="brand-mark flex items-center gap-2 text-xl font-black text-primary-foreground"
+              className="flex items-center gap-2 py-0.5 group shrink-0"
+              aria-label="MOAR CARS Home"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-brand-gold text-sm text-brand-gold font-bold">
-                M
-              </span>
-              <span>
-                MOAR <span className="text-brand-gold">CARS</span>
-              </span>
+              <MoarLogo size="navbar" />
             </a>
           </div>
 
           {/* Right Header Navigation & User Profile */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {compareList.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCompareModal(true)}
-                className="h-9 rounded-xl border-brand-teal bg-brand-teal/10 text-xs font-bold text-brand-teal hover:bg-brand-teal hover:text-white"
+                className="h-8.5 sm:h-9 rounded-xl border-[#c88d18]/40 bg-amber-50 text-xs font-bold text-[#c88d18] hover:bg-amber-100"
               >
                 Compare ({compareList.length})
               </Button>
@@ -270,19 +268,19 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
 
             <a
               href="tel:+918500012345"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-white/80 hover:text-white px-2"
+              className="hidden md:flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-[#c88d18] px-2 transition-colors"
             >
-              <Phone className="h-3.5 w-3.5 text-brand-gold" /> +91 85000 12345
+              <Phone className="h-3.5 w-3.5 text-[#c88d18]" /> +91 85000 12345
             </a>
 
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 rounded-full border border-amber-500/40 bg-slate-900/80 p-1 pl-3 text-xs font-bold text-white hover:bg-slate-800 transition-colors"
+                  className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 px-2.5 sm:px-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors"
                 >
-                  <span className="text-brand-gold">{user.name.split(" ")[0]}</span>
-                  <div className="h-7 w-7 rounded-full overflow-hidden border border-brand-gold bg-slate-900 text-brand-gold font-bold text-xs flex items-center justify-center shrink-0">
+                  <span className="text-[#c88d18] hidden sm:inline">{user.name.split(" ")[0]}</span>
+                  <div className="h-6 w-6 rounded-full overflow-hidden border border-[#c88d18] bg-[#0b1426] text-[#c88d18] font-bold text-[10px] flex items-center justify-center shrink-0">
                     {user.avatar && !user.avatar.includes("unsplash.com") ? (
                       <img
                         src={user.avatar}
@@ -290,22 +288,22 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <User className="h-3.5 w-3.5 text-brand-gold" />
+                      <User className="h-3.5 w-3.5 text-[#c88d18]" />
                     )}
                   </div>
-                  <ChevronDown className="h-3.5 w-3.5 text-white/60 mr-1" />
+                  <ChevronDown className="h-3 w-3 text-slate-400" />
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-slate-900 border border-amber-500/30 p-2 shadow-2xl space-y-1 text-xs z-50 animate-in fade-in">
+                  <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-white border border-slate-200 p-2 shadow-2xl space-y-1 text-xs z-50 animate-in fade-in">
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
                         if (onNavigate) onNavigate("/dashboard");
                       }}
-                      className="flex items-center gap-2 w-full p-2.5 rounded-xl text-left font-bold text-white hover:bg-white/10"
+                      className="flex items-center gap-2 w-full p-2.5 rounded-xl text-left font-bold text-slate-900 hover:bg-slate-50 transition-colors"
                     >
-                      <LayoutDashboard className="h-4 w-4 text-brand-gold" />
+                      <LayoutDashboard className="h-4 w-4 text-[#c88d18]" />
                       <span>My Dashboard</span>
                     </button>
                     <button
@@ -313,18 +311,18 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
                         setUserDropdownOpen(false);
                         if (onNavigate) onNavigate("/dashboard");
                       }}
-                      className="flex items-center gap-2 w-full p-2.5 rounded-xl text-left font-semibold text-white/80 hover:bg-white/10"
+                      className="flex items-center gap-2 w-full p-2.5 rounded-xl text-left font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
                     >
-                      <CalendarDays className="h-4 w-4 text-brand-gold" />
+                      <CalendarDays className="h-4 w-4 text-[#c88d18]" />
                       <span>My Bookings</span>
                     </button>
-                    <div className="border-t border-white/10 my-1" />
+                    <div className="border-t border-slate-100 my-1" />
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
                         logout();
                       }}
-                      className="flex items-center gap-2 w-full p-2.5 rounded-xl text-left font-bold text-rose-400 hover:bg-rose-500/10"
+                      className="flex items-center gap-2 w-full p-2.5 rounded-xl text-left font-bold text-rose-500 hover:bg-rose-50 transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Sign Out</span>
@@ -336,9 +334,9 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
               <Button
                 variant="outline"
                 onClick={() => openAuthModal("login")}
-                className="h-9 rounded-xl border-amber-500/40 bg-amber-500/10 text-xs font-bold text-brand-gold hover:bg-amber-500/20"
+                className="h-8.5 sm:h-9 rounded-xl border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                <User className="h-3.5 w-3.5 mr-1" /> Sign In
+                <User className="h-3.5 w-3.5 mr-1 text-[#c88d18]" /> Sign In
               </Button>
             )}
           </div>
@@ -391,7 +389,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
       ) : (
         <>
           {/* Breadcrumb & Vehicle Title Header */}
-          <div className="pt-20 pb-4 bg-card border-b border-border">
+          <div className="py-4 bg-white border-b border-slate-200/80">
             <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-3">
               {/* Breadcrumb row */}
               <div className="flex items-center justify-between text-xs text-muted-foreground">

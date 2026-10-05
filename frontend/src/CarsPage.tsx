@@ -27,8 +27,8 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
-  Star,
   Rotate3d,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MoarLogo } from "@/components/common/MoarLogo";
@@ -61,6 +61,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const [sortBy, setSortBy] = useState<string>("popular");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
@@ -368,8 +369,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
 
   return (
     <main className="min-h-screen bg-white text-slate-900 font-sans">
-      {/* 1. Top Luxury Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 shadow-xs">
+      {/* 1. Top Luxury Navigation Bar - Sticky across all devices */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 h-16 sm:h-18 flex items-center justify-between">
           {/* Logo */}
           <a
@@ -380,14 +381,14 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 onNavigate("/");
               }
             }}
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2 group shrink-0"
             aria-label="MOAR CARS Home"
           >
             <MoarLogo size="navbar" />
           </a>
 
           {/* Nav Links */}
-          <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.15em] text-slate-700">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.12em] text-slate-700">
             <a
               href="/"
               onClick={(e) => {
@@ -442,8 +443,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             </a>
           </nav>
 
-          {/* Right Action Icons & User Menu */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          {/* Right Action Icons & User Account */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Search Icon Shortcut */}
             <button
               onClick={() => {
@@ -452,7 +453,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               aria-label="Search cars"
               className="p-2 text-slate-700 hover:text-[#c88d18] transition-colors rounded-full hover:bg-slate-100"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-4.5 w-4.5" />
             </button>
 
             {/* Wishlist Shortcut */}
@@ -467,9 +468,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               aria-label="Wishlist"
               className="p-2 text-slate-700 hover:text-rose-500 transition-colors rounded-full hover:bg-slate-100 relative"
             >
-              <Heart className="h-5 w-5" />
+              <Heart className="h-4.5 w-4.5" />
               {wishlistIds.length > 0 && (
-                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="absolute top-1 right-1 h-3.5 w-3.5 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
                   {wishlistIds.length}
                 </span>
               )}
@@ -480,9 +481,10 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 px-2.5 sm:px-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition-colors"
                 >
-                  <div className="h-7 w-7 rounded-full overflow-hidden bg-slate-900 border border-[#d49b29] text-[#d49b29] font-bold text-xs flex items-center justify-center shrink-0">
+                  <span className="text-[#c88d18] hidden sm:inline">{user.name.split(" ")[0]}</span>
+                  <div className="h-6 w-6 rounded-full overflow-hidden bg-slate-900 border border-[#d49b29] text-[#d49b29] font-bold text-[10px] flex items-center justify-center shrink-0">
                     {user.avatar && !user.avatar.includes("unsplash.com") ? (
                       <img
                         src={user.avatar}
@@ -493,10 +495,11 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                       <User className="h-3.5 w-3.5 text-[#d49b29]" />
                     )}
                   </div>
+                  <ChevronDown className="h-3 w-3 text-slate-400" />
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-100 p-2 shadow-xl space-y-1 text-xs z-50">
+                  <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-slate-100 p-2 shadow-xl space-y-1 text-xs z-50 animate-in fade-in">
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
@@ -523,24 +526,106 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
             ) : (
               <button
                 onClick={() => openAuthModal("login")}
-                className="hidden sm:block text-xs font-bold text-slate-700 hover:text-[#c88d18] px-2 py-1"
+                className="text-xs font-bold text-slate-700 hover:text-[#c88d18] px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 Sign In
               </button>
             )}
 
-            {/* Golden "Book Now →" Button */}
+            {/* Golden "Book Now" Button - Hidden on mobile/tablet so it NEVER overflows or overlaps! */}
             <Button
               onClick={() => {
                 document.getElementById("fleet-catalog-grid")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="h-10 px-5 rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center gap-1.5 transition-transform hover:scale-[1.02]"
+              className="hidden xl:flex h-9 px-4 rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 items-center gap-1.5 transition-transform hover:scale-[1.02]"
             >
               <span>Book Now</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Button>
+
+            {/* Mobile menu trigger button */}
+            <button
+              className="p-2 text-slate-700 lg:hidden rounded-lg hover:bg-slate-100 transition-colors"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Dropdown for CarsPage */}
+        {menuOpen && (
+          <nav className="mx-auto max-w-[1600px] px-6 py-4 bg-white border-t border-slate-100 grid gap-3 text-sm font-semibold text-slate-800 lg:hidden shadow-xl animate-in slide-in-from-top-2">
+            <a
+              href="/"
+              onClick={(e) => {
+                setMenuOpen(false);
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate("/");
+                }
+              }}
+            >
+              HOME
+            </a>
+            <a
+              href="/cars"
+              onClick={() => setMenuOpen(false)}
+              className="text-[#c88d18] font-bold"
+            >
+              CARS (CURRENT)
+            </a>
+            <a
+              href="/#weekend-deals"
+              onClick={(e) => {
+                setMenuOpen(false);
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate("/#weekend-deals");
+                }
+              }}
+            >
+              DEALS
+            </a>
+            <a
+              href="/#why-choose-moar"
+              onClick={(e) => {
+                setMenuOpen(false);
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate("/#why-choose-moar");
+                }
+              }}
+            >
+              ABOUT
+            </a>
+            <a href="#contact" onClick={() => setMenuOpen(false)}>
+              CONTACT
+            </a>
+            {user ? (
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  if (onNavigate) onNavigate("/dashboard");
+                }}
+                className="text-left text-[#c88d18] font-bold flex items-center gap-2 pt-2 border-t border-slate-100"
+              >
+                <LayoutDashboard className="h-4 w-4" /> My Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  openAuthModal("login");
+                }}
+                className="text-left text-[#c88d18] font-bold flex items-center gap-2 pt-2 border-t border-slate-100"
+              >
+                <User className="h-4 w-4" /> Sign In / Join MOAR
+              </button>
+            )}
+          </nav>
+        )}
       </header>
 
 
