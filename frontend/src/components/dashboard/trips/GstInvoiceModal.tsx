@@ -102,25 +102,43 @@ export const GstInvoiceModal: React.FC<GstInvoiceModalProps> = ({ booking, isOpe
   }
 
   const rentalDays = Number(booking.totalDays || booking.rentalDays || 2);
-  const grandTotal = Number(booking.grandTotal || booking.amount || 0);
+  const discountAmount = Number(booking.discountAmount || booking.couponDiscount || 0);
+  const deliveryFee = Number(booking.deliveryFee || 0);
+  const gstRate = Number(booking.gstRate || 18);
+  const rawGrandTotal = Number(booking.grandTotal || booking.amount || 0);
+
+  // Exact Taxable & GST calculation matching checkout system without fractional rounding errors
+  let baseRental = 0;
+  let totalTaxable = 0;
+  let totalGst = 0;
+  let grandTotal = rawGrandTotal;
+
+  if (booking.baseFare !== undefined && Number(booking.baseFare) > 0) {
+    baseRental = Math.round(Number(booking.baseFare));
+    totalTaxable = Math.max(0, baseRental + deliveryFee - discountAmount);
+    totalGst = booking.gstAmount !== undefined && Number(booking.gstAmount) > 0
+      ? Math.round(Number(booking.gstAmount))
+      : Math.round(totalTaxable * (gstRate / 100));
+    grandTotal = totalTaxable + totalGst;
+  } else if (rawGrandTotal > 0) {
+    // Reverse calculation as clean whole rupees without fractional paise
+    totalTaxable = Math.round(rawGrandTotal / (1 + gstRate / 100));
+    baseRental = Math.max(0, totalTaxable - deliveryFee + discountAmount);
+    totalGst = Math.max(0, rawGrandTotal - totalTaxable);
+    grandTotal = rawGrandTotal;
+  }
+
+  // Proper CGST and SGST split (e.g. ₹917 -> ₹458.50 & ₹458.50)
+  const halfGst = totalGst > 0 ? totalGst / 2 : 0;
+  const cgstAmount = halfGst;
+  const sgstAmount = halfGst;
+
   const paidAmount = Number(
-    booking.paidAmount !== undefined ? booking.paidAmount : (booking.advancePaid || grandTotal)
+    booking.paidAmount !== undefined ? booking.paidAmount : (booking.advancePaid || Math.round(grandTotal * 0.2))
   );
   const balanceDue = Number(
     booking.balanceDue !== undefined ? booking.balanceDue : Math.max(0, grandTotal - paidAmount)
   );
-
-  const discountAmount = Number(booking.discountAmount || booking.couponDiscount || 0);
-  const deliveryFee = Number(booking.deliveryFee || 0);
-
-  // Accurate GST breakdown (18% Total: 9% CGST + 9% SGST on taxable value)
-  const gstRate = Number(booking.gstRate || 18);
-  const calculatedTaxable = Math.round((grandTotal / (1 + gstRate / 100)) * 100) / 100;
-  const baseRental = Math.max(0, Math.round((calculatedTaxable - deliveryFee) * 100) / 100);
-  const totalTaxable = baseRental + deliveryFee;
-  const totalGst = Math.round((grandTotal - totalTaxable) * 100) / 100;
-  const cgstAmount = Math.round((totalGst / 2) * 100) / 100;
-  const sgstAmount = Math.round((totalGst - cgstAmount) * 100) / 100;
 
   const amountInWords = numberToWordsINR(grandTotal);
 
@@ -383,15 +401,19 @@ export const GstInvoiceModal: React.FC<GstInvoiceModalProps> = ({ booking, isOpe
                 <span className="font-mono font-bold text-white">₹{totalTaxable.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between text-slate-300 text-[10px]">
-                <span>Central GST (CGST @ 9%):</span>
-                <span className="font-mono text-white">₹{cgstAmount.toLocaleString("en-IN")}</span>
+                <span>Central GST (CGST @ {gstRate / 2}%):</span>
+                <span className="font-mono text-white">
+                  ₹{cgstAmount % 1 !== 0 ? cgstAmount.toFixed(2) : cgstAmount.toLocaleString("en-IN")}
+                </span>
               </div>
               <div className="flex justify-between text-slate-300 text-[10px]">
-                <span>State GST (SGST @ 9%):</span>
-                <span className="font-mono text-white">₹{sgstAmount.toLocaleString("en-IN")}</span>
+                <span>State GST (SGST @ {gstRate / 2}%):</span>
+                <span className="font-mono text-white">
+                  ₹{sgstAmount % 1 !== 0 ? sgstAmount.toFixed(2) : sgstAmount.toLocaleString("en-IN")}
+                </span>
               </div>
               <div className="flex justify-between text-slate-300 text-[10px]">
-                <span>Total GST Output (18%):</span>
+                <span>Total GST Output ({gstRate}%):</span>
                 <span className="font-mono font-bold text-amber-400">₹{totalGst.toLocaleString("en-IN")}</span>
               </div>
 
