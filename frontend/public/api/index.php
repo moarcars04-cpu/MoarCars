@@ -124,6 +124,51 @@ function formatCarResponse($c) {
     $c['mileage'] = !empty($c['mileage']) ? $c['mileage'] : (($c['fuelType'] ?? '') === 'Electric' ? "450 km/charge" : "20 km/l");
     $c['galleryImages'] = safeJsonDecode($c['galleryImages'] ?? null, !empty($c['image']) ? [$c['image']] : []);
     $c['angle360Images'] = safeJsonDecode($c['angle360Images'] ?? null, !empty($c['image']) ? [$c['image']] : []);
+
+    // Clean & Normalize Car Category (no "Hatchback 123", "lux", etc.)
+    $rawCat = trim($c['category'] ?? '');
+    if (preg_match('/hatchback/i', $rawCat)) {
+        $c['category'] = 'Hatchback';
+    } elseif (preg_match('/(sedan|executive)/i', $rawCat)) {
+        $c['category'] = 'Sedan';
+    } elseif (preg_match('/(suv|creta|scorpio|thar|brezza)/i', $rawCat)) {
+        $c['category'] = 'SUV';
+    } elseif (preg_match('/(lux|luxury|bmw|audi|mercedes)/i', $rawCat)) {
+        $c['category'] = 'Luxury';
+    } elseif (preg_match('/(7|seven|ertiga|innova|muv|van)/i', $rawCat)) {
+        $c['category'] = '7-Seater';
+    } elseif (preg_match('/(ev|electric)/i', $rawCat)) {
+        $c['category'] = 'Electric';
+    } else {
+        $c['category'] = (!empty($rawCat) && !preg_match('/(123|test|dummy)/i', $rawCat)) ? ucfirst(strtolower($rawCat)) : 'Hatchback';
+    }
+
+    // Clean & Normalize Car Brand (no "Pandu", "Other", etc.)
+    $rawBrand = trim($c['brand'] ?? '');
+    $carName = trim($c['name'] ?? '');
+    $combined = strtolower($rawBrand . ' ' . $carName);
+    if (preg_match('/(maruti|suzuki|swift|baleno|ertiga|brezza|dzire|wagonr|celerio|ignis|fronx)/i', $combined)) {
+        $c['brand'] = 'Maruti Suzuki';
+    } elseif (preg_match('/(hyundai|creta|i20|i10|verna|venue|alcazar|tucson)/i', $combined)) {
+        $c['brand'] = 'Hyundai';
+    } elseif (preg_match('/(mahindra|scorpio|thar|xuv|bolero)/i', $combined)) {
+        $c['brand'] = 'Mahindra';
+    } elseif (preg_match('/(tata|nexon|harrier|safari|punch|tiago|altroz)/i', $combined)) {
+        $c['brand'] = 'Tata Motors';
+    } elseif (preg_match('/(toyota|innova|fortuner|hyryder|glanza|rumion|crysta)/i', $combined)) {
+        $c['brand'] = 'Toyota';
+    } elseif (preg_match('/(kia|seltos|sonet|carens|carnival)/i', $combined)) {
+        $c['brand'] = 'Kia';
+    } elseif (preg_match('/(honda|city|amaze|elevate)/i', $combined)) {
+        $c['brand'] = 'Honda';
+    } else {
+        if (preg_match('/(pandu|other|test|dummy)/i', $rawBrand)) {
+            $c['brand'] = 'Maruti Suzuki';
+        } else {
+            $c['brand'] = !empty($rawBrand) ? ucwords(strtolower($rawBrand)) : 'Maruti Suzuki';
+        }
+    }
+
     return $c;
 }
 
@@ -3533,6 +3578,12 @@ if ($route === 'user/delete-account' && $method === 'POST') {
 if (($route === 'cars' || $route === 'admin/cars') && $method === 'GET') {
     if (isset($pdo)) {
         try {
+            // Self-healing database cleanup of test/dummy categories and brands
+            $pdo->exec("UPDATE Cars SET category = 'Hatchback' WHERE category LIKE '%Hatchback%' OR category LIKE '%123%'");
+            $pdo->exec("UPDATE Cars SET category = 'Luxury' WHERE LOWER(category) = 'lux'");
+            $pdo->exec("UPDATE Cars SET brand = 'Maruti Suzuki' WHERE LOWER(brand) IN ('pandu', 'other', 'test', 'dummy') OR brand IS NULL OR brand = ''");
+            $pdo->exec("DELETE FROM Categories WHERE name LIKE '%123%' OR LOWER(name) IN ('lux', 'pandu', 'other', 'test')");
+
             $sql = "SELECT Cars.*, 
                            COALESCE(r.avgRating, 0) as rating, 
                            COALESCE(r.reviewCount, 0) as reviewCount,

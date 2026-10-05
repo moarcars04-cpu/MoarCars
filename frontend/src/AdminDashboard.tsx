@@ -2467,13 +2467,18 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Brand *</label>
-                      <input
+                      <select
                         name="brand"
-                        defaultValue={editingCar?.brand || (editingCar?.name ? editingCar.name.split(" ")[0] : "")}
-                        placeholder="e.g. Maruti Suzuki"
-                        required
-                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-[#c88d18]"
-                      />
+                        defaultValue={editingCar?.brand || "Maruti Suzuki"}
+                        className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
+                      >
+                        {["Maruti Suzuki", "Hyundai", "Mahindra", "Tata Motors", "Toyota", "Kia", "Honda", "MG", "BMW", "Mercedes-Benz", "Audi", "Volkswagen", "Skoda"].map((b) => (
+                          <option key={b} value={b}>{b}</option>
+                        ))}
+                        {editingCar?.brand && !["Maruti Suzuki", "Hyundai", "Mahindra", "Tata Motors", "Toyota", "Kia", "Honda", "MG", "BMW", "Mercedes-Benz", "Audi", "Volkswagen", "Skoda"].includes(editingCar.brand) && (
+                          <option value={editingCar.brand}>{editingCar.brand}</option>
+                        )}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">Model *</label>
@@ -2559,17 +2564,21 @@ export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
                       </div>
                       <select
                         name="category"
-                        defaultValue={editingCar?.category || categories[0]?.name || "Hatchback"}
+                        defaultValue={editingCar?.category || "Hatchback"}
                         className="w-full bg-[#070e1c] border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#c88d18]"
                       >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.name}>
-                            {cat.name}
+                        {["Hatchback", "Sedan", "SUV", "Luxury", "7-Seater", "Electric"].map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
                           </option>
                         ))}
-                        {editingCar?.category && !categories.some((c) => c.name === editingCar.category) && (
-                          <option value={editingCar.category}>{editingCar.category}</option>
-                        )}
+                        {categories
+                          .filter((c) => !/(123|test|dummy|pandu|other|lux$)/i.test(c.name) && !["Hatchback", "Sedan", "SUV", "Luxury", "7-Seater", "Electric"].includes(c.name))
+                          .map((cat) => (
+                            <option key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </option>
+                          ))}
                       </select>
                     </div>
                     <div>

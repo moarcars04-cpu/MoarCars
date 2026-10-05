@@ -85,21 +85,47 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
       .then((res) => {
         if (!isMounted) return;
         if (res.success && Array.isArray(res.data)) {
-          const mapped: CarFleetItem[] = res.data.map((car: any) => ({
-            ...car,
-            pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 1699,
-            priceDisplay: car.priceDisplay || (car.price && car.price !== "₹0" && car.price !== "0" ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(Number(car.pricePerDay) || 1699).toLocaleString("en-IN")}/day`),
-            subCategory: car.subCategory || car.variant || `${car.category || "Fleet"} Vehicle`,
-            hasSunroof: car.hasSunroof ?? false,
-            hasGPS: car.hasGPS ?? true,
-            hasAC: car.hasAC ?? true,
-            instantBooking: car.instantBooking ?? true,
-            freeCancellation: car.freeCancellation ?? true,
-            doorstepDelivery: car.doorstepDelivery ?? true,
-            rating: Number(car.rating) || 0,
-            reviewCount: Number(car.reviewCount) || 0,
-            tripsCount: Number(car.totalTrips) || Number(car.tripsCount) || 0,
-          }));
+          const mapped: CarFleetItem[] = res.data.map((car: any) => {
+            // Clean and normalize category
+            let cleanCat = (car.category || "Hatchback").trim();
+            if (/hatchback/i.test(cleanCat)) cleanCat = "Hatchback";
+            else if (/sedan/i.test(cleanCat)) cleanCat = "Sedan";
+            else if (/suv/i.test(cleanCat)) cleanCat = "SUV";
+            else if (/lux/i.test(cleanCat)) cleanCat = "Luxury";
+            else if (/7|seven|muv|ertiga|innova/i.test(cleanCat)) cleanCat = "7-Seater";
+            else if (/electric|ev/i.test(cleanCat)) cleanCat = "Electric";
+            else cleanCat = "Hatchback";
+
+            // Clean and normalize brand
+            let cleanBrand = (car.brand || "").trim();
+            const combinedName = `${cleanBrand} ${car.name || ""}`.toLowerCase();
+            if (/maruti|suzuki|swift|baleno|brezza|dzire|ertiga|wagonr|celerio|ignis|fronx/.test(combinedName)) cleanBrand = "Maruti Suzuki";
+            else if (/hyundai|creta|i20|i10|verna|venue|alcazar|tucson/.test(combinedName)) cleanBrand = "Hyundai";
+            else if (/mahindra|scorpio|thar|xuv|bolero/.test(combinedName)) cleanBrand = "Mahindra";
+            else if (/tata|nexon|harrier|punch|safari|tiago|altroz/.test(combinedName)) cleanBrand = "Tata Motors";
+            else if (/toyota|innova|fortuner|hyryder|glanza|rumion|crysta/.test(combinedName)) cleanBrand = "Toyota";
+            else if (/kia|seltos|sonet|carens|carnival/.test(combinedName)) cleanBrand = "Kia";
+            else if (/honda|city|amaze|elevate/.test(combinedName)) cleanBrand = "Honda";
+            else if (/pandu|other|test/i.test(cleanBrand) || !cleanBrand) cleanBrand = "Maruti Suzuki";
+
+            return {
+              ...car,
+              category: cleanCat,
+              brand: cleanBrand,
+              subCategory: car.subCategory || car.variant || `${cleanCat} Vehicle`,
+              pricePerDay: Number(car.pricePerDay) || parseInt(String(car.price || "0").replace(/[^0-9]/g, ""), 10) || 1699,
+              priceDisplay: car.priceDisplay || (car.price && car.price !== "₹0" && car.price !== "0" ? (car.price.startsWith("₹") ? car.price : `₹${car.price}`) : `₹${(Number(car.pricePerDay) || 1699).toLocaleString("en-IN")}/day`),
+              hasSunroof: car.hasSunroof ?? false,
+              hasGPS: car.hasGPS ?? true,
+              hasAC: car.hasAC ?? true,
+              instantBooking: car.instantBooking ?? true,
+              freeCancellation: car.freeCancellation ?? true,
+              doorstepDelivery: car.doorstepDelivery ?? true,
+              rating: Number(car.rating) || 0,
+              reviewCount: Number(car.reviewCount) || 0,
+              tripsCount: Number(car.totalTrips) || Number(car.tripsCount) || 0,
+            };
+          });
           setFleet(mapped);
         }
       })
@@ -119,8 +145,10 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const categoryTabs = useMemo(() => {
     const counts: Record<string, number> = {};
     fleet.forEach((c) => {
-      const cat = c.category || "Other";
-      counts[cat] = (counts[cat] || 0) + 1;
+      const cat = c.category || "Hatchback";
+      if (!/(123|test|dummy|pandu|other)/i.test(cat)) {
+        counts[cat] = (counts[cat] || 0) + 1;
+      }
     });
 
     const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -128,9 +156,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
       Sedan: Car,
       Hatchback: Car,
       Luxury: Award,
+      "7-Seater": Users,
       Electric: Zap,
-      Vans: Users,
-      Convertible: Sparkles,
     };
 
     const tabs = [
@@ -150,8 +177,10 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const brandsList = useMemo(() => {
     const counts: Record<string, number> = {};
     fleet.forEach((c) => {
-      const b = c.brand || "Other";
-      counts[b] = (counts[b] || 0) + 1;
+      const b = c.brand || "Maruti Suzuki";
+      if (!/(pandu|other|test|dummy|123)/i.test(b)) {
+        counts[b] = (counts[b] || 0) + 1;
+      }
     });
     return Object.entries(counts)
       .map(([name, count]) => ({ name, count }))
@@ -162,8 +191,10 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   const carTypesList = useMemo(() => {
     const counts: Record<string, number> = {};
     fleet.forEach((c) => {
-      const t = c.category || "Other";
-      counts[t] = (counts[t] || 0) + 1;
+      const t = c.category || "Hatchback";
+      if (!/(123|test|dummy|pandu|other)/i.test(t)) {
+        counts[t] = (counts[t] || 0) + 1;
+      }
     });
     return Object.entries(counts)
       .map(([id, count]) => ({ id, label: id, count }))
