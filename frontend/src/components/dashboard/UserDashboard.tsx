@@ -354,7 +354,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
 
               <div className="hidden md:block text-left text-xs">
                 <p className="font-bold text-slate-900 leading-tight truncate max-w-[120px]">{currentUser.name}</p>
-                <p className="text-[10px] text-[#b57d14] font-semibold">{currentUser.loyaltyTier || "Gold VIP"}</p>
+                <p className="text-[10px] text-slate-500 font-semibold truncate max-w-[120px]">{currentUser.phone || "Customer"}</p>
               </div>
 
               <button
