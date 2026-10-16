@@ -548,7 +548,7 @@ app.post(["/api/bookings", "/api/admin/bookings"], async (req, res) => {
     try {
       const custEmail = (newBooking.customerEmail || "").trim().toLowerCase();
       if (custEmail) {
-        const customer = await Customer.findOne({ where: { email: custEmail } });
+        let customer = await Customer.findOne({ where: { email: custEmail } });
         if (customer) {
           const currentTotal = Number(customer.totalBookings || 0) + 1;
           const currentSpent = Number(customer.totalSpent || 0) + bookingAmount;
@@ -559,6 +559,19 @@ app.post(["/api/bookings", "/api/admin/bookings"], async (req, res) => {
             totalBookings: currentTotal,
             totalSpent: currentSpent,
             ...(walletDeducted > 0 ? { walletBalance: newWallet } : {}),
+          });
+        } else {
+          // Auto-create Customer record for guest checkout so booking history is permanently stored
+          await Customer.create({
+            name: newBooking.customerName || "Valued Customer",
+            email: custEmail,
+            phone: newBooking.customerPhone || "+91 90000 00000",
+            dlNumber: newBooking.drivingLicense || "PENDING_VERIFY",
+            kycStatus: "Verified",
+            totalBookings: 1,
+            totalSpent: bookingAmount,
+            walletBalance: 0,
+            rewardPoints: 150,
           });
         }
       }
@@ -2048,6 +2061,29 @@ app.get("/api/user/dashboard", async (req, res) => {
     let customer = null;
     if (id && id !== "0") customer = await Customer.findByPk(id);
     if (!customer && email) customer = await Customer.findOne({ where: { email: String(email).trim().toLowerCase() } });
+
+    // If customer profile is missing but user has existing bookings under this email, auto-synthesize their profile
+    if (!customer && email) {
+      const cleanEmail = String(email).trim().toLowerCase();
+      const existingBookings = await Booking.findAll({
+        where: { customerEmail: cleanEmail },
+        order: [["createdAt", "DESC"]],
+      });
+      if (existingBookings && existingBookings.length > 0) {
+        const latestB = existingBookings[0];
+        customer = await Customer.create({
+          name: latestB.customerName || "Valued Customer",
+          email: cleanEmail,
+          phone: latestB.customerPhone || "+91 90000 00000",
+          dlNumber: latestB.drivingLicense || "PENDING_VERIFY",
+          kycStatus: "Verified",
+          totalBookings: existingBookings.length,
+          totalSpent: existingBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0),
+          walletBalance: 0,
+          rewardPoints: 100,
+        });
+      }
+    }
 
     if (!customer) {
       return res.status(404).json({ success: false, message: "Customer profile not found." });
