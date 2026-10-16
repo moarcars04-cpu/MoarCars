@@ -219,10 +219,10 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 font-sans pt-16 sm:pt-18">
+    <main className="min-h-screen bg-slate-50 text-slate-900 font-sans pt-15 sm:pt-18 pb-16 lg:pb-0">
       {/* Top Luxury Navigation Header - Fixed across all devices */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
-        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 h-16 sm:h-18 flex items-center justify-between">
+        <div className="mx-auto max-w-[1600px] px-3 sm:px-8 lg:px-12 xl:px-16 h-15 sm:h-18 flex items-center justify-between">
           {/* Logo & Back button */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Button
@@ -389,11 +389,11 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
       ) : (
         <>
           {/* Breadcrumb & Vehicle Title Header */}
-          <div className="py-4 bg-white border-b border-slate-200/80">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 space-y-3">
+          <div className="py-3 sm:py-4 bg-white border-b border-slate-200/80">
+            <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-12 xl:px-16 space-y-2.5 sm:space-y-3">
               {/* Breadcrumb row */}
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs min-w-0 max-w-full overflow-hidden">
                   <a
                     href="/"
                     onClick={(e) => {
@@ -402,78 +402,78 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
                         onNavigate("/");
                       }
                     }}
-                    className="hover:text-brand-navy"
+                    className="hover:text-brand-navy shrink-0"
                   >
                     Home
                   </a>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-                  <span>Fleet</span>
-                  <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-                  <span className="font-bold text-brand-navy">{currentCar.name}</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+                  <span className="shrink-0">Fleet</span>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+                  <span className="font-bold text-brand-navy truncate">{currentCar.name}</span>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                   {/* Share button */}
                   <button
                     onClick={handleShare}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-mist hover:bg-brand-mist/80 text-brand-navy text-xs font-bold transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-mist hover:bg-brand-mist/80 text-brand-navy text-[11px] font-bold transition-colors"
                   >
-                    <Share2 className="h-3.5 w-3.5" />
-                    <span>{copiedShareNotice ? "Link Copied!" : "Share"}</span>
+                    <Share2 className="h-3 w-3" />
+                    <span>{copiedShareNotice ? "Copied!" : "Share"}</span>
                   </button>
 
                   {/* Wishlist button */}
                   <button
                     onClick={() => handleToggleWishlist(currentCar.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
                       isSaved
-                        ? "bg-rose-500 text-white shadow"
+                        ? "bg-rose-500 text-white shadow-xs"
                         : "bg-brand-mist hover:bg-brand-mist/80 text-brand-navy"
                     }`}
                   >
-                    <Heart className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
-                    <span>{isSaved ? "Saved" : "Save Car"}</span>
+                    <Heart className={`h-3 w-3 ${isSaved ? "fill-current" : ""}`} />
+                    <span>{isSaved ? "Saved" : "Save"}</span>
                   </button>
                 </div>
               </div>
 
               {/* Title & Ratings row */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-0.5 rounded-full bg-brand-gold text-brand-navy text-[10px] font-black uppercase tracking-wider">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-brand-gold text-brand-navy text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                       {currentCar.tag || currentCar.category || "Luxury"}
                     </span>
-                    <span className="text-xs text-muted-foreground font-semibold">
-                      {currentCar.branch || "Tirupati Central Station Hub"}
+                    <span className="text-[11px] sm:text-xs text-muted-foreground font-semibold truncate">
+                      {currentCar.branch || "Tirupati Central Hub"}
                     </span>
                   </div>
-                  <h1 className="text-3xl sm:text-4xl font-black text-brand-navy tracking-tight mt-1">
+                  <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-brand-navy tracking-tight mt-1 leading-snug break-words">
                     {currentCar.name}
                   </h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 max-w-2xl line-clamp-2 sm:line-clamp-none">
                     {currentCar.detail}
                   </p>
                 </div>
 
                 {dynamicRating && dynamicReviewCount > 0 ? (
-                  <div className="flex items-center gap-3 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
-                    <div className="h-8 w-8 rounded-xl bg-brand-gold text-brand-navy flex items-center justify-center font-black text-sm shadow">
+                  <div className="flex items-center gap-2.5 bg-brand-mist/60 px-3 py-2 rounded-2xl border border-border shrink-0 self-start sm:self-auto">
+                    <div className="h-7 w-7 rounded-xl bg-brand-gold text-brand-navy flex items-center justify-center font-black text-xs shadow-xs">
                       ★
                     </div>
                     <div>
-                      <span className="text-sm font-black text-brand-navy">{dynamicRating} / 5.0</span>
-                      <span className="text-[10px] text-muted-foreground block">
+                      <span className="text-xs sm:text-sm font-black text-brand-navy">{dynamicRating} / 5.0</span>
+                      <span className="text-[9px] sm:text-[10px] text-muted-foreground block">
                         {dynamicReviewCount} Verified {dynamicReviewCount === 1 ? "Review" : "Reviews"}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2.5 bg-brand-mist/60 px-4 py-3 rounded-2xl border border-border shrink-0">
-                    <Sparkles className="h-4 w-4 text-brand-gold" />
+                  <div className="flex items-center gap-2 bg-brand-mist/60 px-3 py-2 rounded-2xl border border-border shrink-0 self-start sm:self-auto">
+                    <Sparkles className="h-3.5 w-3.5 text-brand-gold" />
                     <div>
                       <span className="text-xs font-black text-brand-navy">New Fleet Addition</span>
-                      <span className="text-[10px] text-muted-foreground block">No reviews yet</span>
+                      <span className="text-[9px] sm:text-[10px] text-muted-foreground block">Verified Fleet</span>
                     </div>
                   </div>
                 )}
@@ -482,7 +482,7 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
           </div>
 
           {/* Main Vehicle Details & Booking Section */}
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-6 space-y-12">
+          <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-12 xl:px-16 py-4 sm:py-6 space-y-8 sm:space-y-12">
             {/* 1. Hero Gallery & Luxury Booking Calculator Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
               {/* Left Column (8 cols): HD Gallery */}
@@ -688,6 +688,26 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
             }
           }}
         />
+      )}
+
+      {/* Mobile Bottom Sticky Action Bar */}
+      {currentCar && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-4 py-2.5 flex items-center justify-between shadow-2xl">
+          <div>
+            <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Per Day Tariff</span>
+            <span className="text-base sm:text-lg font-black text-slate-900">
+              ₹{(Number(currentCar.pricePerDay) || 1699).toLocaleString("en-IN")}<span className="text-xs text-slate-500 font-normal">/day</span>
+            </span>
+          </div>
+          <Button
+            onClick={() => {
+              document.getElementById("booking-calculator-panel")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="h-9 px-4 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs shadow-md shadow-[#c88d18]/25"
+          >
+            Book This Car
+          </Button>
+        </div>
       )}
     </main>
   );

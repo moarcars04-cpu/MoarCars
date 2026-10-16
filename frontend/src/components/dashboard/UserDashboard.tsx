@@ -374,7 +374,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
       </header>
 
       {/* 2. Main Dashboard Body */}
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+      <main className="flex-1 mx-auto w-full max-w-6xl px-3 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6">
         {/* Welcome Banner Card */}
         <div className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-7 shadow-sm relative overflow-hidden">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">

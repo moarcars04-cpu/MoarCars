@@ -79,9 +79,9 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
 
   return (
     <div className="space-y-6">
-      {/* Category Tabs & Filter Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Category Tabs & Filter Header - Smooth horizontal scroll on mobile */}
+      <div className="border-b border-border pb-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
           {[
             { id: "all", label: "All HD Photos", icon: Layers },
             { id: "exterior", label: "Exterior", icon: Sparkles },
@@ -98,13 +98,13 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
                   setActiveTab(tab.id as any);
                   setActiveImageIndex(0);
                 }}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all shrink-0 ${
                   activeTab === tab.id
                     ? "bg-brand-navy text-white shadow-md shadow-brand-navy/20"
                     : "bg-card text-muted-foreground hover:text-brand-navy border border-border"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 <span>{tab.label}</span>
               </button>
             );
@@ -112,8 +112,8 @@ export const CarGallerySection: React.FC<CarGallerySectionProps> = ({ car }) => 
         </div>
       </div>
 
-      {/* Main Media Showcase Window */}
-      <div className="relative h-[380px] sm:h-[480px] lg:h-[520px] rounded-3xl overflow-hidden bg-brand-navy border border-border shadow-2xl group">
+      {/* Main Media Showcase Window - Responsive height down to 320px */}
+      <div className="relative h-[230px] min-[400px]:h-[290px] sm:h-[420px] lg:h-[500px] rounded-2xl sm:rounded-3xl overflow-hidden bg-brand-navy border border-border shadow-xl group">
         {/* 1. Standard HD Gallery View */}
         {activeTab !== "360" && activeTab !== "video" && (
           <>

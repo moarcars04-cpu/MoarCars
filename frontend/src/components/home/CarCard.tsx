@@ -119,20 +119,20 @@ export const CarCard: React.FC<CarCardProps> = ({
       </div>
 
       {/* Info Body */}
-      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+      <div className="p-3.5 sm:p-5 flex-1 flex flex-col justify-between space-y-3 sm:space-y-4 min-w-0">
         <div>
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="text-lg font-black text-brand-navy group-hover:text-brand-teal transition-colors">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-black text-brand-navy group-hover:text-brand-teal transition-colors truncate">
                 {car.name && car.name !== "Fleet Vehicle" && car.name !== "Fleet Vehicle 3"
                   ? car.name
                   : (`${car.brand || ""} ${car.model || ""}`.trim() || car.name || `${car.category || "Premium"} Vehicle`)}
               </h3>
-              <p className="text-[11px] font-bold text-brand-teal">{car.variant || "Executive Spec"}</p>
+              <p className="text-[10px] sm:text-[11px] font-bold text-brand-teal truncate">{car.variant || "Executive Spec"}</p>
             </div>
 
             {/* Compare Checkbox */}
-            <label className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground cursor-pointer hover:text-brand-navy select-none">
+            <label className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-muted-foreground cursor-pointer hover:text-brand-navy select-none shrink-0">
               <input
                 type="checkbox"
                 checked={isCompared}
@@ -143,23 +143,23 @@ export const CarCard: React.FC<CarCardProps> = ({
             </label>
           </div>
 
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground line-clamp-2">
             {car.detail}
           </p>
 
           {/* Specs Badges */}
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3 text-[11px] font-semibold text-muted-foreground">
-            <span className="flex items-center gap-1 bg-brand-mist/70 px-2.5 py-1 rounded-lg">
-              <Users className="h-3.5 w-3.5 text-brand-teal" /> {car.seats || 5} Seats
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-border/60 pt-2 text-[10px] sm:text-[11px] font-semibold text-muted-foreground">
+            <span className="flex items-center gap-1 bg-brand-mist/70 px-2 py-0.5 rounded-lg">
+              <Users className="h-3 w-3 text-brand-teal" /> {car.seats || 5} Seats
             </span>
-            <span className="flex items-center gap-1 bg-brand-mist/70 px-2.5 py-1 rounded-lg">
-              <Fuel className="h-3.5 w-3.5 text-brand-teal" /> {car.fuelType || "Petrol"}
+            <span className="flex items-center gap-1 bg-brand-mist/70 px-2 py-0.5 rounded-lg">
+              <Fuel className="h-3 w-3 text-brand-teal" /> {car.fuelType || "Petrol"}
             </span>
-            <span className="flex items-center gap-1 bg-brand-mist/70 px-2.5 py-1 rounded-lg">
-              <Gauge className="h-3.5 w-3.5 text-brand-teal" /> {car.transmission || "Automatic"}
+            <span className="flex items-center gap-1 bg-brand-mist/70 px-2 py-0.5 rounded-lg">
+              <Gauge className="h-3 w-3 text-brand-teal" /> {car.transmission || "Automatic"}
             </span>
             {car.mileage && (
-              <span className="flex items-center gap-1 bg-brand-mist/70 px-2.5 py-1 rounded-lg text-emerald-700 font-bold">
+              <span className="flex items-center gap-1 bg-brand-mist/70 px-2 py-0.5 rounded-lg text-emerald-700 font-bold">
                 ⚡ {car.mileage}
               </span>
             )}
@@ -167,10 +167,10 @@ export const CarCard: React.FC<CarCardProps> = ({
         </div>
 
         {/* Price & Action */}
-        <div className="flex items-end justify-between border-t border-border pt-4">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tariff Starting</p>
-            <p className="text-xl font-black text-brand-teal">
+        <div className="flex items-center justify-between border-t border-border pt-2.5 sm:pt-3 gap-2">
+          <div className="min-w-0">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground truncate">Tariff Starting</p>
+            <p className="text-base sm:text-xl font-black text-brand-teal leading-none mt-0.5">
               {(() => {
                 if (car.pricePerDay && Number(car.pricePerDay) > 0) {
                   return `₹${Number(car.pricePerDay).toLocaleString("en-IN")}`;
@@ -183,29 +183,29 @@ export const CarCard: React.FC<CarCardProps> = ({
                 }
                 return "₹1,699";
               })()}
-              <span className="text-xs font-normal text-muted-foreground"> / day</span>
+              <span className="text-[10px] sm:text-xs font-normal text-muted-foreground">/day</span>
             </p>
-            <p className="text-[10px] text-[#c88d18] font-bold flex items-center gap-0.5">
-              <ShieldCheck className="h-3 w-3 text-emerald-500" /> {car.advancePaymentPercent || 20}% Low Advance Booking
+            <p className="text-[9px] sm:text-[10px] text-[#c88d18] font-bold flex items-center gap-0.5 mt-0.5 truncate">
+              <ShieldCheck className="h-3 w-3 text-emerald-500 shrink-0" /> {car.advancePaymentPercent || 10}% Low Advance
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {onViewDetails && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onViewDetails(car)}
-                className="h-10 px-3 rounded-2xl border-border text-brand-navy font-bold text-xs hover:border-brand-teal hover:text-brand-teal"
+                className="h-8.5 px-2.5 rounded-xl border-border text-brand-navy font-bold text-xs hover:border-brand-teal hover:text-brand-teal"
               >
                 Details
               </Button>
             )}
             <Button
               onClick={() => onBookCar(car)}
-              className="h-10 px-4 rounded-2xl bg-brand-teal text-primary-foreground font-black text-xs uppercase hover:bg-brand-teal/90 shadow-lg shadow-teal-900/10 flex items-center gap-1.5 transition-transform hover:scale-105"
+              className="h-8.5 px-3 rounded-xl bg-brand-teal text-primary-foreground font-black text-xs uppercase hover:bg-brand-teal/90 shadow-md flex items-center gap-1 transition-transform active:scale-95"
             >
-              Book <ArrowRight className="h-3.5 w-3.5" />
+              Book <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
         </div>

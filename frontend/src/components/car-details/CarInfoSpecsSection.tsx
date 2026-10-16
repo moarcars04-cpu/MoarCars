@@ -67,31 +67,38 @@ export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car })
   ];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 sm:space-y-10">
       {/* 1. Hero Specs Matrix */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-extrabold text-brand-navy flex items-center gap-2">
-            <Award className="h-5 w-5 text-brand-teal" /> Key Vehicle Specifications
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg md:text-xl font-extrabold text-brand-navy flex items-center gap-2">
+            <Award className="h-4 w-4 sm:h-5 sm:w-5 text-brand-teal shrink-0" />
+            <span>Key Vehicle Specifications</span>
           </h3>
-          <span className="text-xs font-bold text-muted-foreground">Certified Fleet Data</span>
+          <span className="text-[11px] sm:text-xs font-bold text-muted-foreground">Certified Fleet Data</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
           {specs.map((item, idx) => {
             const Icon = item.icon;
             return (
               <div
                 key={idx}
-                className="p-4 rounded-2xl bg-card border border-border hover:border-brand-teal/40 transition-all shadow-sm flex items-start gap-3.5"
+                className="p-2.5 sm:p-3.5 lg:p-4 rounded-2xl bg-card border border-border hover:border-brand-teal/40 transition-all shadow-xs flex flex-col min-[440px]:flex-row items-start gap-2 sm:gap-3 min-w-0 overflow-hidden"
               >
-                <div className="h-10 w-10 rounded-xl bg-brand-mist flex items-center justify-center text-brand-navy shrink-0">
-                  <Icon className="h-5 w-5 text-brand-teal" />
+                <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-xl bg-brand-mist flex items-center justify-center text-brand-navy shrink-0">
+                  <Icon className="h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 text-brand-teal" />
                 </div>
-                <div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{item.label}</p>
-                  <p className="text-sm sm:text-base font-black text-brand-navy mt-0.5">{item.value}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{item.sub}</p>
+                <div className="min-w-0 w-full">
+                  <p className="text-[9px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-normal leading-tight" title={item.label}>
+                    {item.label}
+                  </p>
+                  <p className="text-xs sm:text-sm font-black text-brand-navy mt-0.5 leading-snug break-words">
+                    {item.value}
+                  </p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5 truncate hidden sm:block">
+                    {item.sub}
+                  </p>
                 </div>
               </div>
             );
@@ -101,28 +108,29 @@ export const CarInfoSpecsSection: React.FC<CarInfoSpecsSectionProps> = ({ car })
 
       {/* 2. Premium Comfort & Cabin Technology */}
       <div>
-        <h3 className="text-xl font-extrabold text-brand-navy flex items-center gap-2 mb-4">
-          <Sparkles className="h-5 w-5 text-brand-gold" /> Comfort & Cabin Features
+        <h3 className="text-base sm:text-lg md:text-xl font-extrabold text-brand-navy flex items-center gap-2 mb-3 sm:mb-4">
+          <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold shrink-0" />
+          <span>Comfort & Cabin Features</span>
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3.5">
           {comfortFeatures.map((feat, idx) => (
             <div
               key={idx}
-              className={`p-3.5 rounded-2xl border transition-all flex items-start gap-3 ${
-                feat.available ? "bg-card border-border" : "bg-muted/30 border-border/40 opacity-60"
+              className={`p-3 sm:p-3.5 rounded-2xl border transition-all flex items-start gap-2.5 sm:gap-3 min-w-0 ${
+                feat.available ? "bg-card border-border shadow-xs" : "bg-muted/30 border-border/40 opacity-60"
               }`}
             >
               <div
-                className={`h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                className={`h-5 w-5 sm:h-6 sm:w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
                   feat.available ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground"
                 }`}
               >
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-brand-navy">{feat.name}</h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{feat.desc}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-xs sm:text-sm font-bold text-brand-navy leading-snug break-words">{feat.name}</h4>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{feat.desc}</p>
               </div>
             </div>
           ))}

@@ -521,42 +521,60 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
       {/* Main Container */}
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-8 space-y-5 sm:space-y-6 min-w-0 w-full">
-        {/* Stepper Progress Bar */}
+        {/* Stepper Progress Bar - Responsive for mobile */}
         {currentStep !== "confirmed" && (
-          <div className="flex items-center justify-center gap-2 sm:gap-6 text-[11px] sm:text-xs font-bold pt-1 overflow-x-auto">
-            <div className={`flex items-center gap-2 shrink-0 ${currentStep === "details" ? "text-[#b57d14]" : "text-emerald-700"}`}>
-              <div
-                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-2xs ${
-                  currentStep === "details" ? "bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 ring-2 ring-amber-400/30" : "bg-emerald-500 text-white"
-                }`}
-              >
-                1
+          <>
+            {/* Mobile Compact Progress Bar */}
+            <div className="sm:hidden flex items-center justify-between bg-white px-3.5 py-2.5 rounded-2xl border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 font-black text-xs shadow-xs">
+                  {currentStep === "details" ? "1" : "2"}
+                </span>
+                <span className="text-xs font-bold text-slate-800">
+                  {currentStep === "details" ? "Step 1: Driver Details" : "Step 2: Advance Payment"}
+                </span>
               </div>
-              <span className="tracking-wide">Renter Details</span>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                256-Bit SSL
+              </span>
             </div>
 
-            <div className="h-0.5 w-6 sm:w-16 bg-slate-200 shrink-0" />
-
-            <div className={`flex items-center gap-2 shrink-0 ${currentStep === "payment" ? "text-[#b57d14]" : "text-slate-400"}`}>
-              <div
-                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black ${
-                  currentStep === "payment" ? "bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 ring-2 ring-amber-400/30" : "bg-slate-100 text-slate-500 border border-slate-300"
-                }`}
-              >
-                2
+            {/* Desktop / Tablet Full Stepper */}
+            <div className="hidden sm:flex items-center justify-center gap-2 sm:gap-6 text-xs font-bold pt-1">
+              <div className={`flex items-center gap-2 shrink-0 ${currentStep === "details" ? "text-[#b57d14]" : "text-emerald-700"}`}>
+                <div
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black shadow-2xs ${
+                    currentStep === "details" ? "bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 ring-2 ring-amber-400/30" : "bg-emerald-500 text-white"
+                  }`}
+                >
+                  1
+                </div>
+                <span className="tracking-wide">Renter Details</span>
               </div>
-              <span className="tracking-wide">Payment & Gateway</span>
-            </div>
 
-            <div className="h-0.5 w-6 sm:w-16 bg-slate-200 shrink-0" />
+              <div className="h-0.5 w-8 sm:w-16 bg-slate-200 shrink-0" />
 
-            <div className="flex items-center gap-2 shrink-0 text-slate-400">
-              <div className="h-7 w-7 rounded-full bg-slate-100 text-slate-400 border border-slate-300 flex items-center justify-center text-xs font-black">
-                3
+              <div className={`flex items-center gap-2 shrink-0 ${currentStep === "payment" ? "text-[#b57d14]" : "text-slate-400"}`}>
+                <div
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-black ${
+                    currentStep === "payment" ? "bg-gradient-to-r from-[#d49b29] to-[#c88d18] text-slate-950 ring-2 ring-amber-400/30" : "bg-slate-100 text-slate-500 border border-slate-300"
+                  }`}
+                >
+                  2
+                </div>
+                <span className="tracking-wide">Payment & Gateway</span>
               </div>
-              <span className="tracking-wide">Instant Confirmation</span>
+
+              <div className="h-0.5 w-8 sm:w-16 bg-slate-200 shrink-0" />
+
+              <div className="flex items-center gap-2 shrink-0 text-slate-400">
+                <div className="h-7 w-7 rounded-full bg-slate-100 text-slate-400 border border-slate-300 flex items-center justify-center text-xs font-black">
+                  3
+                </div>
+                <span className="tracking-wide">Instant Confirmation</span>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* STEP 3: CONFIRMATION VIEW */}
@@ -903,8 +921,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         )}
       </div>
 
-      {/* Sticky Mobile Checkout Bar - Compact & Clean */}
-      {currentStep !== "confirmed" && car && user && (
+      {/* Sticky Mobile Checkout Bar - Compact & Clean for All Renters */}
+      {currentStep !== "confirmed" && car && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200 px-4 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between gap-3 max-w-md mx-auto">
             <div className="min-w-0">

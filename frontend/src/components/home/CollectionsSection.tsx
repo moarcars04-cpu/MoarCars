@@ -208,25 +208,25 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                     </div>
 
                     {/* Specs Row */}
-                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-100 text-[11px] text-slate-600 font-semibold">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{car.seats || 5} Seats</span>
+                    <div className="grid grid-cols-3 gap-1 sm:gap-2 py-2 border-y border-slate-100 text-[10px] sm:text-[11px] text-slate-600 font-semibold">
+                      <div className="flex items-center gap-1 min-w-0 truncate">
+                        <User className="h-3 w-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{car.seats || 5} Seats</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Gauge className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{car.transmission || "Auto"}</span>
+                      <div className="flex items-center gap-1 min-w-0 truncate">
+                        <Gauge className="h-3 w-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{car.transmission || "Auto"}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Fuel className="h-3.5 w-3.5 text-slate-400" />
-                        <span>{car.fuelType || "Diesel"}</span>
+                      <div className="flex items-center gap-1 min-w-0 truncate">
+                        <Fuel className="h-3 w-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{car.fuelType || "Petrol"}</span>
                       </div>
                     </div>
 
                     {/* Bottom Price & View Details Action */}
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <div>
-                        <span className="text-lg sm:text-xl font-black text-slate-900">
+                    <div className="pt-2.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="text-base sm:text-xl font-black text-slate-900 leading-none">
                           {(() => {
                             if (car.pricePerDay && Number(car.pricePerDay) > 0) {
                               return `₹${Number(car.pricePerDay).toLocaleString("en-IN")}`;
@@ -240,7 +240,7 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                             return "₹1,699";
                           })()}
                         </span>
-                        <span className="text-[11px] text-slate-500 font-semibold ml-1">/ day</span>
+                        <span className="text-[10px] sm:text-[11px] text-slate-500 font-semibold ml-0.5">/day</span>
                       </div>
 
                       <Button
@@ -251,9 +251,9 @@ export const CollectionsSection: React.FC<CollectionsSectionProps> = ({
                             window.location.href = `/car/${car.id}`;
                           }
                         }}
-                        className="h-9 px-4 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs shadow-md shadow-[#c88d18]/25 flex items-center gap-1 transition-transform hover:scale-[1.02]"
+                        className="h-8.5 px-3 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs shadow-md shadow-[#c88d18]/20 flex items-center gap-1 transition-transform active:scale-95 shrink-0"
                       >
-                        <span>View Details</span>
+                        <span>Details</span>
                         <ChevronRight className="h-3.5 w-3.5" />
                       </Button>
                     </div>

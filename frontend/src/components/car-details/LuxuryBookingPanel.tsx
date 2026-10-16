@@ -234,29 +234,29 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   };
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-6 sticky top-24">
+    <div id="booking-calculator-panel" className="rounded-3xl border border-border bg-card p-3.5 sm:p-6 shadow-xl space-y-4 sm:space-y-6 sticky top-24">
       {/* Header with Live Price */}
-      <div className="flex items-start justify-between border-b border-border pb-4">
+      <div className="flex items-start justify-between border-b border-border pb-3 sm:pb-4">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-brand-teal">Direct Booking Rate</span>
           <div className="flex items-baseline gap-1 mt-0.5">
-            <span className="text-3xl font-black text-brand-navy">₹{dailyRate.toLocaleString("en-IN")}</span>
+            <span className="text-2xl sm:text-3xl font-black text-brand-navy">₹{dailyRate.toLocaleString("en-IN")}</span>
             <span className="text-xs text-muted-foreground">/ day</span>
           </div>
         </div>
 
-        <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20">
+        <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[11px] sm:text-xs font-bold border border-emerald-500/20 shrink-0">
           Instant Confirmation
         </span>
       </div>
 
       {/* Date & Time Selectors */}
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-2.5 sm:space-y-3">
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
           {/* Pickup Date/Time */}
-          <div className="p-3 rounded-2xl bg-brand-mist/60 border border-border space-y-1">
-            <label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-brand-teal" /> Pickup
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-brand-mist/60 border border-border space-y-0.5 sm:space-y-1 min-w-0">
+            <label className="text-[9px] sm:text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3 text-brand-teal shrink-0" /> Pickup
             </label>
             <input
               type="date"
@@ -423,9 +423,9 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
         size="lg"
         disabled={isSubmitting}
         onClick={handleInstantReserve}
-        className="w-full h-14 rounded-2xl bg-brand-gold hover:bg-brand-gold/90 text-brand-navy text-sm font-black uppercase tracking-wider shadow-xl hover:shadow-brand-gold/20 flex items-center justify-center gap-2 transition-transform active:scale-95"
+        className="w-full h-11 sm:h-13 rounded-2xl bg-brand-gold hover:bg-brand-gold/90 text-brand-navy text-xs sm:text-sm font-black uppercase tracking-normal sm:tracking-wider shadow-md hover:shadow-brand-gold/20 flex items-center justify-center gap-2 transition-transform active:scale-95"
       >
-        {isSubmitting ? "Securing Reservation..." : user ? "Instant Book Now" : "Sign In & Reserve Vehicle"}
+        <span>{isSubmitting ? "Securing Reservation..." : "Instant Book Now"}</span>
         <ArrowRight className="h-4 w-4" />
       </Button>
 

@@ -190,44 +190,44 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [
   return (
     <div className="w-full max-w-[1600px] mx-auto relative z-20">
       {/* Service Tabs (3 pills across width on mobile) */}
-      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-2.5">
+      <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-2.5">
         <button
           type="button"
           onClick={() => setServiceType("self")}
-          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+          className={`flex-1 sm:flex-none px-2 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] min-[360px]:text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs whitespace-nowrap ${
             serviceType === "self"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
           }`}
         >
-          <Car className="h-3.5 w-3.5" />
+          <Car className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
           <span>Self Drive</span>
         </button>
 
         <button
           type="button"
           onClick={() => setServiceType("chauffeur")}
-          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+          className={`flex-1 sm:flex-none px-2 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] min-[360px]:text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs whitespace-nowrap ${
             serviceType === "chauffeur"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
           }`}
         >
-          <User className="h-3.5 w-3.5" />
+          <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
           <span>Chauffeur</span>
         </button>
 
         <button
           type="button"
           onClick={() => setServiceType("airport")}
-          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+          className={`flex-1 sm:flex-none px-2 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] min-[360px]:text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs whitespace-nowrap ${
             serviceType === "airport"
               ? "bg-[#c88d18] text-white shadow-md shadow-[#c88d18]/30"
               : "bg-white/95 hover:bg-white text-slate-700 border border-slate-200/90"
           }`}
         >
-          <Plane className="h-3.5 w-3.5" />
-          <span>Airport Pickup</span>
+          <Plane className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+          <span className="truncate">Airport Pickup</span>
         </button>
       </div>
 
@@ -391,7 +391,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [
           <div className="p-0.5 sm:col-span-2 lg:col-span-1">
             <Button
               type="submit"
-              className="h-11 sm:h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#c88d18]/30 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
+              className="h-10 sm:h-12 w-full rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-black text-xs uppercase tracking-wider shadow-md shadow-[#c88d18]/25 flex items-center justify-center gap-2 transition-transform active:scale-95"
             >
               <span>Search Cars</span>
               <ArrowRight className="h-4 w-4" />

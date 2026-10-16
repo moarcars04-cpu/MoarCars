@@ -215,16 +215,16 @@ export const PayBalancePage: React.FC<PayBalancePageProps> = ({ onNavigate }) =>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
+      <main className="max-w-3xl mx-auto px-3 sm:px-6 pt-4 sm:pt-8 space-y-4 sm:space-y-6">
         {/* Search / Lookup Box */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-1 mb-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-50 text-[#b57d14]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-50 text-[#b57d14] shrink-0">
                 <Search className="w-4 h-4" />
               </span>
-              <h2 className="text-sm sm:text-base font-black text-slate-900">
-                Lookup Booking &amp; Pay Remaining Balance
+              <h2 className="text-xs sm:text-base font-black text-slate-900 leading-snug">
+                Lookup Booking &amp; Settle Balance
               </h2>
             </div>
             <span className="text-[10px] sm:text-xs font-bold text-slate-400">
@@ -238,12 +238,12 @@ export const PayBalancePage: React.FC<PayBalancePageProps> = ({ onNavigate }) =>
               value={bookingIdInput}
               onChange={(e) => setBookingIdInput(e.target.value)}
               placeholder="Enter Booking ID (e.g. MC-2026-27 or Phone Number)"
-              className="flex-1 h-12 px-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+              className="flex-1 h-11 sm:h-12 px-3.5 sm:px-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
             />
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 px-6 rounded-2xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] text-slate-950 font-black text-xs shadow-md transition-all active:scale-95 shrink-0"
+              className="h-11 sm:h-12 px-5 rounded-2xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] text-slate-950 font-black text-xs shadow-md transition-all active:scale-95 shrink-0"
             >
               {loading ? (
                 <>
@@ -424,10 +424,10 @@ export const PayBalancePage: React.FC<PayBalancePageProps> = ({ onNavigate }) =>
                     <Button
                       onClick={handleRazorpayPayBalance}
                       disabled={isPaying}
-                      className="w-full h-13 rounded-2xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] hover:opacity-95 text-slate-950 font-black text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                      className="w-full h-11 sm:h-13 rounded-2xl bg-gradient-to-r from-[#d49b29] via-[#c88d18] to-[#b57d14] hover:opacity-95 text-slate-950 font-black text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                     >
-                      <CreditCard className="w-5 h-5 text-slate-950" />
-                      {isPaying ? "Connecting to Razorpay..." : `Pay ₹${balanceDue.toLocaleString("en-IN")} Balance Now`}
+                      <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" />
+                      <span>{isPaying ? "Connecting to Razorpay..." : `Pay ₹${balanceDue.toLocaleString("en-IN")} Balance Now`}</span>
                     </Button>
                     <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400">
                       <span className="flex items-center gap-1">

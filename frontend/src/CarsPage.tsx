@@ -632,8 +632,8 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
 
       {/* 3. Category Filter Tabs Bar (Horizontal Pills Bar) */}
       <div className="bg-white border-b border-slate-100 shadow-xs sticky top-16 sm:top-18 z-40">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-3 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-12 xl:px-16 py-2.5 sm:py-3 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-max">
             {categoryTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeCategoryTab === tab.id;
@@ -644,15 +644,15 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                     setActiveCategoryTab(tab.id);
                     setCurrentPage(1);
                   }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 shadow-xs ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-[11px] sm:text-xs transition-all duration-200 shadow-xs shrink-0 ${
                     isActive
                       ? "bg-[#0b1329] text-white shadow-md shadow-black/20 scale-[1.02]"
                       : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-[#d49b29]" : "text-slate-500"}`} />
+                  <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isActive ? "text-[#d49b29]" : "text-slate-500"}`} />
                   <span>{tab.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"}`}>
+                  <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-200 text-slate-600"}`}>
                     {tab.count}
                   </span>
                 </button>
@@ -878,7 +878,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
           {/* RIGHT FLEET CATALOG (9 cols) */}
           <div className="lg:col-span-9 space-y-6">
             {/* Top Results & Sort Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 bg-white px-3.5 sm:px-5 py-3 sm:py-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
               <div className="flex items-center gap-3 flex-1">
                 <div className="relative flex-1 max-w-md">
                   <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -890,7 +890,7 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    placeholder="Search Swift, Innova, Scorpio, BMW, EV..."
+                    placeholder="Search Swift, Innova, Scorpio, EV..."
                     className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white pl-9 pr-8 py-2 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 border border-slate-200 focus:border-[#c88d18] outline-none transition-all"
                   />
                   {searchQuery && (
@@ -904,23 +904,23 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                <span className="text-xs font-semibold text-slate-500 whitespace-nowrap">
+              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 shrink-0 text-xs">
+                <span className="text-[11px] sm:text-xs font-semibold text-slate-500 whitespace-nowrap">
                   Showing{" "}
                   <strong className="text-slate-900">
                     {filteredCars.length > 0 ? (currentPage - 1) * carsPerPage + 1 : 0}–
                     {Math.min(currentPage * carsPerPage, filteredCars.length)}
                   </strong>{" "}
-                  of <strong className="text-slate-900">{filteredCars.length}</strong> cars
+                  of <strong className="text-slate-900">{filteredCars.length}</strong>
                 </span>
 
                 {/* Sort By Dropdown */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-medium">Sort:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] sm:text-xs text-slate-500 font-medium">Sort:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="h-8 px-2.5 rounded-lg border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 outline-none focus:border-[#c88d18]"
+                    className="h-8 px-2 rounded-lg border border-slate-200 bg-slate-50 text-[11px] sm:text-xs font-bold text-slate-800 outline-none focus:border-[#c88d18]"
                   >
                     <option value="popular">Popular First</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -1021,27 +1021,27 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                             {car.variant || car.subCategory || car.category}
                           </p>
 
-                          {/* 3 Specs Badges */}
-                          <div className="flex items-center gap-3 sm:gap-4 mt-3 text-[11px] font-bold text-slate-600">
-                            <div className="flex items-center gap-1">
-                              <User className="h-3.5 w-3.5 text-slate-400" />
+                          {/* 3 Specs Badges - Clean wrap on narrow screens */}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2.5 text-[10px] sm:text-[11px] font-bold text-slate-600">
+                            <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                              <User className="h-3 w-3 text-slate-400 shrink-0" />
                               <span>{car.seats} Seats</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Gauge className="h-3.5 w-3.5 text-slate-400" />
+                            <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                              <Gauge className="h-3 w-3 text-slate-400 shrink-0" />
                               <span>{car.transmission}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Fuel className="h-3.5 w-3.5 text-slate-400" />
+                            <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200/60">
+                              <Fuel className="h-3 w-3 text-slate-400 shrink-0" />
                               <span>{car.fuelType}</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Bottom Price & View Details */}
-                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                          <div>
-                            <span className="text-lg sm:text-xl font-black text-slate-900">
+                        <div className="pt-2.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="text-base sm:text-xl font-black text-slate-900 leading-none block">
                               {(() => {
                                 if (car.pricePerDay && Number(car.pricePerDay) > 0) {
                                   return `₹${Number(car.pricePerDay).toLocaleString("en-IN")}`;
@@ -1055,15 +1055,15 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
                                 return "₹1,699";
                               })()}
                             </span>
-                            <p className="text-[10px] text-[#c88d18] font-bold flex items-center gap-0.5">
-                              <ShieldCheck className="h-3 w-3 text-emerald-500" /> {car.advancePaymentPercent || 20}% Low Advance Booking
+                            <p className="text-[9px] sm:text-[10px] text-[#c88d18] font-bold flex items-center gap-0.5 mt-0.5 truncate">
+                              <ShieldCheck className="h-3 w-3 text-emerald-500 shrink-0" /> {car.advancePaymentPercent || 10}% Low Advance
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1 shrink-0">
                             <Button
                               onClick={() => handleCardClick(car)}
-                              className="h-9 px-3.5 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs shadow-md shadow-[#c88d18]/25 flex items-center gap-1 transition-transform hover:scale-[1.02]"
+                              className="h-8.5 px-3 rounded-xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-white font-bold text-xs shadow-md shadow-[#c88d18]/20 flex items-center gap-1 transition-transform active:scale-95"
                             >
                               <span>Details</span>
                               <ChevronRight className="h-3.5 w-3.5" />
