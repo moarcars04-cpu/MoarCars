@@ -29,6 +29,7 @@ import {
   MapPin,
   Rotate3d,
   Menu,
+  Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MoarLogo } from "@/components/common/MoarLogo";
@@ -368,9 +369,9 @@ export const CarsPage: React.FC<CarsPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <main className="min-h-screen bg-white text-slate-900 font-sans">
-      {/* 1. Top Luxury Navigation Bar - Sticky across all devices */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
+    <main className="min-h-screen bg-white text-slate-900 font-sans pt-16 sm:pt-18">
+      {/* 1. Top Luxury Navigation Bar - Fixed across all devices */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 h-16 sm:h-18 flex items-center justify-between">
           {/* Logo */}
           <a

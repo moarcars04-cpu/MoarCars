@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
 import { useLocations } from "@/hooks/useLocations";
+import { getActiveSearchParams, saveActiveSearchParams } from "@/lib/searchSyncUtils";
+import { calculateRentalPricing } from "@/lib/pricingUtils";
 
 interface LuxuryBookingPanelProps {
   car: any;
@@ -35,13 +37,14 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
 }) => {
   const { user, openAuthModal } = useAuth();
   const { locations } = useLocations();
+  const initialSearchParams = useMemo(() => getActiveSearchParams(), []);
 
   // Booking parameters
-  const [pickupHub, setPickupHub] = useState(locations[0] || "Tirupati Central Hub (Station)");
-  const [startDate, setStartDate] = useState(getTodayDateStr());
-  const [startTime, setStartTime] = useState("09:00");
-  const [endDate, setEndDate] = useState(getFutureDateStr(2));
-  const [endTime, setEndTime] = useState("21:00");
+  const [pickupHub, setPickupHub] = useState(initialSearchParams.pickup || locations[0] || "Tirupati Central (Alipiri Main Hub)");
+  const [startDate, setStartDate] = useState(initialSearchParams.startDate || getTodayDateStr());
+  const [startTime, setStartTime] = useState(initialSearchParams.startTime || "09:00");
+  const [endDate, setEndDate] = useState(initialSearchParams.endDate || getFutureDateStr(2));
+  const [endTime, setEndTime] = useState(initialSearchParams.endTime || "21:00");
 
   useEffect(() => {
     if (locations.length > 0 && (!pickupHub || !locations.includes(pickupHub))) {
@@ -90,61 +93,36 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       .catch(() => {});
   }, []);
 
-  // Calculate rental duration in days
-  const rentalDays = useMemo(() => {
-    try {
-      const start = new Date(`${startDate}T${startTime}`);
-      const end = new Date(`${endDate}T${endTime}`);
-      const diffMs = end.getTime() - start.getTime();
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      return Math.max(1, diffDays);
-    } catch {
-      return 2;
-    }
-  }, [startDate, startTime, endDate, endTime]);
+  // Dynamic Price calculations using unified pricing engine
+  const pricing = useMemo(() => {
+    return calculateRentalPricing({
+      pricePerDay: car?.pricePerDay || car?.price || 1699,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      appliedCouponPercent: appliedPromo?.percent || 0,
+      deliveryFee: 0,
+      gstRate: Number(systemSettings.gstRate ?? 18),
+      advancePaymentPercent: Number(car?.advancePaymentPercent || systemSettings.advancePaymentPercent || 10),
+    });
+  }, [car, startDate, startTime, endDate, endTime, appliedPromo, systemSettings]);
 
-  // Dynamic Price calculations
-  const dailyRate = useMemo(() => {
-    if (!car) return 1699;
-    if (car.pricePerDay && Number(car.pricePerDay) > 0) {
-      return Number(car.pricePerDay);
-    }
-    if (car.price) {
-      const parsed = parseInt(String(car.price).replace(/[^0-9]/g, ""), 10);
-      if (parsed > 0) return parsed;
-    }
-    return 1699;
-  }, [car]);
-  const baseFare = dailyRate * rentalDays;
-  const deliveryFee = 0;
+  const rentalDays = pricing.totalDays;
+  const dailyRate = pricing.dailyRate;
+  const baseFare = pricing.baseFare;
+  const deliveryFee = pricing.deliveryFee;
   const driverFee = 0;
   const extrasTotal = 0;
-
-  const subtotalBeforeDiscount = baseFare + deliveryFee;
-
-  // Promo discount calculation
-  const discountAmount = appliedPromo ? Math.round((subtotalBeforeDiscount * appliedPromo.percent) / 100) : 0;
-  const subtotalAfterDiscount = subtotalBeforeDiscount - discountAmount;
-
-  // Dynamic GST from Admin Settings
-  const gstRate = Number(systemSettings.gstRate ?? 18);
-  const gstAmount = Math.round(subtotalAfterDiscount * (gstRate / 100));
-
-  // Grand Total based strictly on Base Fare + Add-ons + GST - Discounts
-  const grandTotal = subtotalAfterDiscount + gstAmount;
-
-  // Dynamic Advance Payment % from Car or Admin System Policy
-  const advancePaymentPercent =
-    car.advancePaymentPercent !== undefined && car.advancePaymentPercent !== null && car.advancePaymentPercent !== ""
-      ? Number(car.advancePaymentPercent)
-      : Number(systemSettings.advancePaymentPercent ?? 20);
-
-  const advancePayableNow =
-    advancePaymentPercent < 100 && advancePaymentPercent > 0 && grandTotal > 0
-      ? Math.round(grandTotal * (advancePaymentPercent / 100))
-      : grandTotal;
-
-  const balanceDueAtPickup = Math.max(0, grandTotal - advancePayableNow);
+  const subtotalBeforeDiscount = pricing.subtotalBeforeDiscounts;
+  const discountAmount = pricing.couponDiscount;
+  const subtotalAfterDiscount = pricing.subtotalAfterDiscounts;
+  const gstRate = pricing.gstRate;
+  const gstAmount = pricing.gstAmount;
+  const grandTotal = pricing.grandTotal;
+  const advancePaymentPercent = pricing.advancePaymentPercent;
+  const advancePayableNow = pricing.payableNow;
+  const balanceDueAtPickup = pricing.balanceDue;
   const securityDeposit = 0;
 
   // Promo Apply Handler
@@ -170,6 +148,15 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
   // Submit Booking / Navigate to Checkout
   const handleInstantReserve = async () => {
     const targetPickup = pickupHub;
+
+    saveActiveSearchParams({
+      pickup: targetPickup,
+      dropoff: targetPickup,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+    });
 
     const payload = {
       pickup: targetPickup,
@@ -209,11 +196,7 @@ export const LuxuryBookingPanel: React.FC<LuxuryBookingPanelProps> = ({
       notes: "Standard self-drive booking",
     };
 
-    if (!user) {
-      sessionStorage.setItem("moar_pending_checkout", JSON.stringify(payload));
-      openAuthModal("login");
-      return;
-    }
+    sessionStorage.setItem("moar_pending_checkout", JSON.stringify(payload));
 
     if (onNavigate) {
       onNavigate("/checkout", payload);

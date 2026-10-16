@@ -302,9 +302,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ onNavigate, onSele
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/90 text-slate-900 flex flex-col font-sans">
-      {/* 1. Top Luxury Navigation Header (Clean White & Sticky across all devices) */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
+    <div className="min-h-screen bg-slate-50/90 text-slate-900 flex flex-col font-sans pt-16">
+      {/* 1. Top Luxury Navigation Header (Clean White & Fixed across all devices) */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo & Portal Badge */}
           <div className="flex items-center gap-3">

@@ -244,11 +244,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       endTime: searchParams.endTime,
     };
 
-    if (!user) {
-      sessionStorage.setItem("moar_pending_checkout", JSON.stringify(checkoutState));
-      openAuthModal("login");
-      return;
-    }
+    sessionStorage.setItem("moar_pending_checkout", JSON.stringify(checkoutState));
 
     if (onNavigate) {
       onNavigate("/checkout", checkoutState);
@@ -281,9 +277,9 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white text-slate-900 font-sans">
-      {/* 1. Top Luxury Header / Navbar - Sticky across all devices */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
+    <main className="min-h-screen overflow-x-hidden bg-white text-slate-900 font-sans pt-16 sm:pt-18">
+      {/* 1. Top Luxury Header / Navbar - Fixed across all devices */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
         <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 h-16 sm:h-18 flex items-center justify-between">
           {/* Logo */}
           <a href="#top" className="flex items-center gap-2 py-0.5 group shrink-0" aria-label="MOAR CARS Home">

@@ -23,6 +23,8 @@ import { BookingSummaryCard } from "./components/checkout/BookingSummaryCard";
 import { CouponSection } from "./components/checkout/CouponSection";
 import { PaymentMethodsSection, PaymentMethodType } from "./components/checkout/PaymentMethodsSection";
 import { BookingConfirmationScreen } from "./components/checkout/BookingConfirmationScreen";
+import { calculateRentalPricing } from "@/lib/pricingUtils";
+import { getActiveSearchParams, saveActiveSearchParams } from "@/lib/searchSyncUtils";
 
 interface CheckoutPageProps {
   initialCar?: any;
@@ -40,9 +42,43 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [car, setCar] = useState<any | null>(initialCar || null);
   const [currentStep, setCurrentStep] = useState<"details" | "payment" | "confirmed">("details");
 
-  // Load car from API if not provided in props
+  // Check if there is a pending checkout in sessionStorage or URL booking_id
   useEffect(() => {
-    if (!initialCar) {
+    // 1. Check if user refreshed on a confirmed booking
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlBookingId = searchParams.get("booking_id");
+    const savedConfirmed = sessionStorage.getItem("moar_latest_confirmed_booking");
+
+    if (savedConfirmed) {
+      try {
+        const parsed = JSON.parse(savedConfirmed);
+        if (!urlBookingId || parsed.bookingId === urlBookingId) {
+          setConfirmedBookingData(parsed);
+          setCurrentStep("confirmed");
+          return;
+        }
+      } catch {}
+    }
+
+    // 2. Check pending checkout in sessionStorage
+    const pendingStr = sessionStorage.getItem("moar_pending_checkout");
+    if (pendingStr) {
+      try {
+        const pending = JSON.parse(pendingStr);
+        if (!initialCar && pending.car) setCar(pending.car);
+        if (pending.pickup) setPickupLocation(pending.pickup);
+        if (pending.dropoff || pending.dropLocation) setDropLocation(pending.dropoff || pending.dropLocation);
+        if (pending.startDate) setStartDate(pending.startDate.split(" ")[0]);
+        if (pending.startTime) setStartTime(pending.startTime);
+        if (pending.endDate) setEndDate(pending.endDate.split(" ")[0]);
+        if (pending.endTime) setEndTime(pending.endTime);
+      } catch {}
+    }
+  }, [initialCar]);
+
+  // Load car from API if not provided in props or session
+  useEffect(() => {
+    if (!car) {
       fetch("/api/cars")
         .then((res) => res.json())
         .then((res) => {
@@ -52,7 +88,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
         })
         .catch((err) => console.warn(err));
     }
-  }, [initialCar]);
+  }, [car]);
 
   // Renter Details
   const [customerName, setCustomerName] = useState(user?.name || "");
@@ -73,16 +109,17 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   }>({});
 
   // Trip Timeline
+  const activeParams = useMemo(() => getActiveSearchParams(), []);
   const [pickupLocation, setPickupLocation] = useState(
-    initialParams?.pickup || "Tirupati Central Station Hub"
+    initialParams?.pickup || activeParams.pickup || "Tirupati Central (Alipiri Main Hub)"
   );
   const [dropLocation, setDropLocation] = useState(
-    initialParams?.dropoff || initialParams?.pickup || "Tirupati Central Station Hub"
+    initialParams?.dropoff || initialParams?.pickup || activeParams.dropoff || "Tirupati Central (Alipiri Main Hub)"
   );
-  const [startDate, setStartDate] = useState(initialParams?.startDate || getTodayDateStr());
-  const [startTime, setStartTime] = useState(initialParams?.startTime || "09:00");
-  const [endDate, setEndDate] = useState(initialParams?.endDate || getFutureDateStr(2));
-  const [endTime, setEndTime] = useState(initialParams?.endTime || "21:00");
+  const [startDate, setStartDate] = useState(initialParams?.startDate || activeParams.startDate || getTodayDateStr());
+  const [startTime, setStartTime] = useState(initialParams?.startTime || activeParams.startTime || "09:00");
+  const [endDate, setEndDate] = useState(initialParams?.endDate || activeParams.endDate || getFutureDateStr(2));
+  const [endTime, setEndTime] = useState(initialParams?.endTime || activeParams.endTime || "21:00");
 
   // Options & Extras
   const [withDriver] = useState(false);
@@ -118,29 +155,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
     }
   }, [user]);
 
-  // Accurate Duration Calculation (Exact Hours & 24h Days Tariff)
-  const rentalDuration = useMemo(() => {
-    try {
-      const start = new Date(`${startDate}T${startTime}`);
-      const end = new Date(`${endDate}T${endTime}`);
-      const diffMs = end.getTime() - start.getTime();
-      if (isNaN(diffMs) || diffMs <= 0) {
-        return { totalHours: 24, totalDays: 1, durationLabel: "24 Hours (1 Day Tariff)" };
-      }
-      const totalHours = Math.max(1, Math.round(diffMs / (1000 * 60 * 60)));
-      const totalDays = Math.max(1, Math.ceil(totalHours / 24));
-      return {
-        totalHours,
-        totalDays,
-        durationLabel: `${totalHours} Hours (${totalDays} ${totalDays === 1 ? "Day" : "Days"} Tariff)`,
-      };
-    } catch {
-      return { totalHours: 48, totalDays: 2, durationLabel: "48 Hours (2 Days Tariff)" };
-    }
-  }, [startDate, startTime, endDate, endTime]);
-
-  const rentalDays = rentalDuration.totalDays;
-
   // Live System Financial Settings
   const [systemSettings, setSystemSettings] = useState<{
     gstRate?: number;
@@ -167,37 +181,43 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       .catch(() => {});
   }, []);
 
-  // Calculations
-  const dailyRate =
-    (Number(car?.pricePerDay) && Number(car?.pricePerDay) > 0)
-      ? Number(car.pricePerDay)
-      : (parseInt(String(car?.price || "0").replace(/[^0-9]/g, ""), 10) || 1699);
-  const baseFare = dailyRate * rentalDays;
-  const deliveryFee = deliveryMode === "doorstep" ? 299 : 0;
+  // Dynamic Pricing using unified calculation engine
+  const pricing = useMemo(() => {
+    return calculateRentalPricing({
+      pricePerDay: car?.pricePerDay || car?.price || 1699,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      deliveryFee: deliveryMode === "doorstep" ? 299 : 0,
+      appliedCouponPercent: appliedCoupon?.percent || 0,
+      gstRate: Number(systemSettings.gstRate ?? 18),
+      advancePaymentPercent: 10,
+    });
+  }, [car, startDate, startTime, endDate, endTime, deliveryMode, appliedCoupon, systemSettings]);
+
+  const rentalDuration = {
+    totalHours: pricing.totalHours,
+    totalDays: pricing.totalDays,
+    durationLabel: pricing.durationLabel,
+  };
+  const rentalDays = pricing.totalDays;
+  const dailyRate = pricing.dailyRate;
+  const baseFare = pricing.baseFare;
+  const deliveryFee = pricing.deliveryFee;
+  const subtotalBeforeDiscounts = pricing.subtotalBeforeDiscounts;
+  const couponDiscount = pricing.couponDiscount;
+  const totalDiscounts = pricing.couponDiscount;
+  const subtotalAfterDiscounts = pricing.subtotalAfterDiscounts;
+  const gstRate = pricing.gstRate;
+  const gstAmount = pricing.gstAmount;
+  const grandTotal = pricing.grandTotal;
+  const advancePaymentPercent = 10;
+  const payableNow = pricing.payableNow;
+  const balanceDue = pricing.balanceDue;
+  const securityDeposit = 0;
   const driverFee = 0;
   const extrasTotal = 0;
-
-  const subtotalBeforeDiscounts = baseFare + deliveryFee;
-
-  const couponDiscount = appliedCoupon
-    ? Math.round((subtotalBeforeDiscounts * appliedCoupon.percent) / 100)
-    : 0;
-
-  const totalDiscounts = couponDiscount;
-  const subtotalAfterDiscounts = Math.max(0, subtotalBeforeDiscounts - totalDiscounts);
-
-  // Dynamic GST from Admin System Settings
-  const gstRate = Number(systemSettings.gstRate ?? 18);
-  const gstAmount = Math.round(subtotalAfterDiscounts * (gstRate / 100));
-
-  // Grand Total based strictly on Daily Rental Days + Extras + GST - Discounts
-  const grandTotal = subtotalAfterDiscounts + gstAmount;
-
-  // Exact 10% Non-Refundable Booking Advance Calculation
-  const advancePaymentPercent = 10;
-  const payableNow = Math.round(grandTotal * (advancePaymentPercent / 100));
-  const balanceDue = Math.max(0, grandTotal - payableNow);
-  const securityDeposit = 0;
 
   // Helper: Dynamically load Razorpay SDK
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -295,17 +315,26 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       const finalBookingId = data.data?.bookingId || (data.data?.id ? `MC-2026-${data.data.id}` : bookingId);
       const finalPin = data.data?.pickupOtp || data.data?.keyPin || keyPin;
 
-      setConfirmedBookingData({
+      const finalConfirmed = {
         ...bookingPayload,
         bookingId: finalBookingId,
         keyPin: finalPin,
         pickupOtp: finalPin,
-      });
+      };
+
+      try {
+        sessionStorage.setItem("moar_latest_confirmed_booking", JSON.stringify(finalConfirmed));
+        sessionStorage.removeItem("moar_pending_checkout");
+        window.history.replaceState(null, "", `/checkout?booking_id=${finalBookingId}`);
+      } catch {}
+
+      saveSession(generatedUser as any, `session_${Date.now()}`);
+
+      setConfirmedBookingData(finalConfirmed);
       setCurrentStep("confirmed");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.warn("Optimistic booking confirmation:", err);
-      // Even in offline/fallback, create profile session
       const fallbackUser = {
         id: user?.id || Date.now(),
         name: customerName.trim(),
@@ -320,7 +349,19 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
       };
       saveSession(fallbackUser as any, `session_${Date.now()}`);
 
-      setConfirmedBookingData(bookingPayload);
+      const fallbackConfirmed = {
+        ...bookingPayload,
+        bookingId,
+        keyPin,
+        pickupOtp: keyPin,
+      };
+      try {
+        sessionStorage.setItem("moar_latest_confirmed_booking", JSON.stringify(fallbackConfirmed));
+        sessionStorage.removeItem("moar_pending_checkout");
+        window.history.replaceState(null, "", `/checkout?booking_id=${bookingId}`);
+      } catch {}
+
+      setConfirmedBookingData(fallbackConfirmed);
       setCurrentStep("confirmed");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -330,13 +371,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
   // Final Payment & Reservation Submission with Razorpay & Strict Form Validation
   const handleConfirmAndPay = async () => {
-    // 0. Mandatory Authentication Check
-    if (!user) {
-      openAuthModal("login");
-      setSubmissionError("Authentication required: Please sign in or create an account to proceed with your booking.");
-      return;
-    }
-
     // 1. Strict Form Validations
     const errors: { name?: string; phone?: string; email?: string; address?: string; dl?: string } = {};
 
@@ -432,9 +466,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 pb-28 lg:pb-16 selection:bg-[#c88d18] selection:text-slate-950 overflow-x-hidden w-full max-w-full">
-      {/* Checkout Top Bar - Clean White Sticky Header across all devices */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs transition-all w-full">
+    <main className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 pb-28 lg:pb-16 selection:bg-[#c88d18] selection:text-slate-950 overflow-x-hidden w-full max-w-full pt-16 sm:pt-18">
+      {/* Checkout Top Bar - Clean White Fixed Header across all devices */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs transition-all w-full">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-4">
             <Button
@@ -562,62 +596,32 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
         )}
 
-        {/* AUTHENTICATION GATE: User must be signed in to book */}
-        {currentStep !== "confirmed" && car && !user && (
-          <div className="rounded-3xl border border-amber-300 bg-white text-slate-900 p-6 sm:p-12 shadow-md space-y-6 max-w-2xl mx-auto text-center animate-in fade-in duration-300">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200 text-amber-700">
-              <Lock className="h-8 w-8" />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black tracking-tight text-slate-900">
-                Sign In to Reserve {car.name}
-              </h3>
-              <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                To guarantee safe self-drive reservations, Tirumala Ghat road clearances & instant vehicle handover, an authenticated user profile is required.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-left max-w-md mx-auto">
-              <div className="flex items-center gap-3">
-                {car.image ? (
-                  <img src={car.image} alt={car.name} className="h-12 w-16 object-cover rounded-xl bg-slate-200 shrink-0 border border-slate-200" />
-                ) : (
-                  <div className="h-12 w-16 bg-slate-200 rounded-xl flex items-center justify-center"><Car className="h-6 w-6 text-slate-500" /></div>
-                )}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">{car.name}</h4>
-                  <p className="text-[11px] text-amber-800 font-semibold">{rentalDays} Days • {startDate} to {endDate}</p>
-                </div>
-              </div>
-              <span className="text-sm font-black text-emerald-700">₹{payableNow.toLocaleString("en-IN")} Adv</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-md mx-auto">
-              <Button
-                onClick={() => openAuthModal("login")}
-                className="h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-transform active:scale-95"
-              >
-                <User className="h-4 w-4 text-amber-700" /> Existing User (Sign In)
-              </Button>
-              <Button
-                onClick={() => openAuthModal("register")}
-                className="h-12 rounded-2xl bg-gradient-to-r from-[#d49b29] to-[#c88d18] hover:from-[#c88d18] hover:to-[#b57d14] text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/25 transition-transform active:scale-95"
-              >
-                <Sparkles className="h-4 w-4 text-slate-950" /> New User (Create Profile)
-              </Button>
-            </div>
-
-            <p className="text-[11px] text-slate-500">
-              ⚡ Instant 6-digit email OTP verification • No paperwork required
-            </p>
-          </div>
-        )}
-
-        {currentStep !== "confirmed" && car && user && (
+        {currentStep !== "confirmed" && car && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Left Column (7 cols): Input Forms */}
             <div className="lg:col-span-7 space-y-6">
+              {/* Optional Quick Sign In Banner for returning users */}
+              {!user && (
+                <div className="p-4 sm:p-5 rounded-3xl bg-amber-50 border border-amber-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs animate-in fade-in">
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#d49b29] to-[#c88d18] text-slate-950 flex items-center justify-center shrink-0 shadow-xs">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900">Already registered with MOAR CARS?</h4>
+                      <p className="text-[11px] text-slate-600">Sign in with mobile OTP to autofill license & claim loyalty points</p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => openAuthModal("login")}
+                    className="h-9 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold shrink-0 shadow-xs"
+                  >
+                    Quick Sign In
+                  </Button>
+                </div>
+              )}
+
               {/* Error Notice */}
               {submissionError && (
                 <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2.5 shadow-xs">

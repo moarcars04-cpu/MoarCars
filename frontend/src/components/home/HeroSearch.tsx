@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getTodayDateStr, getFutureDateStr, getMaxBookingDateStr } from "@/lib/dateUtils";
 import { useLocations } from "@/hooks/useLocations";
+import { getActiveSearchParams, saveActiveSearchParams } from "@/lib/searchSyncUtils";
 
 interface HeroSearchProps {
   onSearch: (params: {
@@ -100,14 +101,16 @@ export const TrustBadgesBar: React.FC = () => {
 
 export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [] }) => {
   const { locations } = useLocations();
+  const initialParams = useMemo(() => getActiveSearchParams(), []);
+
   const [serviceType, setServiceType] = useState<"self" | "chauffeur" | "airport">("self");
-  const [pickup, setPickup] = useState(locations[0] || "Tirupati Central Hub (Station)");
-  const [dropoff, setDropoff] = useState(locations[0] || "Tirupati Central Hub (Station)");
-  const [startDate, setStartDate] = useState(getTodayDateStr());
-  const [startTime, setStartTime] = useState("09:00");
-  const [returnDate, setReturnDate] = useState(getFutureDateStr(2));
-  const [endTime, setEndTime] = useState("21:00");
-  const [carType, setCarType] = useState("All Types");
+  const [pickup, setPickup] = useState(initialParams.pickup || locations[0] || "Tirupati Central (Alipiri Main Hub)");
+  const [dropoff, setDropoff] = useState(initialParams.dropoff || locations[0] || "Tirupati Central (Alipiri Main Hub)");
+  const [startDate, setStartDate] = useState(initialParams.startDate || getTodayDateStr());
+  const [startTime, setStartTime] = useState(initialParams.startTime || "09:00");
+  const [returnDate, setReturnDate] = useState(initialParams.endDate || getFutureDateStr(2));
+  const [endTime, setEndTime] = useState(initialParams.endTime || "21:00");
+  const [carType, setCarType] = useState(initialParams.category || "All Types");
   const [isLocating, setIsLocating] = useState(false);
   const [locationNotice, setLocationNotice] = useState("");
 
@@ -142,13 +145,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [
     navigator.geolocation.getCurrentPosition(
       () => {
         setIsLocating(false);
-        setPickup("Tirupati Central Hub (Station)");
+        setPickup("Tirupati Central (Alipiri Main Hub)");
         setLocationNotice("📍 Tirupati Central Hub selected");
         setTimeout(() => setLocationNotice(""), 3500);
       },
       () => {
         setIsLocating(false);
-        setPickup("Tirupati Central Hub (Station)");
+        setPickup("Tirupati Central (Alipiri Main Hub)");
         setLocationNotice("📍 Tirupati Central Hub selected");
         setTimeout(() => setLocationNotice(""), 3500);
       },
@@ -158,9 +161,22 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({ onSearch, categories = [
 
   const handleTriggerSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPickup = pickup === "City, Airport or Area" ? "Tirupati Central (Alipiri Main Hub)" : pickup;
+    const cleanDropoff = dropoff === "City, Airport or Area" ? "Tirupati Central (Alipiri Main Hub)" : dropoff;
+
+    saveActiveSearchParams({
+      pickup: cleanPickup,
+      dropoff: cleanDropoff,
+      startDate,
+      startTime,
+      endDate: returnDate,
+      endTime,
+      category: carType === "All Types" ? undefined : carType,
+    });
+
     onSearch({
-      pickup: pickup === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : pickup,
-      dropoff: dropoff === "City, Airport or Area" ? "Tirupati Central Hub (Station)" : dropoff,
+      pickup: cleanPickup,
+      dropoff: cleanDropoff,
       startDate,
       startTime,
       endDate: returnDate,

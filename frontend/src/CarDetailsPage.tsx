@@ -219,9 +219,9 @@ export const CarDetailsPage: React.FC<CarDetailsPageProps> = ({ carIdOrName, ini
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      {/* Top Luxury Navigation Header - Sticky across all devices */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
+    <main className="min-h-screen bg-slate-50 text-slate-900 font-sans pt-16 sm:pt-18">
+      {/* Top Luxury Navigation Header - Fixed across all devices */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all w-full">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-12 xl:px-16 h-16 sm:h-18 flex items-center justify-between">
           {/* Logo & Back button */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
